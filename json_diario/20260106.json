@@ -1,0 +1,164 @@
+{
+  "day_id": "2026-01-06",
+  "timezone": "America/Sao_Paulo",
+  "day_number": 2,
+  "goals": {
+    "program_duration_days": 45,
+    "primary_goal": "fat_loss_preserve_lean_mass",
+    "cgm_active": false,
+    "cgm_notes": "Sensor com falha; dados de CGM serão enviados nos próximos dias."
+  },
+  "body": {
+    "weight_kg": 75.95,
+    "body_fat_percent": 22.8,
+    "lean_mass_kg": 58.6,
+    "fat_mass_kg_est": 17.3,
+    "visceral_fat_rating": 10.3,
+    "bmr_kcal": 1636,
+    "source": "Fitdays",
+    "notes": "Peso diário; composição estimada por bioimpedância."
+  },
+  "sleep": {
+    "date_reference": "night_before_day",
+    "total_sleep_hhmm": "07:28",
+    "awake_hhmm": "00:14",
+    "rem_hhmm": "01:32",
+    "core_hhmm": "05:12",
+    "deep_hhmm": "00:44",
+    "subjective": {
+      "sleep_quality_1_5": 3,
+      "daytime_sleepiness_1_5": 3
+    },
+    "context": [
+      "Dormiu mais tarde por aniversário",
+      "Uso de despertador"
+    ],
+    "source": "Apple Watch"
+  },
+  "subjective_state": {
+    "stress_1_5": 1,
+    "mental_clarity_1_5": 3,
+    "pain_or_injury": {
+      "has_pain": false,
+      "notes": ""
+    }
+  },
+  "training": {
+    "cardio_sessions": [
+      {
+        "type": "bike_zone_2",
+        "start_time_local": null,
+        "duration_hhmmss": "00:35:00",
+        "avg_hr_bpm": 116,
+        "max_hr_bpm": 131,
+        "hr_zones": {
+          "zone_1_percent": 24,
+          "zone_2_percent": 76,
+          "zone_3_percent": 0,
+          "zone_4_percent": 0,
+          "zone_5_percent": 0
+        },
+        "relative_effort": 6,
+        "source": "Apple Watch",
+        "notes": "Zona 2 bem controlada, sem drift."
+      }
+    ],
+    "strength_sessions": [
+      {
+        "type": "gym_strength",
+        "start_time_local": null,
+        "source": "Apple Watch / User report",
+        "exercises": [
+          {
+            "name": "Lateral Raise",
+            "notes": "Variações em pé e sentado"
+          },
+          {
+            "name": "Biceps Curl",
+            "notes": "Isoladores"
+          },
+          {
+            "name": "Triceps Pushdown",
+            "notes": "Incluiu dropset final"
+          }
+        ],
+        "notes": "Treino preservado, sem excesso de carga dado o contexto do sono."
+      }
+    ],
+    "neat": []
+  },
+  "nutrition": {
+    "caffeine": [
+      {
+        "time_local": "08:00",
+        "item": "coffee",
+        "sugar": false,
+        "notes": "Sem açúcar."
+      },
+      {
+        "time_local": "10:30",
+        "item": "coffee",
+        "sugar": false,
+        "notes": "Segundo café do dia."
+      }
+    ],
+    "meals": [
+      {
+        "meal_name": "lunch",
+        "time_local": "14:00",
+        "items": [
+          { "food": "white_rice_cooked", "amount_g": 70 },
+          { "food": "ground_beef_patinho_lean", "amount_g": 150 },
+          { "food": "salad_mixed", "amount_g": null }
+        ]
+      },
+      {
+        "meal_name": "afternoon_block",
+        "time_local": "16:00",
+        "items": [
+          { "food": "baby_carrot", "amount_g": 100 },
+          { "food": "creme_de_ricota_light", "amount_g": 40 },
+          { "food": "eggs_boiled", "amount_units": 4 },
+          { "food": "yogurt_molico", "amount_ml": 200 },
+          { "food": "yogurt_parmalat_fit", "amount_g": 100 },
+          { "food": "whey_protein", "amount_g": 60 },
+          { "food": "banana_prata", "amount_units": 1 }
+        ]
+      },
+      {
+        "meal_name": "dinner",
+        "time_local": "20:00",
+        "items": [
+          { "food": "white_rice_cooked", "amount_g": 70 },
+          { "food": "ground_beef_patinho_lean", "amount_g": 150 },
+          { "food": "salad_mixed", "amount_g": null },
+          { "food": "cheese_prato", "amount_units": 1 },
+          { "food": "plum", "amount_units": 1 }
+        ]
+      }
+    ],
+    "day_totals": {
+      "kcal": 1680,
+      "protein_g": 200,
+      "carbs_g": 107,
+      "fat_g": 46,
+      "fiber_g": null
+    },
+    "notes": "Macros estimados com base em rótulos e tabelas padrão."
+  },
+  "energy_balance": {
+    "bmr_kcal": 1636,
+    "tdee_estimated_kcal": 2290,
+    "intake_kcal": 1680,
+    "deficit_kcal_est": 610,
+    "confidence": "high",
+    "notes": "Déficit dentro do alvo ideal do projeto."
+  },
+  "cgm": null,
+  "summary_flags": {
+    "has_cgm_data": false,
+    "sleep_outlier_contextual": true,
+    "training_completed": true,
+    "nutrition_completed": true
+  }
+}

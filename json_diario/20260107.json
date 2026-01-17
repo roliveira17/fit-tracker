@@ -1,0 +1,150 @@
+{
+    "day_id": "2026-01-07",
+    "timezone": "America/Sao_Paulo",
+    "day_number": 3,
+  
+    "goals": {
+      "program_duration_days": 45,
+      "primary_goal": "fat_loss_preserve_lean_mass",
+      "cgm_active": false,
+      "cgm_notes": "CGM inativo no dia."
+    },
+  
+    "body": {
+      "weight_kg": 75.65,
+      "body_fat_percent": 22.7,
+      "lean_mass_kg": 58.5,
+      "fat_mass_kg_est": 17.1,
+      "visceral_fat_rating": 10.2,
+      "bmr_kcal": 1633,
+      "source": "Fitdays",
+      "notes": null
+    },
+  
+    "sleep": {
+      "date_reference": "night_before_day",
+      "total_sleep_hhmm": "05:26",
+      "awake_hhmm": "01:32",
+      "rem_hhmm": "01:26",
+      "core_hhmm": "03:19",
+      "deep_hhmm": "00:41",
+      "subjective": {
+        "sleep_quality_1_5": 2,
+        "daytime_sleepiness_1_5": 5
+      },
+      "context": ["filha acordou durante a noite"],
+      "source": "Apple Watch"
+    },
+  
+    "subjective_state": {
+      "stress_1_5": 1,
+      "mental_clarity_1_5": 4,
+      "pain_or_injury": {
+        "has_pain": true,
+        "notes": "DOMS leve após retorno aos treinos."
+      }
+    },
+  
+    "training": {
+      "cardio_sessions": [],
+      "strength_sessions": [
+        {
+          "type": "hypertrophy",
+          "start_time_local": "12:17",
+          "source": "Apple Watch",
+          "exercises": [
+            {
+              "name": "Incline Bench Press (Barbell)",
+              "sets": [
+                { "set": 1, "reps": 12, "weight_kg": 20 },
+                { "set": 2, "reps": 12, "weight_kg": 20 },
+                { "set": 3, "reps": 12, "weight_kg": 20 }
+              ]
+            },
+            {
+              "name": "Chest Fly (Machine)",
+              "sets": [
+                { "set": 1, "reps": 10, "weight_kg": 72 },
+                { "set": 2, "reps": 8, "weight_kg": 72 },
+                { "set": 3, "reps": 8, "weight_kg": 72 }
+              ]
+            },
+            {
+              "name": "Reverse Grip Lat Pulldown",
+              "sets": [
+                { "set": 1, "reps": 10, "weight_kg": 58 },
+                { "set": 2, "reps": 8, "weight_kg": 58 },
+                { "set": 3, "reps": 8, "weight_kg": 58 }
+              ]
+            },
+            {
+              "name": "Straight Arm Lat Pulldown",
+              "sets": [
+                { "set": 1, "reps": 8, "weight_kg": 50 },
+                { "set": 2, "reps": 9, "weight_kg": 60 },
+                { "set": 3, "reps": 8, "weight_kg": 60 }
+              ]
+            },
+            {
+              "name": "Seated Leg Curl",
+              "sets": [
+                { "set": 1, "reps": 12, "weight_kg": 59 },
+                { "set": 2, "reps": 12, "weight_kg": 59 },
+                { "set": 3, "reps": 8, "weight_kg": 59 }
+              ]
+            },
+            {
+              "name": "Leg Extension",
+              "sets": [
+                { "set": 1, "reps": 8, "weight_kg": 72 },
+                { "set": 2, "reps": 10, "weight_kg": 72 },
+                { "set": 3, "reps": 10, "weight_kg": 72 }
+              ]
+            }
+          ],
+          "notes": "50 min, 20 sets, volume total 10.600 kg, FC média 104 bpm, ~217 kcal."
+        }
+      ],
+      "neat": []
+    },
+  
+    "nutrition": {
+      "caffeine": [
+        {
+          "time_local": "09:00",
+          "item": "café",
+          "sugar": false,
+          "notes": "sem açúcar"
+        }
+      ],
+      "meals": [],
+      "day_totals": {
+        "kcal": 1815,
+        "protein_g": 182,
+        "carbs_g": 95,
+        "fat_g": 70,
+        "fiber_g": 18
+      },
+      "notes": "Distribuição focada em proteína alta para preservação de massa magra."
+    },
+  
+    "energy_balance": {
+      "bmr_kcal": 1633,
+      "tdee_estimated_kcal": 2300,
+      "intake_kcal": 1815,
+      "deficit_kcal_est": 485,
+      "confidence": "medium",
+      "notes": "Treino de força realizado; sono ruim pode afetar TDEE real."
+    },
+  
+    "cgm": null,
+  
+    "summary_flags": {
+      "has_cgm_data": false,
+      "sleep_outlier_contextual": true,
+      "training_completed": true,
+      "nutrition_completed": true,
+      "notes": "Sono foi o principal fator limitante do dia."
+    }
+  }
+  

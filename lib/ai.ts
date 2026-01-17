@@ -1,0 +1,330 @@
+import OpenAI from "openai";
+import { type UserProfile } from "./storage";
+import {
+  parseFood,
+  parseExercise,
+  parseWeight,
+  parseBodyFat,
+  type FoodParseResult,
+  type ExerciseParseResult,
+  type WeightParseResult,
+  type BodyFatParseResult,
+} from "./parsers";
+
+/**
+ * Cliente OpenAI - inicializado apenas no servidor
+ */
+let openai: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI {
+  if (!openai) {
+    openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  }
+  return openai;
+}
+
+/**
+ * Tipos para mensagens do chat
+ */
+export interface ChatMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: string;
+}
+
+/**
+ * Tipos de mensagem do usuário
+ *
+ * - declaration: Registro factual ("comi arroz", "treinei perna")
+ * - question: Pergunta informativa ("qual meu BMR?", "quantas calorias tem banana?")
+ * - simulation: Cenário hipotético ("se eu comer pizza, como fica?")
+ * - correction: Correção de registro anterior ("não, foram 80g, não 60g")
+ * - subjective: Estado subjetivo ("dormi mal", "estou cansado")
+ * - other: Mensagens fora do escopo ou conversacionais
+ */
+export type MessageType =
+  | "declaration"
+  | "question"
+  | "simulation"
+  | "correction"
+  | "subjective"
+  | "other";
+
+/**
+ * Subtipo para declarações (o que está sendo registrado)
+ */
+export type DeclarationSubtype =
+  | "food"      // Alimentação
+  | "exercise"  // Exercício/treino
+  | "weight"    // Peso corporal
+  | "bodyfat"   // Percentual de gordura
+  | "unknown";  // Não identificado
+
+/**
+ * Resultado da classificação
+ */
+export interface ClassificationResult {
+  type: MessageType;
+  subtype?: DeclarationSubtype;
+  confidence: "high" | "medium" | "low";
+}
+
+/**
+ * Classifica o tipo de mensagem do usuário
+ * Usa a AI para determinar a intenção da mensagem
+ */
+export async function classifyMessage(
+  message: string,
+  chatHistory: ChatMessage[]
+): Promise<ClassificationResult> {
+  const client = getOpenAIClient();
+
+  const classificationPrompt = `Você é um classificador de mensagens para um app de fitness.
+Analise a mensagem do usuário e retorne APENAS um JSON válido (sem markdown, sem explicação).
+
+TIPOS DE MENSAGEM:
+- "declaration": Registro factual de algo que aconteceu ("comi arroz", "treinei perna", "peso 78kg")
+- "question": Pergunta informativa ("qual meu BMR?", "quantas calorias tem banana?")
+- "simulation": Cenário hipotético com "se" ou "caso" ("se eu comer pizza, como fica?")
+- "correction": Correção de algo dito antes ("não, foram 80g", "errei, foi frango não peixe")
+- "subjective": Estado emocional ou físico ("dormi mal", "estou cansado", "me sinto bem")
+- "other": Saudações, agradecimentos, ou fora do escopo de fitness
+
+SUBTIPOS (apenas para "declaration"):
+- "food": Alimentação/refeição
+- "exercise": Treino/exercício
+- "weight": Peso corporal (ex: "peso 78kg", "estou com 80")
+- "bodyfat": Body fat/gordura (ex: "bf 20%", "gordura corporal 18")
+- "unknown": Não conseguiu identificar
+
+CONTEXTO DAS ÚLTIMAS MENSAGENS:
+${chatHistory.slice(-3).map(m => `${m.role}: ${m.content}`).join("\n") || "(nenhum histórico)"}
+
+MENSAGEM ATUAL: "${message}"
+
+Responda APENAS com JSON no formato:
+{"type": "...", "subtype": "...", "confidence": "high|medium|low"}`;
+
+  try {
+    const response = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [{ role: "user", content: classificationPrompt }],
+      temperature: 0.1, // Baixa temperatura para respostas consistentes
+      max_tokens: 100,
+    });
+
+    const content = response.choices[0]?.message?.content?.trim() || "";
+
+    // Tenta extrair JSON da resposta
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0]) as ClassificationResult;
+      return {
+        type: parsed.type || "other",
+        subtype: parsed.subtype,
+        confidence: parsed.confidence || "medium",
+      };
+    }
+  } catch (error) {
+    console.error("Erro na classificação:", error);
+  }
+
+  // Fallback: retorna "other" se falhar
+  return { type: "other", confidence: "low" };
+}
+
+/**
+ * Gera o prompt de sistema baseado no perfil do usuário
+ */
+function generateSystemPrompt(profile: UserProfile): string {
+  const firstName = profile.name.split(" ")[0];
+
+  return `Você é o Fit Track, um assistente de saúde e fitness pessoal. Você é direto, técnico e baseado em dados - nunca motivacional ou genérico.
+
+INFORMAÇÕES DO USUÁRIO:
+- Nome: ${firstName}
+- Gênero: ${profile.gender}
+- Peso atual: ${profile.weight} kg
+- Altura: ${profile.height} cm
+- BMR (Taxa Metabólica Basal): ${profile.bmr} kcal/dia
+
+SUAS RESPONSABILIDADES:
+1. Registrar alimentação - quando o usuário disser o que comeu, registre e estime calorias/macros
+2. Registrar treinos - quando o usuário relatar exercícios
+3. Registrar peso - quando o usuário informar pesagem
+4. Responder perguntas sobre nutrição, treino e dados
+5. Calcular balanço calórico baseado no BMR
+
+REGRAS DE COMPORTAMENTO:
+- Seja direto e conciso
+- Use linguagem técnica mas acessível
+- Nunca seja motivacional ou use frases vazias como "você consegue!"
+- Sempre baseie suas respostas em dados quando possível
+- Se o usuário perguntar algo fora do escopo (saúde/fitness), redirecione educadamente
+- Responda sempre em português brasileiro
+
+FORMATO DE REGISTRO:
+Quando registrar algo, confirme de forma estruturada:
+✓ Registrado: [descrição]
+  Calorias: ~X kcal
+  Proteína: ~Xg (se aplicável)
+
+EXEMPLO DE INTERAÇÃO:
+Usuário: "almocei arroz, feijão e frango grelhado"
+Assistente: ✓ Registrado: Almoço
+  - Arroz (150g): ~195 kcal
+  - Feijão (100g): ~77 kcal
+  - Frango grelhado (150g): ~248 kcal, 46g proteína
+
+  Total: ~520 kcal, ~50g proteína
+  Restam ~${profile.bmr - 520} kcal do seu BMR hoje.`;
+}
+
+/**
+ * Dados parseados (dependendo do tipo de mensagem)
+ */
+export type ParsedData =
+  | { type: "food"; data: FoodParseResult }
+  | { type: "exercise"; data: ExerciseParseResult }
+  | { type: "weight"; data: WeightParseResult }
+  | { type: "bodyfat"; data: BodyFatParseResult }
+  | null;
+
+/**
+ * Resultado completo do processamento de mensagem
+ */
+export interface ChatResponse {
+  response: string;
+  classification: ClassificationResult;
+  parsedData: ParsedData;
+}
+
+/**
+ * Gera instruções adicionais baseadas no tipo de mensagem
+ */
+function getTypeSpecificInstructions(classification: ClassificationResult): string {
+  switch (classification.type) {
+    case "declaration":
+      return `
+INSTRUÇÃO ESPECIAL: Esta é uma DECLARAÇÃO factual. Registre automaticamente.
+Use o formato "✓ Registrado:" na sua resposta.`;
+
+    case "simulation":
+      return `
+INSTRUÇÃO ESPECIAL: Esta é uma SIMULAÇÃO/cenário hipotético.
+NÃO registre nada. Calcule o cenário e mostre os resultados.
+No final, pergunte: "Quer que eu registre isso?"`;
+
+    case "question":
+      return `
+INSTRUÇÃO ESPECIAL: Esta é uma PERGUNTA informativa.
+Responda de forma direta e técnica. Não registre nada.`;
+
+    case "correction":
+      return `
+INSTRUÇÃO ESPECIAL: Esta é uma CORREÇÃO de um registro anterior.
+Confirme a correção com "✓ Corrigido:" e mostre o valor atualizado.`;
+
+    case "subjective":
+      return `
+INSTRUÇÃO ESPECIAL: Este é um ESTADO SUBJETIVO.
+Registre com "✓ Registrado:" e faça UMA pergunta de follow-up contextual.
+Exemplo: "Quer me dizer o motivo?" ou "Quantas horas dormiu?"`;
+
+    default:
+      return "";
+  }
+}
+
+/**
+ * Executa o parser apropriado baseado na classificação
+ */
+async function runParser(
+  message: string,
+  classification: ClassificationResult
+): Promise<ParsedData> {
+  // Só parseia declarações
+  if (classification.type !== "declaration") {
+    return null;
+  }
+
+  switch (classification.subtype) {
+    case "food": {
+      const data = await parseFood(message);
+      return { type: "food", data };
+    }
+    case "exercise": {
+      const data = await parseExercise(message);
+      return { type: "exercise", data };
+    }
+    case "weight": {
+      const data = await parseWeight(message);
+      return data ? { type: "weight", data } : null;
+    }
+    case "bodyfat": {
+      const data = await parseBodyFat(message);
+      return data ? { type: "bodyfat", data } : null;
+    }
+    default:
+      return null;
+  }
+}
+
+/**
+ * Envia mensagem para a AI e retorna resposta com classificação
+ */
+export async function sendMessage(
+  userMessage: string,
+  chatHistory: ChatMessage[],
+  profile: UserProfile
+): Promise<ChatResponse> {
+  const client = getOpenAIClient();
+
+  // Classifica a mensagem primeiro
+  const classification = await classifyMessage(userMessage, chatHistory);
+
+  // Executa parser em paralelo com a geração de resposta
+  const parserPromise = runParser(userMessage, classification);
+
+  // Adiciona instruções específicas baseadas no tipo
+  const typeInstructions = getTypeSpecificInstructions(classification);
+  const systemPrompt = generateSystemPrompt(profile) + typeInstructions;
+
+  // Converte histórico para formato OpenAI
+  const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
+    { role: "system", content: systemPrompt },
+    ...chatHistory.map((msg) => ({
+      role: msg.role as "user" | "assistant",
+      content: msg.content,
+    })),
+    { role: "user", content: userMessage },
+  ];
+
+  const [aiResponse, parsedData] = await Promise.all([
+    client.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages,
+      temperature: 0.7,
+      max_tokens: 500,
+    }),
+    parserPromise,
+  ]);
+
+  const responseText = aiResponse.choices[0]?.message?.content || "Desculpe, não consegui processar sua mensagem.";
+
+  return {
+    response: responseText,
+    classification,
+    parsedData,
+  };
+}
+
+/**
+ * Gera um ID único para mensagens
+ */
+export function generateMessageId(): string {
+  return `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+}

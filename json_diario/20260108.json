@@ -1,0 +1,126 @@
+{
+    "day_id": "2026-01-08",
+    "timezone": "America/Sao_Paulo",
+    "day_number": 4,
+    "goals": {
+      "program_duration_days": 45,
+      "primary_goal": "fat_loss_preserve_lean_mass",
+      "cgm_active": false,
+      "cgm_notes": null
+    },
+    "body": {
+      "weight_kg": 75.45,
+      "body_fat_percent": 22.5,
+      "lean_mass_kg": 58.5,
+      "fat_mass_kg_est": 17.0,
+      "visceral_fat_rating": 10.1,
+      "bmr_kcal": 1633,
+      "source": "Fitdays",
+      "notes": null
+    },
+    "sleep": {
+      "quality_score_1_5": 4,
+      "sleepiness_score_1_5": 5,
+      "notes": "Despertar precoce às 5h45 por demanda da filha. Evento pontual."
+    },
+    "subjective_state": {
+      "stress_1_5": 1,
+      "energy_clarity_1_5": 4,
+      "pain_or_discomfort": false,
+      "notes": null
+    },
+    "training": {
+      "cardio": {
+        "type": "bike",
+        "start_time": "08:42",
+        "duration_min": 31,
+        "avg_hr_bpm": 114,
+        "max_hr_bpm": 128,
+        "zones": {
+          "z1_percent": 42,
+          "z2_percent": 58,
+          "z3_plus_percent": 0
+        },
+        "notes": "Zona 2 estável"
+      },
+      "strength": {
+        "start_time": "12:55",
+        "duration_min": 47,
+        "total_volume_kg": 5102,
+        "sets": 19,
+        "avg_hr_bpm": 105,
+        "calories_kcal": 201,
+        "muscle_split": {
+          "arms_percent": 68,
+          "shoulders_percent": 32
+        },
+        "notes": "Volume adequado, baixo estresse sistêmico"
+      }
+    },
+    "nutrition": {
+      "meals": [
+        {
+          "type": "almoço",
+          "time": "14:00",
+          "items": [
+            "frango desfiado 190g",
+            "arroz 80g",
+            "legumes tipo yakisoba",
+            "ameixa"
+          ]
+        },
+        {
+          "type": "lanche",
+          "time": "17:00",
+          "items": [
+            "pão de milho panco 50g",
+            "iogurte parmalat 100g",
+            "queijo prato 60g"
+          ]
+        },
+        {
+          "type": "jantar",
+          "time": "20:00",
+          "items": [
+            "frango desfiado 190g",
+            "arroz 80g",
+            "legumes tipo yakisoba",
+            "ameixa",
+            "2 ovos cozidos"
+          ]
+        }
+      ],
+      "totals": {
+        "calories_kcal": 1656,
+        "protein_g": 176.5,
+        "carbs_g": 126,
+        "fat_g": 43.5,
+        "macro_percentages": {
+          "protein_percent": 43,
+          "carbs_percent": 30,
+          "fat_percent": 24
+        }
+      },
+      "caffeine": {
+        "consumed": true,
+        "details": "2 cafés pela manhã"
+      },
+      "alcohol": {
+        "consumed": false
+      }
+    },
+    "energy_balance": {
+      "bmr_kcal": 1633,
+      "estimated_tdee_kcal": null,
+      "daily_deficit_estimated": true,
+      "notes": "Déficit claro mesmo com treino e cardio"
+    },
+    "cgm": null,
+    "summary_flags": {
+      "day_executed_as_planned": true,
+      "sleep_issue_external": true,
+      "nutrition_on_target": true,
+      "training_on_target": true
+    }
+  }
+  
