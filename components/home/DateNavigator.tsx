@@ -1,7 +1,13 @@
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Header } from "@/components/ui/Header";
+
+// ========================================
+// DATE NAVIGATOR - Navegação temporal
+// ========================================
+// Componente wrapper que usa o Header com variant="date-nav"
+// Permite navegar entre dias com setas ◀ ▶
+// Bloqueia navegação para datas futuras
 
 interface DateNavigatorProps {
   selectedDate: Date;
@@ -10,11 +16,11 @@ interface DateNavigatorProps {
 
 /**
  * Formata a data para exibição
- * Hoje → "Hoje, 17 Jan"
- * Ontem → "Ontem, 16 Jan"
+ * Hoje → "Hoje"
+ * Ontem → "Ontem"
  * Outros → "Seg, 15 Jan"
  */
-function formatDisplayDate(date: Date): string {
+function formatTitle(date: Date): string {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -24,19 +30,33 @@ function formatDisplayDate(date: Date): string {
   const target = new Date(date);
   target.setHours(0, 0, 0, 0);
 
-  const day = date.getDate();
-  const month = date.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "");
-  const monthCapitalized = month.charAt(0).toUpperCase() + month.slice(1);
-
   if (target.getTime() === today.getTime()) {
-    return `Hoje, ${day} ${monthCapitalized}`;
+    return "Hoje";
   }
 
   if (target.getTime() === yesterday.getTime()) {
-    return `Ontem, ${day} ${monthCapitalized}`;
+    return "Ontem";
   }
 
-  const weekday = date.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "");
+  const weekday = date
+    .toLocaleDateString("pt-BR", { weekday: "short" })
+    .replace(".", "");
+  return weekday.charAt(0).toUpperCase() + weekday.slice(1);
+}
+
+/**
+ * Formata o subtítulo (dia e mês)
+ */
+function formatSubtitle(date: Date): string {
+  const day = date.getDate();
+  const month = date
+    .toLocaleDateString("pt-BR", { month: "short" })
+    .replace(".", "");
+  const monthCapitalized = month.charAt(0).toUpperCase() + month.slice(1);
+
+  const weekday = date
+    .toLocaleDateString("pt-BR", { weekday: "long" })
+    .replace(".", "");
   const weekdayCapitalized = weekday.charAt(0).toUpperCase() + weekday.slice(1);
 
   return `${weekdayCapitalized}, ${day} ${monthCapitalized}`;
@@ -54,14 +74,10 @@ function isToday(date: Date): boolean {
   );
 }
 
-/**
- * Componente de navegação temporal
- * Permite navegar entre dias com setas ◀ ▶
- * Bloqueia navegação para datas futuras
- */
-export function DateNavigator({ selectedDate, onDateChange }: DateNavigatorProps) {
-  const canGoForward = !isToday(selectedDate);
-
+export function DateNavigator({
+  selectedDate,
+  onDateChange,
+}: DateNavigatorProps) {
   const goToPreviousDay = () => {
     const newDate = new Date(selectedDate);
     newDate.setDate(newDate.getDate() - 1);
@@ -69,39 +85,19 @@ export function DateNavigator({ selectedDate, onDateChange }: DateNavigatorProps
   };
 
   const goToNextDay = () => {
-    if (!canGoForward) return;
+    if (isToday(selectedDate)) return;
     const newDate = new Date(selectedDate);
     newDate.setDate(newDate.getDate() + 1);
     onDateChange(newDate);
   };
 
   return (
-    <div className="flex items-center justify-between py-4">
-      {/* Botão voltar */}
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={goToPreviousDay}
-        className="h-10 w-10"
-      >
-        <ChevronLeft className="h-5 w-5" />
-      </Button>
-
-      {/* Data atual */}
-      <h1 className="text-lg font-semibold text-foreground">
-        {formatDisplayDate(selectedDate)}
-      </h1>
-
-      {/* Botão avançar (desabilitado se for hoje) */}
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={goToNextDay}
-        disabled={!canGoForward}
-        className="h-10 w-10"
-      >
-        <ChevronRight className="h-5 w-5" />
-      </Button>
-    </div>
+    <Header
+      variant="date-nav"
+      title={formatTitle(selectedDate)}
+      subtitle={formatSubtitle(selectedDate)}
+      onPrevious={goToPreviousDay}
+      onNext={isToday(selectedDate) ? undefined : goToNextDay}
+    />
   );
 }

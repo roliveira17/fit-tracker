@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { Upload, FileText, X, AlertCircle } from "lucide-react";
 
 interface FileDropzoneProps {
   onFileSelect: (file: File) => void;
@@ -10,8 +9,8 @@ interface FileDropzoneProps {
 }
 
 /**
- * Componente FileDropzone - Área de upload de arquivos
- * Suporta drag & drop e seleção manual
+ * Componente FileDropzone - Area de upload de arquivos
+ * Suporta drag & drop e selecao manual
  */
 export function FileDropzone({
   onFileSelect,
@@ -29,7 +28,7 @@ export function FileDropzone({
     );
 
     if (!isValid) {
-      setError(`Formato não suportado. Use: ${acceptedFormats.join(", ")}`);
+      setError(`Formato nao suportado. Use: ${acceptedFormats.join(", ")}`);
       return false;
     }
 
@@ -77,61 +76,53 @@ export function FileDropzone({
     setError(null);
   };
 
+  const dropzoneClass = [
+    "group relative flex flex-col items-center gap-6 rounded-2xl border-2 border-dashed px-6 py-12 transition-all duration-300",
+    "border-border-subtle hover:border-primary hover:bg-primary/5",
+    isDragging ? "border-primary bg-primary/5" : "",
+    selectedFile ? "border-success bg-success/10" : "",
+    isLoading ? "pointer-events-none opacity-60" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <div className="w-full">
-      {/* Dropzone area */}
       <div
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className={`relative rounded-xl border-2 border-dashed p-8 transition-colors ${
-          isDragging
-            ? "border-primary bg-primary/5"
-            : selectedFile
-              ? "border-green-500 bg-green-500/5"
-              : "border-border hover:border-muted-foreground"
-        } ${isLoading ? "opacity-50 pointer-events-none" : ""}`}
+        className={dropzoneClass}
       >
-        {selectedFile ? (
-          // Arquivo selecionado
-          <div className="flex flex-col items-center gap-3">
-            <div className="flex items-center gap-3">
-              <FileText className="h-8 w-8 text-green-500" />
-              <div>
-                <p className="text-sm font-medium text-foreground">
-                  {selectedFile.name}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {(selectedFile.size / 1024).toFixed(1)} KB
-                </p>
+        {!selectedFile && (
+          <>
+            <div className="relative">
+              <div className="absolute inset-0 rounded-full bg-primary/20 blur-xl opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+              <div className="relative flex size-20 items-center justify-center rounded-full bg-icon-bg transition-transform duration-300 group-hover:scale-110">
+                <span className="material-symbols-outlined text-[36px] text-primary">
+                  cloud_upload
+                </span>
               </div>
-              {!isLoading && (
-                <button
-                  onClick={clearFile}
-                  className="p-1 rounded-full hover:bg-muted"
-                >
-                  <X className="h-4 w-4 text-muted-foreground" />
-                </button>
-              )}
             </div>
-            {isLoading && (
-              <p className="text-sm text-muted-foreground">Processando...</p>
-            )}
-          </div>
-        ) : (
-          // Estado inicial
-          <div className="flex flex-col items-center gap-4">
-            <div className="rounded-full bg-muted p-4">
-              <Upload className="h-8 w-8 text-muted-foreground" />
-            </div>
-            <div className="text-center">
-              <p className="text-sm font-medium text-foreground">
-                Arraste o arquivo aqui
+
+            <div className="flex flex-col items-center gap-2 text-center">
+              <p className="text-lg font-bold leading-tight tracking-tight text-white">
+                Arraste seu arquivo
               </p>
-              <p className="text-xs text-muted-foreground mt-1">ou</p>
+              <p className="text-sm leading-relaxed text-text-secondary">
+                Suportamos exportacoes do{" "}
+                <span className="font-medium text-primary">Hevy (.csv)</span> ou{" "}
+                <span className="font-medium text-primary">
+                  Apple Health (.zip)
+                </span>
+              </p>
             </div>
-            <label className="cursor-pointer rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-              Selecionar arquivo
+
+            <label className="flex h-12 w-full items-center justify-center rounded-xl bg-primary text-sm font-bold text-white shadow-lg shadow-primary/25 transition-all hover:bg-primary/90 sm:w-auto sm:px-8">
+              <span className="material-symbols-outlined mr-2 text-[20px]">
+                folder_open
+              </span>
+              Buscar nos arquivos
               <input
                 type="file"
                 className="hidden"
@@ -139,17 +130,53 @@ export function FileDropzone({
                 onChange={handleFileInput}
               />
             </label>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-text-secondary">
               Formatos aceitos: {acceptedFormats.join(", ")}
             </p>
+          </>
+        )}
+
+        {selectedFile && (
+          <div className="flex w-full items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex size-12 items-center justify-center rounded-lg bg-icon-bg text-primary">
+                <span className="material-symbols-outlined text-[24px]">
+                  description
+                </span>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-white">
+                  {selectedFile.name}
+                </p>
+                <p className="text-xs text-text-secondary">
+                  {(selectedFile.size / 1024).toFixed(1)} KB
+                </p>
+              </div>
+            </div>
+            {!isLoading && (
+              <button
+                onClick={clearFile}
+                className="flex size-9 items-center justify-center rounded-full text-text-secondary transition-colors hover:bg-white/10 hover:text-white"
+              >
+                <span className="material-symbols-outlined text-[18px]">
+                  close
+                </span>
+              </button>
+            )}
+            {isLoading && (
+              <span className="text-sm font-medium text-text-secondary">
+                Processando...
+              </span>
+            )}
           </div>
         )}
       </div>
 
-      {/* Erro */}
       {error && (
-        <div className="flex items-center gap-2 mt-3 text-red-500">
-          <AlertCircle className="h-4 w-4" />
+        <div className="mt-3 flex items-center gap-2 text-error">
+          <span className="material-symbols-outlined text-[18px]">
+            warning
+          </span>
           <p className="text-sm">{error}</p>
         </div>
       )}

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
+import { FAB } from "@/components/ui/FAB";
 import { DateNavigator } from "@/components/home/DateNavigator";
 import { SummaryCard } from "@/components/home/SummaryCard";
 import { EmptyState } from "@/components/home/EmptyState";
@@ -123,16 +124,16 @@ export default function HomePage() {
 
   if (isLoading) {
     return (
-      <ScreenContainer>
+      <ScreenContainer className="bg-background-dark text-white">
         <div className="flex flex-1 items-center justify-center">
-          <p className="text-muted-foreground">Carregando...</p>
+          <p className="text-text-secondary">Carregando...</p>
         </div>
       </ScreenContainer>
     );
   }
 
   return (
-    <ScreenContainer>
+    <ScreenContainer className="bg-background-dark text-white">
       <div className="flex flex-1 flex-col">
         {/* Navegação temporal */}
         <DateNavigator
@@ -141,7 +142,7 @@ export default function HomePage() {
         />
 
         {/* Conteúdo principal */}
-        <div className="flex flex-1 flex-col gap-4 py-4">
+        <div className="flex flex-1 flex-col gap-6 py-4">
           {/* Card de resumo do dia */}
           <SummaryCard
             calories={totals.calories}
@@ -179,18 +180,18 @@ export default function HomePage() {
 
           {/* Lista de refeições do dia */}
           {meals.length > 0 && (
-            <div className="rounded-xl border border-border bg-card p-4">
-              <h2 className="mb-3 text-sm font-medium text-muted-foreground">
+            <div className="rounded-xl border border-border-subtle bg-surface-card p-4">
+              <h2 className="mb-3 text-sm font-medium text-text-secondary">
                 Refeições ({meals.length})
               </h2>
               <div className="flex flex-col gap-2">
                 {meals.map((meal) => (
                   <div
                     key={meal.id}
-                    className="flex items-center justify-between border-b border-border pb-2 last:border-0 last:pb-0"
+                    className="flex items-center justify-between border-b border-border-subtle pb-2 last:border-0 last:pb-0"
                   >
                     <div>
-                      <p className="text-sm font-medium text-foreground">
+                      <p className="text-sm font-medium text-white">
                         {meal.type === "breakfast"
                           ? "Café da manhã"
                           : meal.type === "lunch"
@@ -201,11 +202,11 @@ export default function HomePage() {
                           ? "Lanche"
                           : "Refeição"}
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-text-secondary">
                         {meal.items.map((i) => i.name).join(", ")}
                       </p>
                     </div>
-                    <p className="text-sm font-medium text-foreground">
+                    <p className="text-sm font-medium text-white">
                       {meal.totalCalories} kcal
                     </p>
                   </div>
@@ -216,8 +217,8 @@ export default function HomePage() {
 
           {/* Lista de treinos do dia */}
           {workouts.length > 0 && (
-            <div className="rounded-xl border border-border bg-card p-4">
-              <h2 className="mb-3 text-sm font-medium text-muted-foreground">
+            <div className="rounded-xl border border-border-subtle bg-surface-card p-4">
+              <h2 className="mb-3 text-sm font-medium text-text-secondary">
                 Treinos ({workouts.length})
               </h2>
               <div className="flex flex-col gap-2">
@@ -227,17 +228,17 @@ export default function HomePage() {
                     className="flex items-center justify-between"
                   >
                     <div>
-                      <p className="text-sm font-medium text-foreground">
+                      <p className="text-sm font-medium text-white">
                         {workout.exercises.map((e) => e.name).join(", ")}
                       </p>
                       {workout.totalDuration && (
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-text-secondary">
                           {workout.totalDuration} min
                         </p>
                       )}
                     </div>
                     {workout.totalCaloriesBurned && (
-                      <p className="text-sm font-medium text-foreground">
+                      <p className="text-sm font-medium text-white">
                         -{workout.totalCaloriesBurned} kcal
                       </p>
                     )}
@@ -248,6 +249,7 @@ export default function HomePage() {
           )}
         </div>
       </div>
-    </ScreenContainer>
+      <FAB onClick={() => router.push("/chat")} />\n    </ScreenContainer>
   );
 }
+

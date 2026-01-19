@@ -1,6 +1,7 @@
 "use client";
 
 import { type ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
 /**
  * Representa um chip individual
@@ -47,25 +48,22 @@ export function ChipGroup({ chips, onChipClick, className = "" }: ChipGroupProps
   if (chips.length === 0) return null;
 
   return (
-    <div className={`flex flex-wrap gap-2 ${className}`}>
+    <div className={cn("flex gap-2 overflow-x-auto pb-1 hide-scrollbar", className)}>
       {chips.map((chip) => (
         <button
           key={chip.label}
           type="button"
           onClick={() => onChipClick(chip.value ?? chip.label)}
           className="
-            inline-flex items-center gap-1.5
-            rounded-full border border-border
-            bg-background px-3 py-1.5
-            text-xs text-muted-foreground
-            transition-colors duration-150
-            hover:bg-accent hover:text-accent-foreground
-            hover:border-accent
-            focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1
+            inline-flex shrink-0 items-center gap-2
+            rounded-full border border-white/5
+            bg-surface-dark px-4 py-2
+            text-sm font-medium text-text-floral
+            transition-transform
             active:scale-95
           "
         >
-          {chip.icon && <span className="h-3.5 w-3.5">{chip.icon}</span>}
+          {chip.icon && <span className="h-4 w-4">{chip.icon}</span>}
           {chip.label}
         </button>
       ))}

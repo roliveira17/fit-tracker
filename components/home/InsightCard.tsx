@@ -1,26 +1,23 @@
 "use client";
 
-import { Lightbulb, TrendingDown, TrendingUp, Target, Award } from "lucide-react";
-
 interface InsightCardProps {
   calories: number;
   protein: number;
   bmr: number;
   hasWorkout: boolean;
   streak: number;
-  weightTrend: "up" | "down" | "stable" | null; // tendência do peso nos últimos 7 dias
+  weightTrend: "up" | "down" | "stable" | null;
 }
 
 interface Insight {
-  icon: React.ReactNode;
+  icon: string;
   headline: string;
   copy: string;
   type: "positive" | "neutral" | "warning";
 }
 
 /**
- * Componente InsightCard - Exibe insight diário baseado nos dados
- * Gera uma mensagem contextual motivacional ou informativa
+ * Componente InsightCard - Exibe insight diario baseado nos dados
  */
 export function InsightCard({
   calories,
@@ -39,49 +36,52 @@ export function InsightCard({
     weightTrend,
   });
 
-  // Se não há insight para mostrar, não renderiza
-  if (!insight) {
-    return null;
-  }
+  if (!insight) return null;
 
-  const bgColor = {
-    positive: "bg-green-500/10 border-green-500/20",
-    neutral: "bg-primary/10 border-primary/20",
-    warning: "bg-yellow-500/10 border-yellow-500/20",
-  }[insight.type];
-
-  const iconColor = {
-    positive: "text-green-500",
-    neutral: "text-primary",
-    warning: "text-yellow-500",
-  }[insight.type];
-
-  return (
-    <div className={`rounded-xl border p-4 ${bgColor}`}>
-      <div className="flex gap-3">
-        {/* Ícone */}
-        <div className={`flex-shrink-0 ${iconColor}`}>
-          {insight.icon}
+  if (insight.type === "warning") {
+    return (
+      <section className="flex items-start gap-4 rounded-xl bg-primary p-5 shadow-lg shadow-primary/20">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20 text-white">
+          <span className="material-symbols-outlined">{insight.icon}</span>
         </div>
-
-        {/* Conteúdo */}
-        <div className="flex-1">
-          <p className="text-sm font-semibold text-foreground">
-            {insight.headline}
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
+        <div className="flex flex-col gap-1">
+          <h4 className="text-base font-bold text-white">{insight.headline}</h4>
+          <p className="text-sm font-medium leading-relaxed text-white/90">
             {insight.copy}
           </p>
         </div>
+      </section>
+    );
+  }
+
+  const accentClass =
+    insight.type === "positive" ? "bg-success" : "bg-primary";
+  const iconClass =
+    insight.type === "positive" ? "text-success" : "text-primary";
+
+  return (
+    <div className="group relative overflow-hidden rounded-xl bg-icon-bg/60 p-4">
+      <div className="flex items-start gap-4">
+        <div
+          className={`flex size-10 shrink-0 items-center justify-center rounded-lg ${iconClass} bg-white/5`}
+        >
+          <span className="material-symbols-outlined">{insight.icon}</span>
+        </div>
+        <div className="flex flex-1 flex-col">
+          <h3 className="text-sm font-bold text-white">{insight.headline}</h3>
+          <p className="mt-1 text-xs leading-relaxed text-text-secondary">
+            {insight.copy}
+          </p>
+        </div>
+        <span className="material-symbols-outlined text-[20px] text-text-secondary">
+          chevron_right
+        </span>
       </div>
+      <div className={`absolute left-0 top-0 h-full w-1 ${accentClass}`} />
     </div>
   );
 }
 
-/**
- * Gera insight baseado nos dados do usuário
- * Prioriza mensagens mais relevantes
- */
 function generateInsight(data: {
   calories: number;
   protein: number;
@@ -94,96 +94,92 @@ function generateInsight(data: {
   const deficit = bmr - calories;
   const deficitPercent = bmr > 0 ? Math.round((deficit / bmr) * 100) : 0;
 
-  // Prioridade 1: Streak alto (celebração)
   if (streak >= 7) {
     return {
-      icon: <Award className="h-5 w-5" />,
-      headline: streak >= 30 ? "Você é lendário!" : streak >= 14 ? "Duas semanas de dedicação!" : "Uma semana forte!",
-      copy: `${streak} dias consecutivos registrando. Sua consistência é admirável!`,
+      icon: "local_fire_department",
+      headline:
+        streak >= 30
+          ? "Voce e lendario!"
+          : streak >= 14
+          ? "Duas semanas de dedicacao!"
+          : "Uma semana forte!",
+      copy: `${streak} dias consecutivos registrando. Sua consistencia e admiravel!`,
       type: "positive",
     };
   }
 
-  // Prioridade 2: Peso caindo (objetivo comum)
   if (weightTrend === "down") {
     return {
-      icon: <TrendingDown className="h-5 w-5" />,
-      headline: "Seu peso está diminuindo!",
-      copy: "A tendência dos últimos 7 dias mostra progresso. Continue assim!",
+      icon: "trending_down",
+      headline: "Seu peso esta diminuindo!",
+      copy: "A tendencia dos ultimos 7 dias mostra progresso. Continue assim!",
       type: "positive",
     };
   }
 
-  // Prioridade 3: Déficit saudável (entre 10-25%)
   if (calories > 0 && deficitPercent >= 10 && deficitPercent <= 25) {
     return {
-      icon: <Target className="h-5 w-5" />,
-      headline: "Déficit ideal!",
-      copy: `Você está ${deficitPercent}% abaixo do seu gasto. Ritmo sustentável para perda de peso.`,
+      icon: "check_circle",
+      headline: "Deficit ideal!",
+      copy: `Voce esta ${deficitPercent}% abaixo do seu gasto. Ritmo sustentavel para perda de peso.`,
       type: "positive",
     };
   }
 
-  // Prioridade 4: Treinou hoje
   if (hasWorkout) {
     return {
-      icon: <Award className="h-5 w-5" />,
+      icon: "fitness_center",
       headline: "Treino registrado!",
-      copy: "Ótimo trabalho! O exercício acelera seus resultados.",
+      copy: "Otimo trabalho! O exercicio acelera seus resultados.",
       type: "positive",
     };
   }
 
-  // Prioridade 5: Déficit muito alto (aviso)
   if (calories > 0 && deficitPercent > 40) {
     return {
-      icon: <Lightbulb className="h-5 w-5" />,
-      headline: "Déficit muito agressivo",
+      icon: "warning",
+      headline: "Deficit muito agressivo",
       copy: "Comer muito pouco pode prejudicar seu metabolismo. Considere aumentar um pouco.",
       type: "warning",
     };
   }
 
-  // Prioridade 6: Peso subindo (alerta gentil)
   if (weightTrend === "up") {
     return {
-      icon: <TrendingUp className="h-5 w-5" />,
-      headline: "Peso em tendência de alta",
-      copy: "A tendência mostra aumento. Pode ser retenção de líquido ou hora de ajustar.",
+      icon: "trending_up",
+      headline: "Peso em tendencia de alta",
+      copy: "A tendencia mostra aumento. Pode ser retencao de liquido ou hora de ajustar.",
       type: "neutral",
     };
   }
 
-  // Prioridade 7: Superávit
   if (calories > 0 && deficit < 0) {
     return {
-      icon: <Lightbulb className="h-5 w-5" />,
-      headline: "Dia de superávit",
-      copy: `Você consumiu ${Math.abs(deficit)} kcal acima do seu gasto. Amanhã é um novo dia!`,
+      icon: "bolt",
+      headline: "Dia de superavit",
+      copy: `Voce consumiu ${Math.abs(deficit)} kcal acima do seu gasto. Amanhã e um novo dia!`,
       type: "neutral",
     };
   }
 
-  // Prioridade 8: Proteína baixa
   if (calories > 0 && protein < 50) {
     return {
-      icon: <Lightbulb className="h-5 w-5" />,
-      headline: "Atenção à proteína",
-      copy: "Sua ingestão de proteína está baixa. Tente incluir mais carnes, ovos ou leguminosas.",
+      icon: "egg_alt",
+      headline: "Atencao a proteina",
+      copy: "Sua ingestao de proteina esta baixa. Tente incluir mais ovos ou frango.",
       type: "warning",
     };
   }
 
-  // Prioridade 9: Incentivo para começar streak
   if (streak === 0 && calories === 0) {
     return {
-      icon: <Lightbulb className="h-5 w-5" />,
+      icon: "bolt",
       headline: "Comece sua jornada!",
-      copy: "Registre sua primeira refeição para iniciar seu streak.",
+      copy: "Registre sua primeira refeicao para iniciar seu streak.",
       type: "neutral",
     };
   }
 
-  // Default: nenhum insight específico
   return null;
 }
+

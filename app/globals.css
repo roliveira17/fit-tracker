@@ -165,3 +165,85 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
 }
+
+/* ========================================
+   NOVO DESIGN SYSTEM - Fit Track
+   ======================================== */
+
+@layer base {
+  :root {
+    /* Primary - Laranja */
+    --ft-primary: #eb6028;
+    --ft-primary-hover: #d4562e;
+    --ft-primary-10: rgba(235, 96, 40, 0.1);
+    --ft-primary-20: rgba(235, 96, 40, 0.2);
+    --ft-primary-30: rgba(235, 96, 40, 0.3);
+
+    /* Backgrounds */
+    --ft-background-dark: #211511;
+    --ft-background-light: #f8f6f6;
+
+    /* Surfaces */
+    --ft-surface-dark: #403d39;
+    --ft-surface-card: #2f221d;
+    --ft-surface-input: #2a2624;
+    --ft-surface-elevated: #2d201c;
+
+    /* Borders */
+    --ft-border-subtle: #54423b;
+    --ft-border-muted: rgba(255, 255, 255, 0.05);
+
+    /* Text */
+    --ft-text-primary: #ffffff;
+    --ft-text-floral: #fffcf2;
+    --ft-text-secondary: #b9a59d;
+    --ft-text-muted: rgba(255, 255, 255, 0.4);
+    --ft-text-disabled: rgba(255, 255, 255, 0.2);
+
+    /* Icon Containers */
+    --ft-icon-bg: #392d28;
+    --ft-icon-bg-hover: rgba(235, 96, 40, 0.1);
+
+    /* Semantic Colors */
+    --ft-success: #22c55e;
+    --ft-success-bg: rgba(34, 197, 94, 0.1);
+    --ft-success-border: rgba(34, 197, 94, 0.2);
+
+    --ft-error: #ef4444;
+    --ft-error-bg: rgba(239, 68, 68, 0.1);
+    --ft-error-border: rgba(239, 68, 68, 0.2);
+
+    --ft-warning: #eab308;
+    --ft-warning-bg: rgba(234, 179, 8, 0.1);
+    --ft-warning-border: rgba(234, 179, 8, 0.2);
+
+    --ft-info-water: #60a5fa;
+    --ft-info-sleep: #c084fc;
+    --ft-info-water-bg: rgba(96, 165, 250, 0.1);
+    --ft-info-sleep-bg: rgba(192, 132, 252, 0.1);
+  }
+}
+
+/* ========================================
+   ESTILOS UTILITÁRIOS
+   ======================================== */
+
+/* Esconde scrollbar mas mantém funcionalidade de scroll */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Ícones Material Symbols preenchidos (estado ativo) */
+.fill-1 {
+  font-variation-settings: 'FILL' 1;
+}
+
+/* Estilo de seleção de texto */
+::selection {
+  background-color: #eb6028;
+  color: #ffffff;
+}

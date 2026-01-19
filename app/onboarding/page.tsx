@@ -2,97 +2,91 @@
 
 import { useRouter } from "next/navigation";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
-import { Button } from "@/components/ui/button";
+import { WelcomeHero } from "@/components/ui/Onboarding";
 
-/**
- * Tela de Boas-vindas / Login
- * Primeira tela do onboarding - apresenta o app e opções de entrada
- */
+// ========================================
+// WELCOME PAGE - Tela de boas-vindas/login
+// ========================================
+// Primeira tela do onboarding
+// Apresenta o app e opções de login
+
 export default function WelcomePage() {
   const router = useRouter();
 
-  // Por enquanto, Apple e Google mostram alerts - integração real virá depois
   const handleAppleLogin = () => {
     alert("Apple Sign-In será implementado em breve!");
-    // Após implementação, também irá para o tour
     router.push("/onboarding/tour");
   };
 
   const handleGoogleLogin = () => {
     alert("Google Sign-In será implementado em breve!");
-    // Após implementação, também irá para o tour
     router.push("/onboarding/tour");
   };
 
   const handleLocalMode = () => {
-    // Navegar para Feature Tour
     router.push("/onboarding/tour");
   };
 
   return (
     <ScreenContainer className="justify-center">
-      <div className="flex flex-1 flex-col items-center justify-center gap-8">
-        {/* Logo e Branding */}
-        <div className="flex flex-col items-center gap-2">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">
-            Fit Track
-          </h1>
+      <div className="flex flex-1 flex-col">
+        {/* Hero Section */}
+        <div className="flex-1 flex flex-col items-center justify-center">
+          <WelcomeHero
+            title="Fit Track"
+            subtitle="Seu corpo, explicado por dados reais. Treino, sono e alimentação em um só lugar, com AI."
+          />
         </div>
 
-        {/* Headlines */}
-        <div className="flex flex-col items-center gap-3 text-center">
-          <h2 className="text-2xl font-semibold text-foreground">
-            Seu corpo, explicado por dados reais
-          </h2>
-          <p className="text-muted-foreground">
-            Treino, sono e alimentação em um só lugar, com AI.
-          </p>
-        </div>
-
-        {/* Espaçador flexível */}
-        <div className="flex-1" />
-
-        {/* Botões de Login */}
-        <div className="flex w-full flex-col gap-3">
-          {/* Botão Apple */}
-          <Button
-            variant="outline"
-            size="lg"
-            className="w-full gap-2 h-12"
+        {/* Login Buttons */}
+        <div className="flex flex-col gap-3 pb-8">
+          {/* Apple Button */}
+          <button
             onClick={handleAppleLogin}
+            className="flex items-center justify-center gap-3 w-full h-14 rounded-xl bg-white text-black font-semibold text-base transition-all hover:bg-white/90 active:scale-[0.98]"
           >
-            <AppleIcon className="h-5 w-5" />
+            <AppleIcon className="w-5 h-5" />
             Continuar com Apple
-          </Button>
+          </button>
 
-          {/* Botão Google */}
-          <Button
-            variant="outline"
-            size="lg"
-            className="w-full gap-2 h-12"
+          {/* Google Button */}
+          <button
             onClick={handleGoogleLogin}
+            className="flex items-center justify-center gap-3 w-full h-14 rounded-xl bg-surface-dark border border-white/10 text-white font-semibold text-base transition-all hover:bg-surface-dark/80 hover:border-white/20 active:scale-[0.98]"
           >
-            <GoogleIcon className="h-5 w-5" />
+            <GoogleIcon className="w-5 h-5" />
             Continuar com Google
-          </Button>
+          </button>
 
-          {/* Link para modo local */}
-          <Button
-            variant="ghost"
-            className="w-full text-muted-foreground hover:text-foreground"
+          {/* Local Mode Link */}
+          <button
             onClick={handleLocalMode}
+            className="w-full py-3 text-text-secondary text-sm font-medium hover:text-white transition-colors"
           >
             Continuar sem login →
-          </Button>
+          </button>
         </div>
+
+        {/* Terms */}
+        <p className="text-center text-text-muted text-xs pb-4">
+          Ao continuar, você concorda com nossos{" "}
+          <a href="#" className="text-primary hover:underline">
+            Termos de Uso
+          </a>{" "}
+          e{" "}
+          <a href="#" className="text-primary hover:underline">
+            Política de Privacidade
+          </a>
+        </p>
       </div>
     </ScreenContainer>
   );
 }
 
-/**
- * Ícone da Apple (SVG simples)
- */
+// ========================================
+// ICONS
+// ========================================
+
 function AppleIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -106,9 +100,6 @@ function AppleIcon({ className }: { className?: string }) {
   );
 }
 
-/**
- * Ícone do Google (SVG colorido)
- */
 function GoogleIcon({ className }: { className?: string }) {
   return (
     <svg

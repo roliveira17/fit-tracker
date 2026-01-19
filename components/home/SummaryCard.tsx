@@ -1,18 +1,16 @@
 "use client";
 
-import { Flame, Zap, Dumbbell, TrendingDown, TrendingUp } from "lucide-react";
-
 interface SummaryCardProps {
   calories: number;
   protein: number;
-  deficit: number;       // positivo = déficit, negativo = superávit
+  deficit: number; // positivo = deficit, negativo = superavit
   hasWorkout: boolean;
   bmr: number;
 }
 
 /**
- * Card de resumo diário
- * Exibe as 4 métricas principais: calorias, déficit/superávit, proteína e treino
+ * Card de resumo diario
+ * Exibe calorias, proteina, treino e deficit
  */
 export function SummaryCard({
   calories,
@@ -21,107 +19,105 @@ export function SummaryCard({
   hasWorkout,
   bmr,
 }: SummaryCardProps) {
+  const progress = bmr > 0 ? Math.min((calories / bmr) * 100, 100) : 0;
+  const remaining = bmr > 0 ? Math.max(bmr - calories, 0) : 0;
   const isDeficit = deficit >= 0;
 
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
-      <h2 className="mb-4 text-sm font-medium text-muted-foreground">
-        Resumo do Dia
-      </h2>
+    <section className="relative overflow-hidden rounded-2xl border border-white/5 bg-surface-dark p-6 shadow-lg">
+      <div className="pointer-events-none absolute -top-20 -right-20 h-40 w-40 rounded-full bg-primary/20 blur-3xl" />
 
-      <div className="grid grid-cols-2 gap-4">
-        {/* Calorias consumidas */}
-        <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-500/10">
-            <Flame className="h-5 w-5 text-orange-500" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-foreground">{calories}</p>
-            <p className="text-xs text-muted-foreground">kcal consumidas</p>
-          </div>
+      <div className="relative z-10 flex flex-col gap-6">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-bold text-white">Resumo diario</h3>
+          <button className="text-white/60 transition-colors hover:text-white">
+            <span className="material-symbols-outlined text-xl">more_horiz</span>
+          </button>
         </div>
 
-        {/* Déficit/Superávit */}
-        <div className="flex items-start gap-3">
-          <div
-            className={`flex h-10 w-10 items-center justify-center rounded-lg ${
-              isDeficit ? "bg-green-500/10" : "bg-red-500/10"
-            }`}
-          >
-            {isDeficit ? (
-              <TrendingDown className="h-5 w-5 text-green-500" />
-            ) : (
-              <TrendingUp className="h-5 w-5 text-red-500" />
-            )}
+        <div className="flex items-center gap-6">
+          <div className="relative size-28 shrink-0">
+            <svg className="size-full -rotate-90" viewBox="0 0 36 36">
+              <path
+                className="text-white/10"
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+              />
+              <path
+                className="text-primary drop-shadow-[0_0_4px_rgba(235,96,40,0.5)]"
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                fill="none"
+                stroke="currentColor"
+                strokeDasharray={`${progress}, 100`}
+                strokeLinecap="round"
+                strokeWidth="3"
+              />
+            </svg>
+            <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center">
+              <span className="text-xs font-medium text-white/60">Restam</span>
+              <span className="text-lg font-bold text-white">{remaining}</span>
+              <span className="text-[10px] text-white/40">kcal</span>
+            </div>
           </div>
-          <div>
-            <p
-              className={`text-2xl font-bold ${
-                isDeficit ? "text-green-500" : "text-red-500"
-              }`}
-            >
-              {isDeficit ? `-${deficit}` : `+${Math.abs(deficit)}`}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {isDeficit ? "déficit" : "superávit"}
-            </p>
-          </div>
-        </div>
 
-        {/* Proteína */}
-        <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/10">
-            <Zap className="h-5 w-5 text-blue-500" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-foreground">{protein}g</p>
-            <p className="text-xs text-muted-foreground">proteína</p>
-          </div>
-        </div>
+          <div className="flex flex-1 flex-col gap-3">
+            <div>
+              <p className="text-sm font-medium text-white/60">
+                Consumo calorico
+              </p>
+              <div className="flex items-end gap-1.5">
+                <span className="text-3xl font-bold tracking-tight text-white">
+                  {calories}
+                </span>
+                <span className="mb-1.5 text-sm font-medium text-white/50">
+                  / {bmr} kcal
+                </span>
+              </div>
+            </div>
 
-        {/* Treino */}
-        <div className="flex items-start gap-3">
-          <div
-            className={`flex h-10 w-10 items-center justify-center rounded-lg ${
-              hasWorkout ? "bg-purple-500/10" : "bg-muted/50"
-            }`}
-          >
-            <Dumbbell
-              className={`h-5 w-5 ${
-                hasWorkout ? "text-purple-500" : "text-muted-foreground"
-              }`}
-            />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-foreground">
-              {hasWorkout ? "Sim" : "Não"}
-            </p>
-            <p className="text-xs text-muted-foreground">treino</p>
+            <div className="flex items-center justify-between rounded-xl border border-white/5 bg-surface-card px-3 py-2">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px] text-primary">
+                  egg_alt
+                </span>
+                <span className="text-xs text-text-secondary">Proteina</span>
+              </div>
+              <span className="text-sm font-semibold text-white">
+                {protein}g
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between rounded-xl border border-white/5 bg-surface-card px-3 py-2">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px] text-primary">
+                  fitness_center
+                </span>
+                <span className="text-xs text-text-secondary">Treino</span>
+              </div>
+              <span
+                className={`text-sm font-semibold ${
+                  hasWorkout ? "text-success" : "text-text-secondary"
+                }`}
+              >
+                {hasWorkout ? "Registrado" : "Pendente"}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-text-secondary">Deficit do dia</span>
+              <span
+                className={`font-semibold ${
+                  isDeficit ? "text-success" : "text-error"
+                }`}
+              >
+                {isDeficit ? `-${deficit}` : `+${Math.abs(deficit)}`} kcal
+              </span>
+            </div>
           </div>
         </div>
       </div>
-
-      {/* Barra de progresso de calorias */}
-      <div className="mt-4 pt-4 border-t border-border">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-xs text-muted-foreground">
-            {calories} / {bmr} kcal
-          </span>
-          <span className="text-xs text-muted-foreground">
-            {bmr > 0 ? Math.round((calories / bmr) * 100) : 0}%
-          </span>
-        </div>
-        <div className="h-2 rounded-full bg-muted overflow-hidden">
-          <div
-            className={`h-full rounded-full transition-all ${
-              calories <= bmr ? "bg-green-500" : "bg-red-500"
-            }`}
-            style={{
-              width: `${Math.min((calories / bmr) * 100, 100)}%`,
-            }}
-          />
-        </div>
-      </div>
-    </div>
+    </section>
   );
 }

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
+import { Header } from "@/components/ui/Header";
 import { FileDropzone } from "@/components/import/FileDropzone";
 import { ImportResult } from "@/components/import/ImportResult";
 import { ImportHistory } from "@/components/import/ImportHistory";
@@ -15,7 +16,6 @@ import {
   type ImportRecord,
 } from "@/lib/storage";
 import { parseHevyCSV } from "@/lib/parsers/hevy";
-import { Upload, FileSpreadsheet, Apple } from "lucide-react";
 
 type ImportStatus = "idle" | "processing" | "success" | "partial" | "error";
 
@@ -164,26 +164,25 @@ export default function ImportPage() {
 
   if (isLoading) {
     return (
-      <ScreenContainer>
+      <ScreenContainer className="bg-background-dark text-white">
         <div className="flex flex-1 items-center justify-center">
-          <p className="text-muted-foreground">Carregando...</p>
+          <p className="text-text-secondary">Carregando...</p>
         </div>
       </ScreenContainer>
     );
   }
 
   return (
-    <ScreenContainer>
+    <ScreenContainer className="bg-background-dark text-white">
       <div className="flex flex-1 flex-col pb-4">
-        {/* Header */}
-        <div className="py-4">
-          <h1 className="text-xl font-bold text-foreground">Importar Dados</h1>
-          <p className="text-sm text-muted-foreground">
-            Importe treinos de outros apps
-          </p>
+        <div className="-mx-6">
+          <Header variant="simple" title="Importar dados" />
         </div>
+        <p className="text-xs text-text-secondary">
+          Importe treinos de outros apps
+        </p>
 
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-6 pt-4">
           {/* Resultado da importação */}
           {(importStatus === "success" ||
             importStatus === "partial" ||
@@ -205,41 +204,41 @@ export default function ImportPage() {
           ) : null}
 
           {/* Fontes suportadas */}
-          <div className="rounded-xl border border-border bg-card p-4">
-            <h3 className="text-sm font-medium text-muted-foreground mb-4">
-              Fontes Suportadas
+          <div className="rounded-xl border border-border-subtle bg-surface-card p-4">
+            <h3 className="mb-4 text-sm font-medium text-text-secondary">
+              Fontes suportadas
             </h3>
 
             <div className="flex flex-col gap-3">
-              {/* Hevy */}
               <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-500/10">
-                  <FileSpreadsheet className="h-5 w-5 text-orange-500" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <span className="material-symbols-outlined text-[20px]">
+                    description
+                  </span>
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-foreground">Hevy</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-sm font-medium text-white">Hevy</p>
+                  <p className="text-xs text-text-secondary">
                     Exporte seus treinos em CSV pelo app
                   </p>
-                  <span className="inline-block mt-1 px-2 py-0.5 rounded-full bg-green-500/10 text-green-500 text-xs">
-                    Disponível
+                  <span className="mt-1 inline-block rounded-full border border-success/20 bg-success/10 px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-success">
+                    Disponivel
                   </span>
                 </div>
               </div>
 
-              {/* Apple Health */}
               <div className="flex items-start gap-3 opacity-50">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-500/10">
-                  <Apple className="h-5 w-5 text-red-500" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-error/10 text-error">
+                  <span className="material-symbols-outlined text-[20px]">
+                    favorite
+                  </span>
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-foreground">
-                    Apple Health
-                  </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-sm font-medium text-white">Apple Health</p>
+                  <p className="text-xs text-text-secondary">
                     Peso, cardio e sono
                   </p>
-                  <span className="inline-block mt-1 px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-xs">
+                  <span className="mt-1 inline-block rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-text-secondary">
                     Em breve
                   </span>
                 </div>
@@ -248,11 +247,11 @@ export default function ImportPage() {
           </div>
 
           {/* Como exportar do Hevy */}
-          <div className="rounded-xl border border-border bg-card p-4">
-            <h3 className="text-sm font-medium text-muted-foreground mb-3">
+          <div className="rounded-xl border border-border-subtle bg-surface-card p-4">
+            <h3 className="text-sm font-medium text-text-secondary mb-3">
               Como exportar do Hevy
             </h3>
-            <ol className="text-sm text-muted-foreground list-decimal list-inside space-y-2">
+            <ol className="text-sm text-text-secondary list-decimal list-inside space-y-2">
               <li>Abra o Hevy e vá em Settings</li>
               <li>Toque em "Export Data"</li>
               <li>Escolha "Export as CSV"</li>
@@ -267,3 +266,4 @@ export default function ImportPage() {
     </ScreenContainer>
   );
 }
+

@@ -20,7 +20,8 @@
       "Bash(tasklist:*)",
       "Bash(npx next dev)",
       "Bash(Remove-Item -Recurse -Force \"c:\\\\projetos\\\\gymrats\\\\.next\" -ErrorAction SilentlyContinue)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(npm run build:*)"
     ],
     "additionalDirectories": [
       "c:\\projetos\\gymrats"

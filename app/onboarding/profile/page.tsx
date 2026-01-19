@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -179,37 +179,44 @@ export default function ProfilePage() {
   };
 
   return (
-    <ScreenContainer>
+    <ScreenContainer className="bg-background-dark text-white">
       <Header
         title="Perfil Básico"
         showBackButton
         onBack={() => router.back()}
       />
 
-      <div className="flex flex-1 flex-col gap-6 py-6">
+      <div className="flex flex-1 flex-col gap-6 py-4">
         {/* Campo: Nome */}
         <div className="flex flex-col gap-2">
-          <Label htmlFor="name">Nome</Label>
+          <Label
+            htmlFor="name"
+            className="text-xs font-medium uppercase tracking-wider text-text-secondary"
+          >
+            Nome
+          </Label>
           <Input
             id="name"
             placeholder="Digite seu nome"
             value={form.name}
             onChange={(e) => updateField("name", e.target.value)}
             error={!!errors.name}
+            className="w-full rounded-lg border-border-subtle bg-surface-input px-4 py-3.5 text-white placeholder:text-text-muted focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-0 transition-all"
           />
           {errors.name && (
-            <span className="text-sm text-destructive">{errors.name}</span>
+            <span className="text-xs font-medium text-error">{errors.name}</span>
           )}
         </div>
 
         {/* Campo: Gênero */}
         <div className="flex flex-col gap-2">
-          <Label htmlFor="gender">Gênero</Label>
+          <Label htmlFor="gender" className="text-xs font-medium uppercase tracking-wider text-text-secondary">Gênero</Label>
           <Select
             id="gender"
             value={form.gender}
             onChange={(e) => updateField("gender", e.target.value)}
             error={!!errors.gender}
+            className="w-full rounded-lg border-border-subtle bg-surface-input px-4 py-3.5 text-white focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-0 transition-all"
           >
             <option value="">Selecione</option>
             <option value="masculino">Masculino</option>
@@ -217,22 +224,27 @@ export default function ProfilePage() {
             <option value="outro">Prefiro não informar</option>
           </Select>
           {errors.gender && (
-            <span className="text-sm text-destructive">{errors.gender}</span>
+            <span className="text-xs font-medium text-error">
+              {errors.gender}
+            </span>
           )}
         </div>
 
         {/* Campo: Data de nascimento */}
         <div className="flex flex-col gap-2">
-          <Label htmlFor="birthDate">Data de nascimento</Label>
+          <Label htmlFor="birthDate" className="text-xs font-medium uppercase tracking-wider text-text-secondary">Data de nascimento</Label>
           <Input
             id="birthDate"
             type="date"
             value={form.birthDate}
             onChange={(e) => updateField("birthDate", e.target.value)}
             error={!!errors.birthDate}
+            className="w-full rounded-lg border-border-subtle bg-surface-input px-4 py-3.5 text-white focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-0 transition-all"
           />
           {errors.birthDate && (
-            <span className="text-sm text-destructive">{errors.birthDate}</span>
+            <span className="text-xs font-medium text-error">
+              {errors.birthDate}
+            </span>
           )}
         </div>
 
@@ -240,7 +252,7 @@ export default function ProfilePage() {
         <div className="grid grid-cols-2 gap-4">
           {/* Altura */}
           <div className="flex flex-col gap-2">
-            <Label htmlFor="height">Altura (cm)</Label>
+            <Label htmlFor="height" className="text-xs font-medium uppercase tracking-wider text-text-secondary">Altura (cm)</Label>
             <Input
               id="height"
               type="number"
@@ -248,15 +260,18 @@ export default function ProfilePage() {
               value={form.height}
               onChange={(e) => updateField("height", e.target.value)}
               error={!!errors.height}
+              className="w-full rounded-lg border-border-subtle bg-surface-input px-4 py-3.5 text-white placeholder:text-text-muted focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-0 transition-all"
             />
             {errors.height && (
-              <span className="text-sm text-destructive">{errors.height}</span>
+              <span className="text-xs font-medium text-error">
+                {errors.height}
+              </span>
             )}
           </div>
 
           {/* Peso */}
           <div className="flex flex-col gap-2">
-            <Label htmlFor="weight">Peso (kg)</Label>
+            <Label htmlFor="weight" className="text-xs font-medium uppercase tracking-wider text-text-secondary">Peso (kg)</Label>
             <Input
               id="weight"
               type="number"
@@ -264,9 +279,12 @@ export default function ProfilePage() {
               value={form.weight}
               onChange={(e) => updateField("weight", e.target.value)}
               error={!!errors.weight}
+              className="w-full rounded-lg border-border-subtle bg-surface-input px-4 py-3.5 text-white placeholder:text-text-muted focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-0 transition-all"
             />
             {errors.weight && (
-              <span className="text-sm text-destructive">{errors.weight}</span>
+              <span className="text-xs font-medium text-error">
+                {errors.weight}
+              </span>
             )}
           </div>
         </div>
@@ -276,8 +294,7 @@ export default function ProfilePage() {
 
         {/* Botão de submit */}
         <Button
-          size="lg"
-          className="w-full h-12"
+          className="w-full h-14 rounded-2xl bg-primary text-lg font-semibold text-white shadow-lg shadow-primary/30 transition-all duration-200 hover:bg-primary/90 active:scale-[0.98]"
           onClick={handleSubmit}
           disabled={isSubmitting}
         >

@@ -3,8 +3,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { MessageBubble } from "@/components/chat/MessageBubble";
 import { TypingIndicator } from "@/components/chat/TypingIndicator";
 import { ChipGroup, type Chip } from "@/components/chat/ChipGroup";
@@ -24,7 +22,6 @@ import {
 import { generateMessageId } from "@/lib/ai";
 import { Toast } from "@/components/feedback/Toast";
 import { useToast } from "@/hooks/useToast";
-import { Send, Trash2 } from "lucide-react";
 
 /**
  * Sugestões iniciais exibidas quando o chat está vazio
@@ -201,9 +198,9 @@ export default function ChatPage() {
 
   if (isLoading) {
     return (
-      <ScreenContainer>
+      <ScreenContainer className="bg-background-dark text-white">
         <div className="flex flex-1 items-center justify-center">
-          <p className="text-muted-foreground">Carregando...</p>
+          <p className="text-text-secondary">Carregando...</p>
         </div>
       </ScreenContainer>
     );
@@ -212,19 +209,31 @@ export default function ChatPage() {
   const hasMessages = messages.length > 0;
 
   return (
-    <ScreenContainer>
+    <ScreenContainer className="bg-background-dark text-white">
       <div className="flex flex-1 flex-col">
+        <header className="sticky top-0 z-20 -mx-6 mb-2 flex items-center justify-between border-b border-white/10 bg-background-dark/95 px-4 py-3 backdrop-blur-md">
+          <h1 className="text-lg font-bold tracking-tight text-white">Fit Track</h1>
+          <button
+            type="button"
+            className="flex size-10 items-center justify-center rounded-full text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+            aria-label="Configuracoes"
+          >
+            <span className="material-symbols-outlined text-[22px]">
+              settings
+            </span>
+          </button>
+        </header>
         {/* Área de mensagens */}
-        <div className="flex flex-1 flex-col gap-4 overflow-y-auto py-4">
+        <div className="flex flex-1 flex-col gap-6 overflow-y-auto py-3">
           {/* Estado inicial (sem mensagens) */}
           {!hasMessages && (
-            <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center px-4">
+            <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center">
               <div className="flex flex-col gap-2">
-                <h1 className="text-xl font-semibold text-foreground">
-                  Olá, {profile?.name?.split(" ")[0] || "usuário"}!
+                <h1 className="text-2xl font-bold tracking-tight text-white">
+                  Ola, {profile?.name?.split(" ")[0] || "usuario"}!
                 </h1>
-                <p className="text-muted-foreground leading-relaxed text-sm">
-                  Pode me dizer o que você comeu hoje, como foi seu treino ou como está se sentindo.
+                <p className="text-text-secondary text-sm leading-relaxed">
+                  Pode me dizer o que voce comeu hoje, como foi seu treino ou como esta se sentindo.
                 </p>
               </div>
 
@@ -232,7 +241,7 @@ export default function ChatPage() {
               <ChipGroup
                 chips={INITIAL_SUGGESTIONS}
                 onChipClick={setMessage}
-                className="justify-center mt-4"
+                className="mt-4"
               />
             </div>
           )}
@@ -240,14 +249,18 @@ export default function ChatPage() {
           {/* Lista de mensagens */}
           {hasMessages && (
             <div className="flex flex-col gap-4">
-              {/* Botão para limpar histórico */}
+              <div className="flex justify-center">
+                <span className="rounded-full bg-white/5 px-3 py-1 text-xs font-medium text-text-secondary">
+                  Hoje
+                </span>
+              </div>
               <div className="flex justify-end">
                 <button
                   onClick={handleClearChat}
-                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  className="flex items-center gap-1.5 text-xs text-text-secondary transition-colors hover:text-white"
                 >
-                  <Trash2 className="h-3 w-3" />
-                  Limpar histórico
+                  <span className="material-symbols-outlined text-[16px]">delete_sweep</span>
+                  Limpar historico
                 </button>
               </div>
 
@@ -271,28 +284,35 @@ export default function ChatPage() {
 
         {/* Mensagem de erro */}
         {error && (
-          <div className="mb-2 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          <div className="mb-2 rounded-lg border border-error/20 bg-error/10 px-3 py-2 text-sm text-error">
             {error}
           </div>
         )}
 
         {/* Área de input */}
-        <div className="flex gap-2 py-4 border-t border-border">
-          <Input
-            placeholder="Digite sua mensagem..."
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
-            disabled={isSending}
-            className="flex-1"
-          />
-          <Button
-            size="icon"
+        <div className="flex items-end gap-3 border-t border-white/5 py-4">
+          <div className="flex min-h-[52px] flex-1 items-center rounded-3xl border border-border-subtle bg-surface-input px-4 py-2 transition-shadow focus-within:ring-2 focus-within:ring-primary/50">
+            <input
+              className="w-full bg-transparent p-0 text-base text-white placeholder:text-text-muted focus:outline-none"
+              placeholder="Digite sua mensagem..."
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyDown={(e) =>
+                e.key === "Enter" && !e.shiftKey && handleSend()
+              }
+              disabled={isSending}
+              type="text"
+            />
+          </div>
+          <button
+            type="button"
             onClick={handleSend}
             disabled={!message.trim() || isSending}
+            className="flex size-[52px] shrink-0 items-center justify-center rounded-full bg-primary text-white shadow-lg shadow-primary/30 transition-all hover:bg-primary/90 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+            aria-label="Enviar mensagem"
           >
-            <Send className="h-4 w-4" />
-          </Button>
+            <span className="material-symbols-outlined">send</span>
+          </button>
         </div>
       </div>
 

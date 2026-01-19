@@ -1,5 +1,4 @@
 import { cn } from "@/lib/utils";
-import { User, Bot } from "lucide-react";
 
 interface MessageBubbleProps {
   role: "user" | "assistant";
@@ -10,8 +9,8 @@ interface MessageBubbleProps {
 /**
  * MessageBubble - Bolha de mensagem do chat
  *
- * - Mensagens do usuário: alinhadas à direita, cor primária
- * - Mensagens da AI: alinhadas à esquerda, cor secundária
+ * - Usuario: alinhado a direita, fundo laranja
+ * - AI: alinhado a esquerda, fundo surface
  */
 export function MessageBubble({ role, content, timestamp }: MessageBubbleProps) {
   const isUser = role === "user";
@@ -19,7 +18,7 @@ export function MessageBubble({ role, content, timestamp }: MessageBubbleProps) 
   return (
     <div
       className={cn(
-        "flex gap-3 w-full",
+        "flex w-full items-end gap-3",
         isUser ? "flex-row-reverse" : "flex-row"
       )}
     >
@@ -27,32 +26,37 @@ export function MessageBubble({ role, content, timestamp }: MessageBubbleProps) 
       <div
         className={cn(
           "flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
-          isUser ? "bg-primary" : "bg-muted"
+          isUser ? "bg-primary/20 text-primary" : "bg-icon-bg text-primary"
         )}
       >
-        {isUser ? (
-          <User className="h-4 w-4 text-primary-foreground" />
-        ) : (
-          <Bot className="h-4 w-4 text-muted-foreground" />
-        )}
+        <span
+          className={cn(
+            "material-symbols-outlined text-[18px]",
+            isUser && "fill-1"
+          )}
+        >
+          {isUser ? "person" : "smart_toy"}
+        </span>
       </div>
 
-      {/* Conteúdo */}
+      {/* Conteudo */}
       <div
         className={cn(
-          "flex max-w-[80%] flex-col gap-1",
+          "flex max-w-[85%] flex-col gap-1",
           isUser ? "items-end" : "items-start"
         )}
       >
+        <span className="text-xs text-text-secondary">
+          {isUser ? "Voce" : "Fit AI"}
+        </span>
         <div
           className={cn(
-            "rounded-2xl px-4 py-2 text-sm",
+            "rounded-2xl px-4 py-3 text-[15px] leading-relaxed",
             isUser
-              ? "bg-primary text-primary-foreground rounded-br-md"
-              : "bg-muted text-foreground rounded-bl-md"
+              ? "bg-primary text-white shadow-md shadow-primary/20 rounded-br-sm"
+              : "bg-surface-dark text-text-floral rounded-bl-sm"
           )}
         >
-          {/* Renderiza quebras de linha */}
           {content.split("\n").map((line, i) => (
             <span key={i}>
               {line}
@@ -61,9 +65,8 @@ export function MessageBubble({ role, content, timestamp }: MessageBubbleProps) 
           ))}
         </div>
 
-        {/* Timestamp (opcional) */}
         {timestamp && (
-          <span className="text-xs text-muted-foreground">
+          <span className="text-xs text-text-secondary">
             {new Date(timestamp).toLocaleTimeString("pt-BR", {
               hour: "2-digit",
               minute: "2-digit",

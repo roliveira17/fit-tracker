@@ -1,7 +1,5 @@
 "use client";
 
-import { CheckCircle, AlertTriangle, XCircle, Clock } from "lucide-react";
-
 interface ImportRecord {
   id: string;
   date: string;
@@ -15,7 +13,7 @@ interface ImportHistoryProps {
 }
 
 /**
- * Formata data para exibição
+ * Formata data para exibicao
  */
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr);
@@ -27,61 +25,67 @@ function formatDate(dateStr: string): string {
   });
 }
 
-/**
- * Componente ImportHistory - Lista de importações anteriores
- */
 export function ImportHistory({ records }: ImportHistoryProps) {
-  if (records.length === 0) {
-    return null;
-  }
+  if (records.length === 0) return null;
 
-  const statusIcons = {
-    success: { icon: CheckCircle, color: "text-green-500" },
-    partial: { icon: AlertTriangle, color: "text-yellow-500" },
-    error: { icon: XCircle, color: "text-red-500" },
+  const statusLabel = {
+    success: "Sucesso",
+    partial: "Parcial",
+    error: "Erro",
   };
 
-  const sourceLabels = {
+  const statusStyles = {
+    success: "bg-success/10 text-success border-success/20",
+    partial: "bg-warning/10 text-warning border-warning/20",
+    error: "bg-error/10 text-error border-error/20",
+  };
+
+  const statusDot = {
+    success: "bg-success",
+    partial: "bg-warning",
+    error: "bg-error",
+  };
+
+  const sourceIcon = {
+    hevy: "description",
+    apple_health: "folder_zip",
+  };
+
+  const sourceLabel = {
     hevy: "Hevy",
     apple_health: "Apple Health",
   };
 
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
-      <div className="flex items-center gap-2 mb-4">
-        <Clock className="h-4 w-4 text-muted-foreground" />
-        <h3 className="text-sm font-medium text-muted-foreground">
-          Histórico de Importações
-        </h3>
-      </div>
+    <div className="flex flex-col gap-3">
+      {records.map((record) => (
+        <div
+          key={record.id}
+          className="group flex items-center gap-4 rounded-xl border border-white/5 bg-surface-dark p-4 transition-all hover:border-primary/30"
+        >
+          <div className="flex size-12 items-center justify-center rounded-lg bg-icon-bg text-primary">
+            <span className="material-symbols-outlined text-[24px]">
+              {sourceIcon[record.source]}
+            </span>
+          </div>
 
-      <div className="flex flex-col gap-2">
-        {records.map((record) => {
-          const { icon: StatusIcon, color } = statusIcons[record.status];
+          <div className="flex flex-1 flex-col justify-center">
+            <p className="text-base font-semibold text-white">
+              {sourceLabel[record.source]}
+            </p>
+            <p className="text-xs text-text-secondary">
+              {formatDate(record.date)} - {record.itemsImported} itens
+            </p>
+          </div>
 
-          return (
-            <div
-              key={record.id}
-              className="flex items-center justify-between py-2 border-b border-border last:border-0"
-            >
-              <div className="flex items-center gap-3">
-                <StatusIcon className={`h-4 w-4 ${color}`} />
-                <div>
-                  <p className="text-sm font-medium text-foreground">
-                    {sourceLabels[record.source]}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {formatDate(record.date)}
-                  </p>
-                </div>
-              </div>
-              <span className="text-sm text-muted-foreground">
-                {record.itemsImported} itens
-              </span>
-            </div>
-          );
-        })}
-      </div>
+          <span
+            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider ${statusStyles[record.status]}`}
+          >
+            <span className={`size-1.5 rounded-full ${statusDot[record.status]}`} />
+            {statusLabel[record.status]}
+          </span>
+        </div>
+      ))}
     </div>
   );
 }
