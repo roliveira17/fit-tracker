@@ -3,6 +3,8 @@
 interface ImportStats {
   workouts: number;
   weightLogs: number;
+  bodyFatLogs?: number;
+  sleepSessions?: number;
   duplicatesSkipped: number;
   errors: string[];
 }
@@ -35,7 +37,7 @@ export function ImportResult({ status, stats, onDismiss }: ImportResultProps) {
     },
   }[status];
 
-  const totalImported = stats.workouts + stats.weightLogs;
+  const totalImported = stats.workouts + stats.weightLogs + (stats.bodyFatLogs || 0) + (stats.sleepSessions || 0);
 
   return (
     <div className="rounded-xl border border-border-subtle bg-surface-card p-4">
@@ -72,6 +74,22 @@ export function ImportResult({ status, stats, onDismiss }: ImportResultProps) {
                 monitor_weight
               </span>
               <span>{stats.weightLogs} registros de peso</span>
+            </div>
+          )}
+          {(stats.bodyFatLogs || 0) > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-[18px] text-primary">
+                percent
+              </span>
+              <span>{stats.bodyFatLogs} registros de body fat</span>
+            </div>
+          )}
+          {(stats.sleepSessions || 0) > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-[18px] text-primary">
+                bedtime
+              </span>
+              <span>{stats.sleepSessions} noites de sono</span>
             </div>
           )}
         </div>

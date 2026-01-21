@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
+import { Header } from "@/components/ui/Header";
+import { BottomNav } from "@/components/ui/BottomNav";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { LineChart } from "@/components/insights/LineChart";
 import { BarChart } from "@/components/insights/BarChart";
 import { StatCard } from "@/components/insights/StatCard";
@@ -18,7 +21,6 @@ import {
   type Meal,
   type WeightLog,
 } from "@/lib/storage";
-import { Scale, Zap, Flame, Dumbbell } from "lucide-react";
 
 type Period = 7 | 14 | 30;
 
@@ -254,11 +256,18 @@ export default function InsightsPage() {
     setInsights(generatedInsights);
   }, [period, profile]);
 
+  // Opções do SegmentedControl
+  const periodOptions = [
+    { value: "7", label: "7 dias" },
+    { value: "14", label: "14 dias" },
+    { value: "30", label: "30 dias" },
+  ];
+
   if (isLoading) {
     return (
       <ScreenContainer>
         <div className="flex flex-1 items-center justify-center">
-          <p className="text-muted-foreground">Carregando...</p>
+          <p className="text-text-secondary">Carregando...</p>
         </div>
       </ScreenContainer>
     );
@@ -270,49 +279,38 @@ export default function InsightsPage() {
 
   return (
     <ScreenContainer>
-      <div className="flex flex-1 flex-col pb-4">
-        {/* Header */}
-        <div className="py-4">
-          <h1 className="text-xl font-bold text-foreground">Insights</h1>
-          <p className="text-sm text-muted-foreground">
-            Análise da sua evolução
-          </p>
-        </div>
+      {/* Header do Design System */}
+      <Header variant="simple" title="Insights" />
 
-        {/* Toggle de período */}
-        <div className="flex gap-2 mb-4">
-          {([7, 14, 30] as Period[]).map((p) => (
-            <button
-              key={p}
-              onClick={() => setPeriod(p)}
-              className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${
-                period === p
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:bg-muted/80"
-              }`}
-            >
-              {p} dias
-            </button>
-          ))}
+      <div className="flex flex-1 flex-col px-4 pb-24">
+        {/* Seletor de período */}
+        <div className="py-4">
+          <SegmentedControl
+            options={periodOptions}
+            value={period.toString()}
+            onChange={(value) => setPeriod(Number(value) as Period)}
+          />
         </div>
 
         {/* Conteúdo */}
         {!hasAnyData ? (
           // Empty state
           <div className="flex flex-1 flex-col items-center justify-center text-center px-4">
-            <div className="rounded-full bg-muted p-4 mb-4">
-              <Scale className="h-8 w-8 text-muted-foreground" />
+            <div className="rounded-full bg-surface-dark p-4 mb-4">
+              <span className="material-symbols-outlined text-[32px] text-text-secondary">
+                scale
+              </span>
             </div>
-            <h2 className="text-lg font-semibold text-foreground mb-2">
+            <h2 className="text-lg font-semibold text-white mb-2">
               Sem dados ainda
             </h2>
-            <p className="text-sm text-muted-foreground mb-4">
+            <p className="text-sm text-text-secondary mb-4">
               Registre refeições, peso ou treinos no Chat para ver seus
               insights aqui.
             </p>
             <button
               onClick={() => router.push("/chat")}
-              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white shadow-lg shadow-primary/30 active:scale-95 transition-transform"
             >
               Ir para o Chat
             </button>
@@ -342,7 +340,7 @@ export default function InsightsPage() {
                     ?.value || "-"
                 }
                 unit="kg"
-                icon={Scale}
+                icon="scale"
               />
               {latestBF && (
                 <StatCard
@@ -356,7 +354,7 @@ export default function InsightsPage() {
                 label="Treinos"
                 value={workoutCount}
                 unit={`no período`}
-                icon={Dumbbell}
+                icon="fitness_center"
               />
               <StatCard
                 label="Média kcal"
@@ -371,7 +369,7 @@ export default function InsightsPage() {
                     : 0
                 }
                 unit="/dia"
-                icon={Flame}
+                icon="local_fire_department"
               />
             </div>
 
@@ -411,6 +409,9 @@ export default function InsightsPage() {
           </div>
         )}
       </div>
+
+      {/* Bottom Navigation */}
+      <BottomNav variant="with-fab" onFabClick={() => router.push("/chat")} />
     </ScreenContainer>
   );
 }

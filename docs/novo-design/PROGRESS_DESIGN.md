@@ -1,7 +1,7 @@
-# FIT TRACK — MIGRAÇÃO DE DESIGN
+# FIT TRACK ï¿½ MIGRAï¿½ï¿½O DE DESIGN
 
-> **Tracking de progresso da migração para o novo design system.**
-> Atualizado automaticamente após cada etapa.
+> **Tracking de progresso da migraï¿½ï¿½o para o novo design system.**
+> Atualizado automaticamente apï¿½s cada etapa.
 
 ---
 
@@ -9,32 +9,32 @@
 
 | Fase | Status | Progresso |
 |------|--------|-----------|
-| Setup | Concluído | 4/4 |
-| Componentes Base | Concluído | 12/12 |
-| Telas | Em progresso | 8/10 |
+| Setup | ConcluÃ­do | 4/4 |
+| Componentes Base | ConcluÃ­do | 12/12 |
+| Telas | ConcluÃ­do | 10/10 |
 
-**Última atualização:** _18/01/2026_
+**Ãšltima atualizaÃ§Ã£o:** _19/01/2026_
 
 ---
 
 ## FASE 1: SETUP
 
-### 1.1 Configuração do Tailwind
+### 1.1 Configuraï¿½ï¿½o do Tailwind
 - [x] Atualizar `tailwind.config.ts` com tokens de cor
 - [x] Adicionar fontFamily (Inter)
 - [x] Adicionar boxShadow customizado (primary, glow)
 - [x] Verificar plugins (@tailwindcss/forms)
 
-### 1.2 Configuração de Estilos Globais
-- [x] Atualizar `globals.css` com variáveis CSS
-- [x] Adicionar estilos utilitários (hide-scrollbar, fill-1)
+### 1.2 Configuraï¿½ï¿½o de Estilos Globais
+- [x] Atualizar `globals.css` com variï¿½veis CSS
+- [x] Adicionar estilos utilitï¿½rios (hide-scrollbar, fill-1)
 
-### 1.3 Configuração de Fontes
+### 1.3 Configuraï¿½ï¿½o de Fontes
 - [x] Adicionar Google Fonts (Inter) no layout
 - [x] Adicionar Material Symbols Outlined
 - [x] Aplicar `antialiased` no body
 
-### 1.4 Configuração Dark Mode
+### 1.4 Configuraï¿½ï¿½o Dark Mode
 - [x] Garantir `class="dark"` no html
 - [x] Verificar `darkMode: "class"` no tailwind config
 
@@ -42,12 +42,12 @@
 
 ## FASE 2: COMPONENTES BASE
 
-### 2.1 Layout & Navegação
+### 2.1 Layout & Navegaï¿½ï¿½o
 - [x] Header (3 variantes)
 - [x] BottomNav (2 variantes)
 - [x] FAB
 
-### 2.2 Botões
+### 2.2 Botï¿½es
 - [x] PrimaryButton
 - [x] SecondaryButton
 - [x] SocialButton (Apple, Google)
@@ -75,7 +75,7 @@
 
 ### 2.5 Feedback
 - [x] StatusBadge
-- [x] TrendBadge (já em ChartCard)
+- [x] TrendBadge (jï¿½ em ChartCard)
 - [x] StreakBadge
 - [x] DateSeparator
 
@@ -83,7 +83,7 @@
 - [x] ChatBubbleAI
 - [x] ChatBubbleUser
 
-### 2.7 Gráficos
+### 2.7 Grï¿½ficos
 - [x] RingChart
 - [x] ProgressBar
 - [x] LineChart
@@ -104,34 +104,34 @@
 - [x] Tela 2: Feature - Dados
 - [x] Tela 3: Feature - Progresso
 - [x] Tela 4: Feature - AI Coach
-- [x] Tela 5: Perfil Básico
+- [x] Tela 5: Perfil Bï¿½sico
 
 ### 3.2 App Principal
 - [x] Chat
 - [x] Home
 - [x] Importar
-- [ ] Insights
-- [ ] Profile
+- [x] Insights
+- [x] Profile
 
 ---
 
-## Histórico de Sessões
+## Histï¿½rico de Sessï¿½es
 
-### Sessão 1 — [DATA]
-**Tarefas concluídas:**
+### Sessï¿½o 1 ï¿½ [DATA]
+**Tarefas concluï¿½das:**
 - _Nenhuma ainda_
 
-**Próximos passos:**
+**Prï¿½ximos passos:**
 - Iniciar Fase 1: Setup
 
-**Observações:**
+**Observaï¿½ï¿½es:**
 - _Nenhuma_
 
 ---
 
-## Decisões Técnicas
+## Decisï¿½es Tï¿½cnicas
 
-| Decisão | Justificativa | Data |
+| Decisï¿½o | Justificativa | Data |
 |---------|---------------|------|
 | _Nenhuma ainda_ | | |
 
@@ -139,6 +139,6 @@
 
 ## Problemas Conhecidos
 
-| Problema | Status | Solução |
+| Problema | Status | Soluï¿½ï¿½o |
 |----------|--------|---------|
 | _Nenhum ainda_ | | |

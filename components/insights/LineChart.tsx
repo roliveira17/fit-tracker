@@ -1,6 +1,10 @@
 "use client";
 
-import { TrendingDown, TrendingUp, Minus } from "lucide-react";
+// ========================================
+// LINE CHART - Gráfico de linha SVG
+// ========================================
+// Usado para visualizar peso ao longo do tempo
+// Usa Material Symbols para ícones de tendência
 
 interface DataPoint {
   date: string;
@@ -15,18 +19,12 @@ interface LineChartProps {
   showTrend?: boolean;
 }
 
-/**
- * Formata data para exibição curta (ex: "17", "18")
- */
+// Formata data para exibição curta (ex: "17", "18")
 function formatShortDate(dateStr: string): string {
   const date = new Date(dateStr + "T12:00:00");
   return date.getDate().toString();
 }
 
-/**
- * Componente LineChart - Gráfico de linha SVG
- * Usado para visualizar peso ao longo do tempo
- */
 export function LineChart({
   data,
   label,
@@ -40,11 +38,11 @@ export function LineChart({
   // Se não há dados suficientes
   if (validPoints.length === 0) {
     return (
-      <div className="rounded-xl border border-border bg-card p-4">
-        <h3 className="text-sm font-medium text-muted-foreground mb-4">
+      <div className="rounded-xl border border-border-subtle bg-surface-card p-4">
+        <h3 className="text-sm font-medium text-text-secondary mb-4">
           {label}
         </h3>
-        <p className="text-sm text-muted-foreground text-center py-8">
+        <p className="text-sm text-text-secondary text-center py-8">
           Sem dados para exibir
         </p>
       </div>
@@ -100,34 +98,34 @@ export function LineChart({
     primary: "text-primary",
     green: "text-green-500",
     blue: "text-blue-500",
-    orange: "text-orange-500",
+    orange: "text-primary",
   }[color] || "text-primary";
 
+  // Ícone e cor da tendência
+  const trendIcon =
+    variation < 0 ? "trending_down" : variation > 0 ? "trending_up" : "remove";
+  const trendColor =
+    variation < 0
+      ? "text-green-500"
+      : variation > 0
+        ? "text-red-500"
+        : "text-text-secondary";
+
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
+    <div className="rounded-xl border border-border-subtle bg-surface-card p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm font-medium text-muted-foreground">{label}</h3>
+        <h3 className="text-sm font-medium text-text-secondary">{label}</h3>
 
         {/* Variação */}
         {showTrend && validPoints.length >= 2 && (
           <div className="flex items-center gap-1">
-            {variation < 0 ? (
-              <TrendingDown className="h-4 w-4 text-green-500" />
-            ) : variation > 0 ? (
-              <TrendingUp className="h-4 w-4 text-red-500" />
-            ) : (
-              <Minus className="h-4 w-4 text-muted-foreground" />
-            )}
             <span
-              className={`text-xs font-medium ${
-                variation < 0
-                  ? "text-green-500"
-                  : variation > 0
-                    ? "text-red-500"
-                    : "text-muted-foreground"
-              }`}
+              className={`material-symbols-outlined text-[16px] ${trendColor}`}
             >
+              {trendIcon}
+            </span>
+            <span className={`text-xs font-medium ${trendColor}`}>
               {variation > 0 ? "+" : ""}
               {variation.toFixed(1)}
               {unit} ({variationPercent}%)
@@ -138,10 +136,10 @@ export function LineChart({
 
       {/* Valor atual */}
       <div className="flex items-baseline gap-1 mb-4">
-        <span className="text-2xl font-bold text-foreground">
+        <span className="text-2xl font-bold text-white">
           {lastValue.toFixed(1)}
         </span>
-        <span className="text-sm text-muted-foreground">{unit}</span>
+        <span className="text-sm text-text-secondary">{unit}</span>
       </div>
 
       {/* Gráfico SVG */}
@@ -159,7 +157,7 @@ export function LineChart({
             y2={chartHeight / 3}
             stroke="currentColor"
             strokeOpacity={0.1}
-            className="text-border"
+            className="text-border-subtle"
           />
           <line
             x1="0"
@@ -168,7 +166,7 @@ export function LineChart({
             y2={(chartHeight * 2) / 3}
             stroke="currentColor"
             strokeOpacity={0.1}
-            className="text-border"
+            className="text-border-subtle"
           />
 
           {/* Área preenchida */}
@@ -204,8 +202,8 @@ export function LineChart({
             key={i}
             className={`text-xs ${
               d.value !== null
-                ? "text-muted-foreground"
-                : "text-muted-foreground/30"
+                ? "text-text-secondary"
+                : "text-text-secondary/30"
             }`}
           >
             {formatShortDate(d.date)}

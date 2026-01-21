@@ -1,6 +1,10 @@
 "use client";
 
-import { Lightbulb, AlertTriangle, CheckCircle, Info } from "lucide-react";
+// ========================================
+// INSIGHT TEXT - Card de insight textual
+// ========================================
+// Exibe observações e insights baseados nos dados do usuário
+// Usa Material Symbols para ícones
 
 interface InsightTextProps {
   type: "info" | "positive" | "warning" | "neutral";
@@ -8,43 +12,44 @@ interface InsightTextProps {
   description: string;
 }
 
-/**
- * Componente InsightText - Card de insight textual
- * Exibe observações baseadas nos dados
- */
 export function InsightText({ type, title, description }: InsightTextProps) {
+  // Configuração de estilo por tipo
   const config = {
     info: {
-      icon: Info,
+      icon: "info",
       bg: "bg-blue-500/10 border-blue-500/20",
       iconColor: "text-blue-500",
     },
     positive: {
-      icon: CheckCircle,
+      icon: "check_circle",
       bg: "bg-green-500/10 border-green-500/20",
       iconColor: "text-green-500",
     },
     warning: {
-      icon: AlertTriangle,
+      icon: "warning",
       bg: "bg-yellow-500/10 border-yellow-500/20",
       iconColor: "text-yellow-500",
     },
     neutral: {
-      icon: Lightbulb,
-      bg: "bg-muted/50 border-border",
-      iconColor: "text-muted-foreground",
+      icon: "lightbulb",
+      bg: "bg-surface-dark/50 border-border-subtle",
+      iconColor: "text-text-secondary",
     },
   };
 
-  const { icon: Icon, bg, iconColor } = config[type];
+  const { icon, bg, iconColor } = config[type];
 
   return (
     <div className={`rounded-xl border p-4 ${bg}`}>
       <div className="flex gap-3">
-        <Icon className={`h-5 w-5 flex-shrink-0 ${iconColor}`} />
+        <span
+          className={`material-symbols-outlined text-[20px] flex-shrink-0 ${iconColor}`}
+        >
+          {icon}
+        </span>
         <div>
-          <p className="text-sm font-medium text-foreground">{title}</p>
-          <p className="text-xs text-muted-foreground mt-1">{description}</p>
+          <p className="text-sm font-medium text-white">{title}</p>
+          <p className="text-xs text-text-secondary mt-1">{description}</p>
         </div>
       </div>
     </div>

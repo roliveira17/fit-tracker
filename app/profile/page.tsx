@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
+import { Header } from "@/components/ui/Header";
+import { BottomNav } from "@/components/ui/BottomNav";
 import {
   getUserProfile,
   saveUserProfile,
@@ -14,15 +16,9 @@ import {
 } from "@/lib/storage";
 import { Toast } from "@/components/feedback/Toast";
 import { useToast } from "@/hooks/useToast";
-import {
-  User,
-  Settings,
-  Shield,
-  Trash2,
-  AlertTriangle,
-  ChevronRight,
-  X,
-} from "lucide-react";
+import { ExportSection } from "@/components/profile/ExportSection";
+import { NotificationSettings } from "@/components/profile/NotificationSettings";
+import { AccountSection } from "@/components/profile/AccountSection";
 
 /**
  * Calcula BMR usando fórmula de Mifflin-St Jeor
@@ -205,7 +201,7 @@ export default function ProfilePage() {
     return (
       <ScreenContainer>
         <div className="flex flex-1 items-center justify-center">
-          <p className="text-muted-foreground">Carregando...</p>
+          <p className="text-text-secondary">Carregando...</p>
         </div>
       </ScreenContainer>
     );
@@ -213,22 +209,23 @@ export default function ProfilePage() {
 
   return (
     <ScreenContainer>
-      <div className="flex flex-1 flex-col pb-4">
-        {/* Header */}
-        <div className="py-4">
-          <h1 className="text-xl font-bold text-foreground">Perfil</h1>
-          <p className="text-sm text-muted-foreground">
-            Configurações e preferências
-          </p>
-        </div>
+      {/* Header do Design System */}
+      <Header variant="simple" title="Perfil" />
 
-        <div className="flex flex-col gap-4">
+      <div className="flex flex-1 flex-col px-4 pb-24">
+
+        <div className="flex flex-col gap-4 pt-4">
+          {/* Seção: Conta */}
+          <AccountSection />
+
           {/* Seção: Dados Pessoais */}
-          <section className="rounded-xl border border-border bg-card p-4">
+          <section className="rounded-xl border border-border-subtle bg-surface-card p-4">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <User className="h-4 w-4 text-muted-foreground" />
-                <h2 className="text-sm font-medium text-muted-foreground">
+                <span className="material-symbols-outlined text-[18px] text-text-secondary">
+                  person
+                </span>
+                <h2 className="text-sm font-medium text-text-secondary">
                   Dados Pessoais
                 </h2>
               </div>
@@ -247,7 +244,7 @@ export default function ProfilePage() {
               <div className="flex flex-col gap-4">
                 {/* Nome */}
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">
+                  <label className="text-xs text-text-secondary mb-1 block">
                     Nome
                   </label>
                   <input
@@ -256,7 +253,7 @@ export default function ProfilePage() {
                     onChange={(e) =>
                       setFormData({ ...formData, name: e.target.value })
                     }
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full rounded-lg border border-border-subtle bg-surface-input px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                   {errors.name && (
                     <p className="text-xs text-red-500 mt-1">{errors.name}</p>
@@ -265,7 +262,7 @@ export default function ProfilePage() {
 
                 {/* Gênero */}
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">
+                  <label className="text-xs text-text-secondary mb-1 block">
                     Gênero
                   </label>
                   <select
@@ -276,7 +273,7 @@ export default function ProfilePage() {
                         gender: e.target.value as typeof formData.gender,
                       })
                     }
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full rounded-lg border border-border-subtle bg-surface-input px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="masculino">Masculino</option>
                     <option value="feminino">Feminino</option>
@@ -286,7 +283,7 @@ export default function ProfilePage() {
 
                 {/* Data de nascimento */}
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">
+                  <label className="text-xs text-text-secondary mb-1 block">
                     Data de nascimento
                   </label>
                   <input
@@ -295,7 +292,7 @@ export default function ProfilePage() {
                     onChange={(e) =>
                       setFormData({ ...formData, birthDate: e.target.value })
                     }
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full rounded-lg border border-border-subtle bg-surface-input px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                   {errors.birthDate && (
                     <p className="text-xs text-red-500 mt-1">
@@ -306,7 +303,7 @@ export default function ProfilePage() {
 
                 {/* Altura */}
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">
+                  <label className="text-xs text-text-secondary mb-1 block">
                     Altura (cm)
                   </label>
                   <input
@@ -318,7 +315,7 @@ export default function ProfilePage() {
                         height: Number(e.target.value),
                       })
                     }
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full rounded-lg border border-border-subtle bg-surface-input px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                   {errors.height && (
                     <p className="text-xs text-red-500 mt-1">{errors.height}</p>
@@ -327,7 +324,7 @@ export default function ProfilePage() {
 
                 {/* Peso */}
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">
+                  <label className="text-xs text-text-secondary mb-1 block">
                     Peso (kg)
                   </label>
                   <input
@@ -340,7 +337,7 @@ export default function ProfilePage() {
                         weight: Number(e.target.value),
                       })
                     }
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full rounded-lg border border-border-subtle bg-surface-input px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                   {errors.weight && (
                     <p className="text-xs text-red-500 mt-1">{errors.weight}</p>
@@ -351,13 +348,13 @@ export default function ProfilePage() {
                 <div className="flex gap-2 pt-2">
                   <button
                     onClick={handleCancel}
-                    className="flex-1 rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground hover:bg-muted"
+                    className="flex-1 rounded-lg border border-border-subtle px-4 py-2 text-sm text-text-secondary hover:bg-surface-dark transition-colors"
                   >
                     Cancelar
                   </button>
                   <button
                     onClick={handleSave}
-                    className="flex-1 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                    className="flex-1 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white shadow-lg shadow-primary/30 hover:bg-primary/90 active:scale-95 transition-all"
                   >
                     Salvar
                   </button>
@@ -367,42 +364,42 @@ export default function ProfilePage() {
               // Modo visualização
               <div className="flex flex-col gap-3">
                 <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Nome</span>
-                  <span className="text-sm text-foreground">
+                  <span className="text-sm text-text-secondary">Nome</span>
+                  <span className="text-sm text-white">
                     {profile?.name}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Gênero</span>
-                  <span className="text-sm text-foreground capitalize">
+                  <span className="text-sm text-text-secondary">Gênero</span>
+                  <span className="text-sm text-white capitalize">
                     {profile?.gender}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Idade</span>
-                  <span className="text-sm text-foreground">
+                  <span className="text-sm text-text-secondary">Idade</span>
+                  <span className="text-sm text-white">
                     {profile?.birthDate
                       ? `${calculateAge(profile.birthDate)} anos`
                       : "-"}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Altura</span>
-                  <span className="text-sm text-foreground">
+                  <span className="text-sm text-text-secondary">Altura</span>
+                  <span className="text-sm text-white">
                     {profile?.height} cm
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Peso</span>
-                  <span className="text-sm text-foreground">
+                  <span className="text-sm text-text-secondary">Peso</span>
+                  <span className="text-sm text-white">
                     {profile?.weight} kg
                   </span>
                 </div>
-                <div className="flex justify-between pt-2 border-t border-border">
-                  <span className="text-sm text-muted-foreground">
+                <div className="flex justify-between pt-2 border-t border-border-subtle">
+                  <span className="text-sm text-text-secondary">
                     BMR (gasto basal)
                   </span>
-                  <span className="text-sm font-medium text-foreground">
+                  <span className="text-sm font-medium text-white">
                     {profile?.bmr} kcal/dia
                   </span>
                 </div>
@@ -411,54 +408,75 @@ export default function ProfilePage() {
           </section>
 
           {/* Seção: Preferências */}
-          <section className="rounded-xl border border-border bg-card p-4">
+          <section className="rounded-xl border border-border-subtle bg-surface-card p-4">
             <div className="flex items-center gap-2 mb-4">
-              <Settings className="h-4 w-4 text-muted-foreground" />
-              <h2 className="text-sm font-medium text-muted-foreground">
+              <span className="material-symbols-outlined text-[18px] text-text-secondary">
+                settings
+              </span>
+              <h2 className="text-sm font-medium text-text-secondary">
                 Preferências
               </h2>
             </div>
 
             <div className="flex flex-col gap-3">
               <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">
+                <span className="text-sm text-text-secondary">
                   Unidade de peso
                 </span>
-                <span className="text-sm text-foreground">kg</span>
+                <span className="text-sm text-white">kg</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">
+                <span className="text-sm text-text-secondary">
                   Unidade de energia
                 </span>
-                <span className="text-sm text-foreground">kcal</span>
+                <span className="text-sm text-white">kcal</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Timezone</span>
-                <span className="text-sm text-foreground">{getTimezone()}</span>
+                <span className="text-sm text-text-secondary">Timezone</span>
+                <span className="text-sm text-white">{getTimezone()}</span>
               </div>
             </div>
           </section>
 
           {/* Seção: Privacidade */}
-          <section className="rounded-xl border border-border bg-card p-4">
+          <section className="rounded-xl border border-border-subtle bg-surface-card p-4">
             <div className="flex items-center gap-2 mb-4">
-              <Shield className="h-4 w-4 text-muted-foreground" />
-              <h2 className="text-sm font-medium text-muted-foreground">
+              <span className="material-symbols-outlined text-[18px] text-text-secondary">
+                shield
+              </span>
+              <h2 className="text-sm font-medium text-text-secondary">
                 Privacidade
               </h2>
             </div>
 
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-text-secondary">
               Seus dados pertencem a você. Tudo é armazenado localmente no seu
               dispositivo. Nada é compartilhado sem sua ação explícita.
             </p>
           </section>
 
+          {/* Seção: Lembretes/Notificações */}
+          <NotificationSettings
+            onPermissionChange={(granted) => {
+              if (!granted) {
+                showToast("Permissão de notificações negada", "error");
+              }
+            }}
+          />
+
+          {/* Seção: Exportar Dados */}
+          <ExportSection
+            onSuccess={() => showToast("Dados exportados!", "success")}
+            onError={(error) => showToast(error, "error")}
+          />
+
           {/* Seção: Avançado */}
-          <section className="rounded-xl border border-border bg-card p-4">
+          <section className="rounded-xl border border-border-subtle bg-surface-card p-4">
             <div className="flex items-center gap-2 mb-4">
-              <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-              <h2 className="text-sm font-medium text-muted-foreground">
+              <span className="material-symbols-outlined text-[18px] text-text-secondary">
+                warning
+              </span>
+              <h2 className="text-sm font-medium text-text-secondary">
                 Avançado
               </h2>
             </div>
@@ -467,39 +485,47 @@ export default function ProfilePage() {
               {/* Limpar registros */}
               <button
                 onClick={() => setShowDeleteModal(true)}
-                className="flex items-center justify-between w-full rounded-lg border border-border p-3 text-left hover:bg-muted/50 transition-colors"
+                className="flex items-center justify-between w-full rounded-lg border border-border-subtle p-3 text-left hover:bg-surface-dark/50 transition-colors active:scale-[0.98]"
               >
                 <div className="flex items-center gap-3">
-                  <Trash2 className="h-4 w-4 text-yellow-500" />
+                  <span className="material-symbols-outlined text-[18px] text-yellow-500">
+                    delete
+                  </span>
                   <div>
-                    <p className="text-sm font-medium text-foreground">
+                    <p className="text-sm font-medium text-white">
                       Limpar registros
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-text-secondary">
                       Apaga refeições, treinos, peso e chat
                     </p>
                   </div>
                 </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                <span className="material-symbols-outlined text-[18px] text-text-secondary">
+                  chevron_right
+                </span>
               </button>
 
               {/* Reset total */}
               <button
                 onClick={() => setShowResetModal(true)}
-                className="flex items-center justify-between w-full rounded-lg border border-red-500/30 p-3 text-left hover:bg-red-500/10 transition-colors"
+                className="flex items-center justify-between w-full rounded-lg border border-red-500/30 p-3 text-left hover:bg-red-500/10 transition-colors active:scale-[0.98]"
               >
                 <div className="flex items-center gap-3">
-                  <Trash2 className="h-4 w-4 text-red-500" />
+                  <span className="material-symbols-outlined text-[18px] text-red-500">
+                    delete_forever
+                  </span>
                   <div>
                     <p className="text-sm font-medium text-red-500">
                       Resetar app
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-text-secondary">
                       Apaga TUDO e volta ao início
                     </p>
                   </div>
                 </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                <span className="material-symbols-outlined text-[18px] text-text-secondary">
+                  chevron_right
+                </span>
               </button>
             </div>
           </section>
@@ -508,21 +534,21 @@ export default function ProfilePage() {
 
       {/* Modal: Limpar registros */}
       {showDeleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="mx-4 w-full max-w-sm rounded-xl bg-card p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="mx-4 w-full max-w-sm rounded-xl border border-border-subtle bg-surface-card p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-foreground">
+              <h3 className="text-lg font-semibold text-white">
                 Limpar registros?
               </h3>
               <button
                 onClick={() => setShowDeleteModal(false)}
-                className="text-muted-foreground hover:text-foreground"
+                className="text-text-secondary hover:text-white transition-colors"
               >
-                <X className="h-5 w-5" />
+                <span className="material-symbols-outlined text-[20px]">close</span>
               </button>
             </div>
 
-            <p className="text-sm text-muted-foreground mb-6">
+            <p className="text-sm text-text-secondary mb-6">
               Isso vai apagar todas as refeições, treinos, registros de peso e
               mensagens do chat. Seu perfil será mantido.
             </p>
@@ -530,13 +556,13 @@ export default function ProfilePage() {
             <div className="flex gap-2">
               <button
                 onClick={() => setShowDeleteModal(false)}
-                className="flex-1 rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground hover:bg-muted"
+                className="flex-1 rounded-lg border border-border-subtle px-4 py-2 text-sm text-text-secondary hover:bg-surface-dark transition-colors"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleClearRegistrations}
-                className="flex-1 rounded-lg bg-yellow-500 px-4 py-2 text-sm font-medium text-black hover:bg-yellow-400"
+                className="flex-1 rounded-lg bg-yellow-500 px-4 py-2 text-sm font-medium text-black hover:bg-yellow-400 active:scale-95 transition-all"
               >
                 Limpar
               </button>
@@ -547,21 +573,21 @@ export default function ProfilePage() {
 
       {/* Modal: Reset app */}
       {showResetModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="mx-4 w-full max-w-sm rounded-xl bg-card p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="mx-4 w-full max-w-sm rounded-xl border border-border-subtle bg-surface-card p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-red-500">
                 Resetar tudo?
               </h3>
               <button
                 onClick={() => setShowResetModal(false)}
-                className="text-muted-foreground hover:text-foreground"
+                className="text-text-secondary hover:text-white transition-colors"
               >
-                <X className="h-5 w-5" />
+                <span className="material-symbols-outlined text-[20px]">close</span>
               </button>
             </div>
 
-            <p className="text-sm text-muted-foreground mb-6">
+            <p className="text-sm text-text-secondary mb-6">
               Isso vai apagar TODOS os dados, incluindo seu perfil. O app
               voltará ao estado inicial como se fosse a primeira vez.
             </p>
@@ -569,13 +595,13 @@ export default function ProfilePage() {
             <div className="flex gap-2">
               <button
                 onClick={() => setShowResetModal(false)}
-                className="flex-1 rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground hover:bg-muted"
+                className="flex-1 rounded-lg border border-border-subtle px-4 py-2 text-sm text-text-secondary hover:bg-surface-dark transition-colors"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleResetApp}
-                className="flex-1 rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white hover:bg-red-400"
+                className="flex-1 rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white hover:bg-red-400 active:scale-95 transition-all"
               >
                 Resetar
               </button>
@@ -583,6 +609,9 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
+
+      {/* Bottom Navigation */}
+      <BottomNav variant="with-fab" onFabClick={() => router.push("/chat")} />
 
       <Toast
         message={toast.message}

@@ -1,5 +1,10 @@
 "use client";
 
+// ========================================
+// BAR CHART - Gráfico de barras SVG
+// ========================================
+// Usado para visualizar calorias e proteína por dia
+
 interface DataPoint {
   date: string;
   value: number;
@@ -14,18 +19,12 @@ interface BarChartProps {
   invertColors?: boolean; // true = abaixo da meta é bom (ex: calorias)
 }
 
-/**
- * Formata data para exibição curta (ex: "17", "18")
- */
+// Formata data para exibição curta (ex: "17", "18")
 function formatShortDate(dateStr: string): string {
   const date = new Date(dateStr + "T12:00:00");
   return date.getDate().toString();
 }
 
-/**
- * Componente BarChart - Gráfico de barras SVG
- * Usado para visualizar calorias e proteína por dia
- */
 export function BarChart({
   data,
   label,
@@ -37,11 +36,11 @@ export function BarChart({
   // Se não há dados
   if (data.length === 0) {
     return (
-      <div className="rounded-xl border border-border bg-card p-4">
-        <h3 className="text-sm font-medium text-muted-foreground mb-4">
+      <div className="rounded-xl border border-border-subtle bg-surface-card p-4">
+        <h3 className="text-sm font-medium text-text-secondary mb-4">
           {label}
         </h3>
-        <p className="text-sm text-muted-foreground text-center py-8">
+        <p className="text-sm text-text-secondary text-center py-8">
           Sem dados para exibir
         </p>
       </div>
@@ -52,7 +51,6 @@ export function BarChart({
   const values = data.map((d) => d.value);
   const maxValue = Math.max(...values, target || 0);
   const avgValue = values.reduce((a, b) => a + b, 0) / values.length;
-  const total = values.reduce((a, b) => a + b, 0);
 
   // Conta dias dentro/fora da meta
   const daysOnTarget = target
@@ -70,7 +68,7 @@ export function BarChart({
     primary: { bar: "fill-primary", text: "text-primary" },
     green: { bar: "fill-green-500", text: "text-green-500" },
     blue: { bar: "fill-blue-500", text: "text-blue-500" },
-    orange: { bar: "fill-orange-500", text: "text-orange-500" },
+    orange: { bar: "fill-primary", text: "text-primary" },
     red: { bar: "fill-red-500", text: "text-red-500" },
   };
 
@@ -81,18 +79,18 @@ export function BarChart({
     if (isOnTarget) {
       return invertColors ? "fill-green-500" : colorClasses[color].bar;
     }
-    return invertColors ? "fill-red-500" : "fill-muted-foreground/50";
+    return invertColors ? "fill-red-500" : "fill-text-secondary/50";
   };
 
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
+    <div className="rounded-xl border border-border-subtle bg-surface-card p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm font-medium text-muted-foreground">{label}</h3>
+        <h3 className="text-sm font-medium text-text-secondary">{label}</h3>
 
         {/* Meta info */}
         {target && (
-          <span className="text-xs text-muted-foreground">
+          <span className="text-xs text-text-secondary">
             {daysOnTarget}/{data.length} dias{" "}
             {invertColors ? "dentro" : "atingiram"} meta
           </span>
@@ -102,15 +100,15 @@ export function BarChart({
       {/* Estatísticas */}
       <div className="flex items-baseline gap-4 mb-4">
         <div>
-          <span className="text-2xl font-bold text-foreground">
+          <span className="text-2xl font-bold text-white">
             {Math.round(avgValue)}
           </span>
-          <span className="text-sm text-muted-foreground ml-1">
+          <span className="text-sm text-text-secondary ml-1">
             {unit}/dia
           </span>
         </div>
         {target && (
-          <div className="text-sm text-muted-foreground">
+          <div className="text-sm text-text-secondary">
             Meta: {target}
             {unit}
           </div>
@@ -130,7 +128,7 @@ export function BarChart({
               stroke="currentColor"
               strokeWidth={1}
               strokeDasharray="4 2"
-              className="text-muted-foreground"
+              className="text-text-secondary"
             />
           )}
 
@@ -158,7 +156,7 @@ export function BarChart({
       {/* Labels dos dias */}
       <div className="flex justify-between mt-2">
         {data.map((d, i) => (
-          <span key={i} className="text-xs text-muted-foreground">
+          <span key={i} className="text-xs text-text-secondary">
             {formatShortDate(d.date)}
           </span>
         ))}

@@ -608,3 +608,59 @@ export function saveWorkoutsBatch(workouts: Omit<Workout, "id" | "timestamp">[])
 
   return added;
 }
+
+/**
+ * Salva múltiplos registros de peso de uma vez (para importação)
+ * @param weightLogs - Array de registros de peso (sem id e timestamp)
+ * @returns Número de registros adicionados
+ */
+export function saveWeightLogsBatch(
+  weightLogs: Omit<WeightLog, "id" | "timestamp">[]
+): number {
+  const existingLogs = getWeightLogs();
+  let added = 0;
+
+  weightLogs.forEach((log) => {
+    const newLog: WeightLog = {
+      ...log,
+      id: generateId("weight"),
+      timestamp: new Date().toISOString(),
+    };
+    existingLogs.push(newLog);
+    added++;
+  });
+
+  if (isBrowser()) {
+    localStorage.setItem(STORAGE_KEYS.WEIGHT_LOGS, JSON.stringify(existingLogs));
+  }
+
+  return added;
+}
+
+/**
+ * Salva múltiplos registros de body fat de uma vez (para importação)
+ * @param bodyFatLogs - Array de registros de body fat (sem id e timestamp)
+ * @returns Número de registros adicionados
+ */
+export function saveBodyFatLogsBatch(
+  bodyFatLogs: Omit<BodyFatLog, "id" | "timestamp">[]
+): number {
+  const existingLogs = getBodyFatLogs();
+  let added = 0;
+
+  bodyFatLogs.forEach((log) => {
+    const newLog: BodyFatLog = {
+      ...log,
+      id: generateId("bf"),
+      timestamp: new Date().toISOString(),
+    };
+    existingLogs.push(newLog);
+    added++;
+  });
+
+  if (isBrowser()) {
+    localStorage.setItem(STORAGE_KEYS.BODYFAT_LOGS, JSON.stringify(existingLogs));
+  }
+
+  return added;
+}

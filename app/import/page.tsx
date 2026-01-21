@@ -10,18 +10,27 @@ import { ImportHistory } from "@/components/import/ImportHistory";
 import {
   isOnboardingComplete,
   getWorkouts,
+  getWeightLogs,
+  getBodyFatLogs,
   saveWorkoutsBatch,
+  saveWeightLogsBatch,
+  saveBodyFatLogsBatch,
   saveImportRecord,
   getImportHistory,
   type ImportRecord,
 } from "@/lib/storage";
 import { parseHevyCSV } from "@/lib/parsers/hevy";
+import { extractAppleHealthXml } from "@/lib/import/appleHealth";
+import { parseAppleHealthXml } from "@/lib/import/appleHealthParser";
+import { mapAppleHealthToEntities } from "@/lib/import/appleHealthMapper";
 
 type ImportStatus = "idle" | "processing" | "success" | "partial" | "error";
 
 interface ImportStats {
   workouts: number;
   weightLogs: number;
+  bodyFatLogs: number;
+  sleepSessions: number;
   duplicatesSkipped: number;
   errors: string[];
 }
@@ -36,6 +45,8 @@ export default function ImportPage() {
   const [importStats, setImportStats] = useState<ImportStats>({
     workouts: 0,
     weightLogs: 0,
+    bodyFatLogs: 0,
+    sleepSessions: 0,
     duplicatesSkipped: 0,
     errors: [],
   });
@@ -53,6 +64,150 @@ export default function ImportPage() {
 
     setIsLoading(false);
   }, [router]);
+
+  /**
+   * Processa importação do Apple Health (ZIP)
+   */
+  const handleAppleHealthImport = async (file: File) => {
+    try {
+      // 1. Extrai XML do ZIP (pode usar streaming para arquivos grandes)
+      const zipResult = await extractAppleHealthXml(file);
+
+      if (!zipResult.success) {
+        setImportStats({
+          workouts: 0,
+          weightLogs: 0,
+          bodyFatLogs: 0,
+          sleepSessions: 0,
+          duplicatesSkipped: 0,
+          errors: [zipResult.error || "Erro ao extrair ZIP"],
+        });
+        setImportStatus("error");
+        return;
+      }
+
+      // 2. Obtém dados parseados
+      // Se usou streaming, já vem parseado; caso contrário, parseia o XML
+      let parsedData;
+      if (zipResult.usedStreaming && zipResult.parsedData) {
+        // Streaming já retorna dados parseados
+        parsedData = zipResult.parsedData;
+        console.log(`Streaming: ${parsedData.records.length} records, ${parsedData.workouts.length} workouts`);
+      } else if (zipResult.xmlContent) {
+        // Método direto: precisa parsear XML
+        parsedData = parseAppleHealthXml(zipResult.xmlContent);
+      } else {
+        setImportStats({
+          workouts: 0,
+          weightLogs: 0,
+          bodyFatLogs: 0,
+          sleepSessions: 0,
+          duplicatesSkipped: 0,
+          errors: ["Nenhum dado encontrado no arquivo"],
+        });
+        setImportStatus("error");
+        return;
+      }
+
+      if (parsedData.errors.length > 0 && parsedData.records.length === 0) {
+        setImportStats({
+          workouts: 0,
+          weightLogs: 0,
+          bodyFatLogs: 0,
+          sleepSessions: 0,
+          duplicatesSkipped: 0,
+          errors: parsedData.errors,
+        });
+        setImportStatus("error");
+        return;
+      }
+
+      // 3. Mapeia para entidades do app
+      const mappedData = mapAppleHealthToEntities(parsedData);
+
+      // 4. Detecta duplicatas
+      const existingWeightLogs = getWeightLogs();
+      const existingBodyFatLogs = getBodyFatLogs();
+      const existingWorkouts = getWorkouts();
+
+      const existingWeightDates = new Set(existingWeightLogs.map((w) => w.date));
+      const existingBodyFatDates = new Set(existingBodyFatLogs.map((b) => b.date));
+      const existingWorkoutDates = new Set(existingWorkouts.map((w) => w.date));
+
+      // Filtra duplicatas
+      const newWeightLogs = mappedData.weightLogs.filter(
+        (w) => !existingWeightDates.has(w.date)
+      );
+      const newBodyFatLogs = mappedData.bodyFatLogs.filter(
+        (b) => !existingBodyFatDates.has(b.date)
+      );
+      const newWorkouts = mappedData.workouts.filter(
+        (w) => !existingWorkoutDates.has(w.date)
+      );
+
+      const duplicatesSkipped =
+        (mappedData.weightLogs.length - newWeightLogs.length) +
+        (mappedData.bodyFatLogs.length - newBodyFatLogs.length) +
+        (mappedData.workouts.length - newWorkouts.length);
+
+      // 5. Salva dados
+      const addedWeightLogs = newWeightLogs.length > 0
+        ? saveWeightLogsBatch(newWeightLogs)
+        : 0;
+      const addedBodyFatLogs = newBodyFatLogs.length > 0
+        ? saveBodyFatLogsBatch(newBodyFatLogs)
+        : 0;
+      const addedWorkouts = newWorkouts.length > 0
+        ? saveWorkoutsBatch(newWorkouts)
+        : 0;
+
+      const totalImported = addedWeightLogs + addedBodyFatLogs + addedWorkouts;
+      const hasWarnings = duplicatesSkipped > 0 || parsedData.errors.length > 0;
+
+      // 6. Atualiza estado
+      setImportStats({
+        workouts: addedWorkouts,
+        weightLogs: addedWeightLogs,
+        bodyFatLogs: addedBodyFatLogs,
+        sleepSessions: mappedData.sleepSessions.length, // TODO: salvar quando tivermos storage
+        duplicatesSkipped,
+        errors: parsedData.errors,
+      });
+
+      if (totalImported === 0 && duplicatesSkipped > 0) {
+        setImportStatus("partial");
+      } else if (totalImported > 0) {
+        setImportStatus(hasWarnings ? "partial" : "success");
+      } else {
+        setImportStatus("error");
+        setImportStats((prev) => ({
+          ...prev,
+          errors: [...prev.errors, "Nenhum dado novo encontrado no arquivo"],
+        }));
+      }
+
+      // 7. Registra importação
+      saveImportRecord({
+        source: "apple_health",
+        status: totalImported > 0 ? (hasWarnings ? "partial" : "success") : "error",
+        itemsImported: totalImported,
+      });
+
+      // 8. Atualiza histórico
+      setHistory(getImportHistory());
+    } catch (err) {
+      console.error("Erro ao importar Apple Health:", err);
+      setImportStats({
+        workouts: 0,
+        weightLogs: 0,
+        bodyFatLogs: 0,
+        sleepSessions: 0,
+        duplicatesSkipped: 0,
+        errors: ["Erro ao processar arquivo. Verifique se é um ZIP válido do Apple Health."],
+      });
+      setImportStatus("error");
+    }
+  };
 
   const handleFileSelect = async (file: File) => {
     setImportStatus("processing");
@@ -73,6 +228,8 @@ export default function ImportPage() {
           setImportStats({
             workouts: 0,
             weightLogs: 0,
+            bodyFatLogs: 0,
+            sleepSessions: 0,
             duplicatesSkipped: result.duplicatesSkipped,
             errors: result.errors,
           });
@@ -93,6 +250,8 @@ export default function ImportPage() {
           setImportStats({
             workouts: added,
             weightLogs: 0,
+            bodyFatLogs: 0,
+            sleepSessions: 0,
             duplicatesSkipped: result.duplicatesSkipped,
             errors: result.errors,
           });
@@ -108,6 +267,8 @@ export default function ImportPage() {
           setImportStats({
             workouts: 0,
             weightLogs: 0,
+            bodyFatLogs: 0,
+            sleepSessions: 0,
             duplicatesSkipped: result.duplicatesSkipped,
             errors: ["Nenhum treino novo encontrado no arquivo"],
           });
@@ -123,18 +284,14 @@ export default function ImportPage() {
         // Atualiza histórico
         setHistory(getImportHistory());
       } else if (fileName.endsWith(".zip")) {
-        // Apple Health - não implementado ainda
-        setImportStats({
-          workouts: 0,
-          weightLogs: 0,
-          duplicatesSkipped: 0,
-          errors: ["Apple Health ainda não suportado. Use arquivos CSV do Hevy."],
-        });
-        setImportStatus("error");
+        // Apple Health
+        await handleAppleHealthImport(file);
       } else {
         setImportStats({
           workouts: 0,
           weightLogs: 0,
+          bodyFatLogs: 0,
+          sleepSessions: 0,
           duplicatesSkipped: 0,
           errors: ["Formato de arquivo não reconhecido"],
         });
@@ -145,8 +302,10 @@ export default function ImportPage() {
       setImportStats({
         workouts: 0,
         weightLogs: 0,
+        bodyFatLogs: 0,
+        sleepSessions: 0,
         duplicatesSkipped: 0,
-        errors: ["Erro ao ler o arquivo. Verifique se é um CSV válido."],
+        errors: ["Erro ao ler o arquivo. Verifique se é um arquivo válido."],
       });
       setImportStatus("error");
     }
@@ -157,6 +316,8 @@ export default function ImportPage() {
     setImportStats({
       workouts: 0,
       weightLogs: 0,
+      bodyFatLogs: 0,
+      sleepSessions: 0,
       duplicatesSkipped: 0,
       errors: [],
     });
@@ -227,7 +388,7 @@ export default function ImportPage() {
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 opacity-50">
+              <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-error/10 text-error">
                   <span className="material-symbols-outlined text-[20px]">
                     favorite
@@ -236,17 +397,17 @@ export default function ImportPage() {
                 <div className="flex-1">
                   <p className="text-sm font-medium text-white">Apple Health</p>
                   <p className="text-xs text-text-secondary">
-                    Peso, cardio e sono
+                    Peso, body fat, treinos e sono
                   </p>
-                  <span className="mt-1 inline-block rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-text-secondary">
-                    Em breve
+                  <span className="mt-1 inline-block rounded-full border border-success/20 bg-success/10 px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-success">
+                    Disponível
                   </span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Como exportar do Hevy */}
+          {/* Como exportar */}
           <div className="rounded-xl border border-border-subtle bg-surface-card p-4">
             <h3 className="text-sm font-medium text-text-secondary mb-3">
               Como exportar do Hevy
@@ -256,6 +417,19 @@ export default function ImportPage() {
               <li>Toque em "Export Data"</li>
               <li>Escolha "Export as CSV"</li>
               <li>Salve o arquivo e importe aqui</li>
+            </ol>
+          </div>
+
+          <div className="rounded-xl border border-border-subtle bg-surface-card p-4">
+            <h3 className="text-sm font-medium text-text-secondary mb-3">
+              Como exportar do Apple Health
+            </h3>
+            <ol className="text-sm text-text-secondary list-decimal list-inside space-y-2">
+              <li>No iPhone, abra o app Saúde</li>
+              <li>Toque na sua foto de perfil</li>
+              <li>Role até "Exportar Dados de Saúde"</li>
+              <li>Confirme e aguarde a exportação</li>
+              <li>Envie o ZIP para este dispositivo</li>
             </ol>
           </div>
 

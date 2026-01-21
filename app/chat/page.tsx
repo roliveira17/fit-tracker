@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { MessageBubble } from "@/components/chat/MessageBubble";
 import { TypingIndicator } from "@/components/chat/TypingIndicator";
 import { ChipGroup, type Chip } from "@/components/chat/ChipGroup";
+import { ChatInput, type RecordingState } from "@/components/ui/ChatInput";
+import { ImagePreview } from "@/components/chat/ImagePreview";
+import { useAudioRecorder } from "@/hooks/useAudioRecorder";
 import {
   getUserProfile,
   isOnboardingComplete,
@@ -47,7 +50,27 @@ export default function ChatPage() {
   const [error, setError] = useState<string | null>(null);
   const { toast, showToast, hideToast } = useToast();
 
+  // Estado de gravação de áudio
+  const [recordingState, setRecordingState] = useState<RecordingState>("idle");
+  const [recordingError, setRecordingError] = useState<string | undefined>();
+  const [transcribedText, setTranscribedText] = useState<string | undefined>();
+
+  // Estado de imagem
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [isAnalyzingImage, setIsAnalyzingImage] = useState(false);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Hook de gravação de áudio
+  const {
+    status: recorderStatus,
+    error: recorderError,
+    duration: recordingDuration,
+    startRecording,
+    stopRecording,
+    cancelRecording,
+    reset: resetRecorder,
+  } = useAudioRecorder();
 
   // Scroll para última mensagem
   const scrollToBottom = () => {
@@ -95,16 +118,228 @@ export default function ChatPage() {
     clearChatMessages();
   };
 
+  // Sincroniza estado do recorder com o estado local
+  useEffect(() => {
+    if (recorderStatus === "recording") {
+      setRecordingState("recording");
+      setRecordingError(undefined);
+    } else if (recorderStatus === "processing") {
+      setRecordingState("processing");
+    } else if (recorderStatus === "error") {
+      setRecordingState("error");
+      // Mapeia erros para mensagens amigáveis
+      const errorMessages: Record<string, string> = {
+        permission_denied: "Permissão de microfone negada. Habilite nas configurações.",
+        not_supported: "Seu navegador não suporta gravação de áudio.",
+        no_microphone: "Nenhum microfone encontrado.",
+        unknown: "Erro ao acessar o microfone.",
+      };
+      setRecordingError(errorMessages[recorderError || "unknown"]);
+    } else if (recorderStatus === "idle" && recordingState !== "idle") {
+      setRecordingState("idle");
+    }
+  }, [recorderStatus, recorderError, recordingState]);
+
   /**
-   * Envia mensagem para a AI
+   * Inicia gravação de áudio
    */
-  const handleSend = async () => {
-    if (!message.trim() || isSending || !profile) return;
+  const handleStartRecording = useCallback(async () => {
+    setTranscribedText(undefined);
+    setRecordingError(undefined);
+    await startRecording();
+  }, [startRecording]);
+
+  /**
+   * Para gravação e transcreve o áudio
+   */
+  const handleStopRecording = useCallback(async () => {
+    setRecordingState("processing");
+
+    const audioBlob = await stopRecording();
+
+    if (!audioBlob) {
+      setRecordingState("error");
+      setRecordingError("Nenhum áudio gravado.");
+      return;
+    }
+
+    try {
+      // Envia para API de transcrição
+      const formData = new FormData();
+      formData.append("audio", audioBlob, "audio.webm");
+
+      const response = await fetch("/api/transcribe", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Erro na transcrição");
+      }
+
+      // Preenche o input com o texto transcrito
+      setTranscribedText(data.text);
+      setRecordingState("idle");
+      showToast("Áudio transcrito!", "success");
+    } catch (err) {
+      setRecordingState("error");
+      setRecordingError(
+        err instanceof Error ? err.message : "Erro ao transcrever áudio"
+      );
+    }
+  }, [stopRecording, showToast]);
+
+  /**
+   * Cancela gravação
+   */
+  const handleCancelRecording = useCallback(() => {
+    cancelRecording();
+    setRecordingState("idle");
+    setRecordingError(undefined);
+  }, [cancelRecording]);
+
+  /**
+   * Handler para seleção de imagem
+   */
+  const handleImageSelect = useCallback((file: File) => {
+    setSelectedImage(file);
+  }, []);
+
+  /**
+   * Remove imagem selecionada
+   */
+  const handleRemoveImage = useCallback(() => {
+    setSelectedImage(null);
+  }, []);
+
+  /**
+   * Converte arquivo para base64
+   */
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const result = reader.result as string;
+        // Remove o prefixo "data:image/...;base64,"
+        const base64 = result.split(",")[1];
+        resolve(base64);
+      };
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  /**
+   * Envia imagem para análise
+   */
+  const handleSendImage = useCallback(async () => {
+    if (!selectedImage || isAnalyzingImage || !profile) return;
+
+    setIsAnalyzingImage(true);
+
+    try {
+      // Converte imagem para base64
+      const base64 = await fileToBase64(selectedImage);
+
+      // Adiciona mensagem do usuário com indicação de foto
+      const userMessage: ChatMessage = {
+        id: generateMessageId(),
+        role: "user",
+        content: "📷 [Foto de refeição enviada]",
+        timestamp: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, userMessage]);
+
+      // Envia para API de análise
+      const response = await fetch("/api/analyze-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          image: base64,
+          mimeType: selectedImage.type,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Erro ao analisar imagem");
+      }
+
+      const { analysis } = data;
+
+      // Monta resposta baseada na análise
+      let responseContent: string;
+
+      if (!analysis.isFood) {
+        responseContent = "Não consegui identificar alimentos nesta imagem. Tente enviar uma foto mais clara da refeição.";
+      } else {
+        // Formata a resposta com os alimentos identificados
+        const itemsList = analysis.items
+          .map((item: { name: string; portion: string; calories: number; protein: number }) =>
+            `• ${item.name} (${item.portion}) - ${item.calories}kcal, ${item.protein}g prot`
+          )
+          .join("\n");
+
+        responseContent = `📸 **Análise da refeição:**\n\n${analysis.description}\n\n**Alimentos identificados:**\n${itemsList}\n\n**Totais estimados:**\n🔥 ${analysis.totals.calories} kcal\n🥩 ${analysis.totals.protein}g proteína\n🍚 ${analysis.totals.carbs}g carboidratos\n🧈 ${analysis.totals.fat}g gordura\n\n_Confiança: ${analysis.confidence}_\n\n✓ Registrado! Quer corrigir algo?`;
+
+        // Salva a refeição
+        saveMeal({
+          type: "other",
+          items: analysis.items.map((item: { name: string; portion: string; calories: number; protein: number; carbs: number; fat: number }) => ({
+            name: item.name,
+            quantity: 1,
+            unit: item.portion,
+            calories: item.calories,
+            protein: item.protein,
+            carbs: item.carbs,
+            fat: item.fat,
+          })),
+          totalCalories: analysis.totals.calories,
+          totalProtein: analysis.totals.protein,
+          totalCarbs: analysis.totals.carbs,
+          totalFat: analysis.totals.fat,
+          rawText: `Foto: ${analysis.description}`,
+        });
+
+        showToast("Refeição registrada!", "success");
+      }
+
+      // Adiciona resposta da AI
+      const aiMessage: ChatMessage = {
+        id: generateMessageId(),
+        role: "assistant",
+        content: responseContent,
+        timestamp: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, aiMessage]);
+
+      // Limpa imagem selecionada
+      setSelectedImage(null);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Erro ao analisar imagem";
+      setError(errorMessage);
+      showToast("Erro na análise", "error");
+    } finally {
+      setIsAnalyzingImage(false);
+    }
+  }, [selectedImage, isAnalyzingImage, profile, showToast]);
+
+  /**
+   * Envia mensagem para a AI (chamado pelo ChatInput)
+   */
+  const handleSendMessage = async (messageText: string) => {
+    if (!messageText.trim() || isSending || !profile) return;
+
+    // Limpa texto transcrito após enviar
+    setTranscribedText(undefined);
 
     const userMessage: ChatMessage = {
       id: generateMessageId(),
       role: "user",
-      content: message.trim(),
+      content: messageText.trim(),
       timestamp: new Date().toISOString(),
     };
 
@@ -240,7 +475,7 @@ export default function ChatPage() {
               {/* Sugestões rápidas */}
               <ChipGroup
                 chips={INITIAL_SUGGESTIONS}
-                onChipClick={setMessage}
+                onChipClick={(text) => handleSendMessage(text)}
                 className="mt-4"
               />
             </div>
@@ -289,30 +524,37 @@ export default function ChatPage() {
           </div>
         )}
 
-        {/* Área de input */}
-        <div className="flex items-end gap-3 border-t border-white/5 py-4">
-          <div className="flex min-h-[52px] flex-1 items-center rounded-3xl border border-border-subtle bg-surface-input px-4 py-2 transition-shadow focus-within:ring-2 focus-within:ring-primary/50">
-            <input
-              className="w-full bg-transparent p-0 text-base text-white placeholder:text-text-muted focus:outline-none"
-              placeholder="Digite sua mensagem..."
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyDown={(e) =>
-                e.key === "Enter" && !e.shiftKey && handleSend()
-              }
+        {/* Área de input com suporte a áudio e foto */}
+        <div className="border-t border-white/5 py-4">
+          {/* Preview de imagem selecionada */}
+          {selectedImage && (
+            <div className="mb-4">
+              <ImagePreview
+                file={selectedImage}
+                onRemove={handleRemoveImage}
+                onSend={handleSendImage}
+                isLoading={isAnalyzingImage}
+                loadingMessage="Analisando refeição..."
+              />
+            </div>
+          )}
+
+          {/* Input de texto/áudio (oculto quando tem imagem) */}
+          {!selectedImage && (
+            <ChatInput
+              placeholder="Digite ou grave sua mensagem..."
+              onSend={handleSendMessage}
+              onStartRecording={handleStartRecording}
+              onStopRecording={handleStopRecording}
+              onCancelRecording={handleCancelRecording}
+              onImageSelect={handleImageSelect}
               disabled={isSending}
-              type="text"
+              recordingState={recordingState}
+              recordingDuration={recordingDuration}
+              recordingError={recordingError}
+              transcribedText={transcribedText}
             />
-          </div>
-          <button
-            type="button"
-            onClick={handleSend}
-            disabled={!message.trim() || isSending}
-            className="flex size-[52px] shrink-0 items-center justify-center rounded-full bg-primary text-white shadow-lg shadow-primary/30 transition-all hover:bg-primary/90 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
-            aria-label="Enviar mensagem"
-          >
-            <span className="material-symbols-outlined">send</span>
-          </button>
+          )}
         </div>
       </div>
 
