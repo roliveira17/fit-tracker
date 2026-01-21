@@ -180,6 +180,7 @@
 | 2026-01-21 | Bug Fixes | ChatInput expandível, AI perguntar quantidade, Apple Health streaming | Fixes: textarea auto-expand, prompts para quantidade, streaming para arquivos >100MB |
 | 2026-01-21 | Push Notifications | lib/notifications, NotificationSettings, Provider | MVP: lembretes para refeições e peso via Notification API |
 | 2026-01-21 | Autenticação Social | lib/auth, AuthProvider, LoginPage, AccountSection | MVP: login Google/Apple via NextAuth.js, sessão JWT |
+| 2026-01-21 | Config Google OAuth | Credenciais no .env.local, teste de login | Login funcionando! Bug: avatar bloqueado (next.config.js) |
 
 ---
 
@@ -197,7 +198,20 @@
 
 | # | Descrição | Feature | Status |
 |---|-----------|---------|--------|
-| — | — | — | — |
+| 1 | Avatar Google bloqueado - hostname "lh3.googleusercontent.com" não configurado em next.config.js | Auth | PENDENTE |
+
+### Fix necessário para Bug #1:
+Adicionar em `next.config.js`:
+```js
+images: {
+  remotePatterns: [
+    {
+      protocol: 'https',
+      hostname: 'lh3.googleusercontent.com',
+    },
+  ],
+},
+```
 
 ---
 
