@@ -22,7 +22,8 @@
       "Bash(Remove-Item -Recurse -Force \"c:\\\\projetos\\\\gymrats\\\\.next\" -ErrorAction SilentlyContinue)",
       "Bash(npx tsc:*)",
       "Bash(npm run build:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ],
     "additionalDirectories": [
       "c:\\projetos\\gymrats"

@@ -198,20 +198,7 @@
 
 | # | Descrição | Feature | Status |
 |---|-----------|---------|--------|
-| 1 | Avatar Google bloqueado - hostname "lh3.googleusercontent.com" não configurado em next.config.js | Auth | PENDENTE |
-
-### Fix necessário para Bug #1:
-Adicionar em `next.config.js`:
-```js
-images: {
-  remotePatterns: [
-    {
-      protocol: 'https',
-      hostname: 'lh3.googleusercontent.com',
-    },
-  ],
-},
-```
+| 1 | ~~Avatar Google bloqueado~~ | Auth | RESOLVIDO ✅ |
 
 ---
 
