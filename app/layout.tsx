@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from "@/components/providers/AuthProvider";
+import { SupabaseAuthProvider } from "@/components/providers/SupabaseAuthProvider";
 import { NotificationProvider } from "@/components/providers/NotificationProvider";
 
 // Fonte principal do novo design system
@@ -31,9 +31,9 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
-        <AuthProvider>
+        <SupabaseAuthProvider>
           <NotificationProvider>{children}</NotificationProvider>
-        </AuthProvider>
+        </SupabaseAuthProvider>
       </body>
     </html>
   );

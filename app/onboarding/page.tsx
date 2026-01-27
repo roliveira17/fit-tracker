@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { WelcomeHero } from "@/components/ui/Onboarding";
+import { useAuth } from "@/components/providers/SupabaseAuthProvider";
 
 // ========================================
 // WELCOME PAGE - Tela de boas-vindas/login
@@ -12,15 +14,29 @@ import { WelcomeHero } from "@/components/ui/Onboarding";
 
 export default function WelcomePage() {
   const router = useRouter();
+  const { signInWithGoogle, signInWithApple } = useAuth();
+  const [isLoading, setIsLoading] = useState<"google" | "apple" | null>(null);
 
-  const handleAppleLogin = () => {
-    alert("Apple Sign-In será implementado em breve!");
-    router.push("/onboarding/tour");
+  const handleAppleLogin = async () => {
+    setIsLoading("apple");
+    try {
+      await signInWithApple();
+      // Após login, o SupabaseAuthProvider redireciona automaticamente
+    } catch (error) {
+      console.error("Erro no login Apple:", error);
+      setIsLoading(null);
+    }
   };
 
-  const handleGoogleLogin = () => {
-    alert("Google Sign-In será implementado em breve!");
-    router.push("/onboarding/tour");
+  const handleGoogleLogin = async () => {
+    setIsLoading("google");
+    try {
+      await signInWithGoogle();
+      // Após login, o SupabaseAuthProvider redireciona automaticamente
+    } catch (error) {
+      console.error("Erro no login Google:", error);
+      setIsLoading(null);
+    }
   };
 
   const handleLocalMode = () => {
@@ -43,25 +59,36 @@ export default function WelcomePage() {
           {/* Apple Button */}
           <button
             onClick={handleAppleLogin}
-            className="flex items-center justify-center gap-3 w-full h-14 rounded-xl bg-white text-black font-semibold text-base transition-all hover:bg-white/90 active:scale-[0.98]"
+            disabled={isLoading !== null}
+            className="flex items-center justify-center gap-3 w-full h-14 rounded-xl bg-white text-black font-semibold text-base transition-all hover:bg-white/90 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <AppleIcon className="w-5 h-5" />
+            {isLoading === "apple" ? (
+              <span className="material-symbols-outlined animate-spin text-[20px]">progress_activity</span>
+            ) : (
+              <AppleIcon className="w-5 h-5" />
+            )}
             Continuar com Apple
           </button>
 
           {/* Google Button */}
           <button
             onClick={handleGoogleLogin}
-            className="flex items-center justify-center gap-3 w-full h-14 rounded-xl bg-surface-dark border border-white/10 text-white font-semibold text-base transition-all hover:bg-surface-dark/80 hover:border-white/20 active:scale-[0.98]"
+            disabled={isLoading !== null}
+            className="flex items-center justify-center gap-3 w-full h-14 rounded-xl bg-surface-dark border border-white/10 text-white font-semibold text-base transition-all hover:bg-surface-dark/80 hover:border-white/20 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <GoogleIcon className="w-5 h-5" />
+            {isLoading === "google" ? (
+              <span className="material-symbols-outlined animate-spin text-[20px]">progress_activity</span>
+            ) : (
+              <GoogleIcon className="w-5 h-5" />
+            )}
             Continuar com Google
           </button>
 
           {/* Local Mode Link */}
           <button
             onClick={handleLocalMode}
-            className="w-full py-3 text-text-secondary text-sm font-medium hover:text-white transition-colors"
+            disabled={isLoading !== null}
+            className="w-full py-3 text-text-secondary text-sm font-medium hover:text-white transition-colors disabled:opacity-50"
           >
             Continuar sem login →
           </button>

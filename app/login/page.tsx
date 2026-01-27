@@ -3,16 +3,16 @@
 /**
  * Página de Login
  *
- * Permite login social com Google e Apple.
+ * Permite login social com Google e Apple via Supabase Auth.
  * Após autenticação, redireciona para /home.
  */
 
-import { signIn, useSession } from "next-auth/react";
+import { useAuth } from "@/components/providers/SupabaseAuthProvider";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
 function LoginContent() {
-  const { data: session, status } = useSession();
+  const { user, isLoading: authLoading, signInWithGoogle, signInWithApple } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState<"google" | "apple" | null>(null);
@@ -20,29 +20,17 @@ function LoginContent() {
 
   // Se já autenticado, redireciona
   useEffect(() => {
-    if (status === "authenticated") {
+    if (!authLoading && user) {
       router.push("/home");
     }
-  }, [status, router]);
+  }, [authLoading, user, router]);
 
   // Verifica erros da URL
   useEffect(() => {
     const errorParam = searchParams.get("error");
+    const errorDescription = searchParams.get("error_description");
     if (errorParam) {
-      switch (errorParam) {
-        case "OAuthSignin":
-        case "OAuthCallback":
-          setError("Erro ao conectar com o provedor. Tente novamente.");
-          break;
-        case "OAuthCreateAccount":
-          setError("Não foi possível criar a conta. Tente novamente.");
-          break;
-        case "Callback":
-          setError("Erro durante autenticação. Tente novamente.");
-          break;
-        default:
-          setError("Ocorreu um erro. Tente novamente.");
-      }
+      setError(errorDescription || "Ocorreu um erro. Tente novamente.");
     }
   }, [searchParams]);
 
@@ -50,7 +38,7 @@ function LoginContent() {
     setIsLoading("google");
     setError(null);
     try {
-      await signIn("google", { callbackUrl: "/home" });
+      await signInWithGoogle();
     } catch {
       setError("Erro ao conectar com Google");
       setIsLoading(null);
@@ -61,7 +49,7 @@ function LoginContent() {
     setIsLoading("apple");
     setError(null);
     try {
-      await signIn("apple", { callbackUrl: "/home" });
+      await signInWithApple();
     } catch {
       setError("Erro ao conectar com Apple");
       setIsLoading(null);
@@ -73,7 +61,7 @@ function LoginContent() {
   };
 
   // Loading inicial
-  if (status === "loading") {
+  if (authLoading) {
     return (
       <main className="min-h-screen bg-surface-dark flex items-center justify-center">
         <div className="animate-pulse">
@@ -183,8 +171,7 @@ function LoginContent() {
 
       {/* Info */}
       <p className="mt-6 text-xs text-text-secondary text-center max-w-sm">
-        Ao entrar, seus dados ficam salvos apenas no seu dispositivo. Em breve,
-        sincronização na nuvem.
+        Ao entrar, seus dados são sincronizados na nuvem e ficam disponíveis em qualquer dispositivo.
       </p>
     </main>
   );

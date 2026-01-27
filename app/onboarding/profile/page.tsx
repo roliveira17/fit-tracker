@@ -13,6 +13,8 @@ import {
   setOnboardingComplete,
   type UserProfile,
 } from "@/lib/storage";
+import { useAuth } from "@/components/providers/SupabaseAuthProvider";
+import { createProfile } from "@/lib/supabase";
 
 /**
  * Tipos para o formulário de perfil
@@ -74,6 +76,7 @@ function calculateBMR(
  */
 export default function ProfilePage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [form, setForm] = useState<ProfileForm>({
@@ -168,9 +171,27 @@ export default function ProfilePage() {
       createdAt: new Date().toISOString(),
     };
 
-    // Salva no localStorage
+    // Salva no localStorage (sempre, para fallback offline)
     saveUserProfile(userProfile);
     setOnboardingComplete(true);
+
+    // Se usuário está logado, salva também no Supabase
+    if (user) {
+      try {
+        await createProfile({
+          name: form.name.trim(),
+          gender: form.gender as "masculino" | "feminino",
+          birth_date: form.birthDate,
+          height_cm: height,
+          weight_kg: weight,
+          tdee_multiplier: 1.2, // Sedentário como padrão inicial
+        });
+        console.log("Perfil salvo no Supabase");
+      } catch (error) {
+        console.error("Erro ao salvar perfil no Supabase:", error);
+        // Continua mesmo se falhar no Supabase (localStorage já está salvo)
+      }
+    }
 
     console.log("Perfil salvo:", userProfile);
 
