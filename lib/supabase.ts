@@ -266,25 +266,31 @@ export async function logWeight(weightKg: number, rawText?: string): Promise<Wei
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data, error } = await supabase
-    .from("weight_logs")
-    .upsert({
-      user_id: user.id,
-      weight_kg: weightKg,
-      date: new Date().toISOString().split("T")[0],
-      source: "chat",
-      raw_text: rawText
-    }, {
-      onConflict: "user_id,date"
-    })
-    .select()
-    .single();
+  const date = new Date().toISOString().split("T")[0];
 
-  if (error) {
+  // Usar função RPC com SECURITY DEFINER para bypass RLS
+  const { data: weightId, error } = await supabase.rpc("insert_weight_log", {
+    p_user_id: user.id,
+    p_weight_kg: weightKg,
+    p_date: date,
+    p_source: "chat",
+    p_raw_text: rawText || null
+  });
+
+  if (error || !weightId) {
     console.error("Error logging weight:", error);
     return null;
   }
-  return data;
+
+  return {
+    id: weightId,
+    user_id: user.id,
+    weight_kg: weightKg,
+    date,
+    source: "chat",
+    raw_text: rawText,
+    created_at: new Date().toISOString()
+  };
 }
 
 export async function logMeal(
@@ -372,36 +378,53 @@ export async function logWorkout(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data: workout, error: workoutError } = await supabase
-    .from("workouts")
-    .insert({
-      user_id: user.id,
-      workout_type: workoutType,
-      date: new Date().toISOString().split("T")[0],
-      duration_min: durationMin,
-      calories_burned: caloriesBurned,
-      source: "chat",
-      raw_text: rawText
-    })
-    .select()
-    .single();
+  const date = new Date().toISOString().split("T")[0];
 
-  if (workoutError || !workout) {
+  // Usar função RPC com SECURITY DEFINER para bypass RLS
+  const { data: workoutId, error: workoutError } = await supabase.rpc("insert_workout", {
+    p_user_id: user.id,
+    p_workout_type: workoutType,
+    p_date: date,
+    p_duration_min: durationMin || null,
+    p_calories_burned: caloriesBurned || null,
+    p_source: "chat",
+    p_raw_text: rawText || null
+  });
+
+  if (workoutError || !workoutId) {
     console.error("Error creating workout:", workoutError);
     return null;
   }
 
+  // Inserir cada exercício usando função RPC
   if (exercises && exercises.length > 0) {
-    const { error: setsError } = await supabase
-      .from("workout_sets")
-      .insert(exercises.map(ex => ({ ...ex, workout_id: workout.id })));
+    for (const ex of exercises) {
+      const { error: setError } = await supabase.rpc("insert_workout_set", {
+        p_workout_id: workoutId,
+        p_exercise_name: ex.exercise_name,
+        p_sets: ex.sets || null,
+        p_reps: ex.reps || null,
+        p_weight_kg: ex.weight_kg || null,
+        p_duration_min: ex.duration_min || null
+      });
 
-    if (setsError) {
-      console.error("Error adding workout sets:", setsError);
+      if (setError) {
+        console.error("Error adding workout set:", setError);
+      }
     }
   }
 
-  return workout;
+  return {
+    id: workoutId,
+    user_id: user.id,
+    workout_type: workoutType,
+    date,
+    duration_min: durationMin,
+    calories_burned: caloriesBurned,
+    source: "chat",
+    raw_text: rawText,
+    created_at: new Date().toISOString()
+  };
 }
 
 export async function importAppleHealth(data: {
@@ -464,25 +487,31 @@ export async function logBodyFat(percentage: number, rawText?: string): Promise<
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data, error } = await supabase
-    .from("body_fat_logs")
-    .upsert({
-      user_id: user.id,
-      body_fat_pct: percentage,
-      date: new Date().toISOString().split("T")[0],
-      source: "chat",
-      raw_text: rawText
-    }, {
-      onConflict: "user_id,date"
-    })
-    .select()
-    .single();
+  const date = new Date().toISOString().split("T")[0];
 
-  if (error) {
+  // Usar função RPC com SECURITY DEFINER para bypass RLS
+  const { data: bodyFatId, error } = await supabase.rpc("insert_body_fat_log", {
+    p_user_id: user.id,
+    p_body_fat_pct: percentage,
+    p_date: date,
+    p_source: "chat",
+    p_raw_text: rawText || null
+  });
+
+  if (error || !bodyFatId) {
     console.error("Error logging body fat:", error);
     return null;
   }
-  return data;
+
+  return {
+    id: bodyFatId,
+    user_id: user.id,
+    body_fat_pct: percentage,
+    date,
+    source: "chat",
+    raw_text: rawText,
+    created_at: new Date().toISOString()
+  };
 }
 
 // ============================================
@@ -522,25 +551,37 @@ export async function logGlucose(
   if (!user) return null;
 
   const now = new Date();
-  const { data, error } = await supabase
-    .from("glucose_logs")
-    .insert({
-      user_id: user.id,
-      glucose_mg_dl: glucoseMgDl,
-      date: now.toISOString().split("T")[0],
-      time: now.toTimeString().split(" ")[0],
-      measurement_type: measurementType,
-      notes,
-      source: "chat"
-    })
-    .select()
-    .single();
+  const date = now.toISOString().split("T")[0];
+  const time = now.toTimeString().split(" ")[0];
 
-  if (error) {
+  // Usar função RPC com SECURITY DEFINER para bypass RLS
+  const { data: glucoseId, error } = await supabase.rpc("insert_glucose_log", {
+    p_user_id: user.id,
+    p_glucose_mg_dl: glucoseMgDl,
+    p_date: date,
+    p_time: time,
+    p_measurement_type: measurementType,
+    p_notes: notes || null,
+    p_device: null,
+    p_source: "chat"
+  });
+
+  if (error || !glucoseId) {
     console.error("Error logging glucose:", error);
     return null;
   }
-  return data;
+
+  return {
+    id: glucoseId,
+    user_id: user.id,
+    glucose_mg_dl: glucoseMgDl,
+    date,
+    time,
+    measurement_type: measurementType,
+    notes,
+    source: "chat",
+    created_at: new Date().toISOString()
+  };
 }
 
 export interface GlucoseReadingImport {
