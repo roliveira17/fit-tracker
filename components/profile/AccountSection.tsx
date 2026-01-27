@@ -7,13 +7,13 @@
  * Permite fazer logout.
  */
 
-import { useSession, signOut } from "next-auth/react";
+import { useAuth } from "@/components/providers/SupabaseAuthProvider";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useState } from "react";
 
 export function AccountSection() {
-  const { data: session, status } = useSession();
+  const { user, isLoading, signOut } = useAuth();
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -23,12 +23,12 @@ export function AccountSection() {
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
-    await signOut({ redirect: false });
+    await signOut();
     setIsLoggingOut(false);
   };
 
   // Loading
-  if (status === "loading") {
+  if (isLoading) {
     return (
       <section className="rounded-xl border border-border-subtle bg-surface-card p-4">
         <div className="animate-pulse flex items-center gap-4">
@@ -43,7 +43,7 @@ export function AccountSection() {
   }
 
   // Não autenticado
-  if (!session) {
+  if (!user) {
     return (
       <section className="rounded-xl border border-border-subtle bg-surface-card p-4">
         <div className="flex items-center justify-between">
@@ -78,18 +78,19 @@ export function AccountSection() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           {/* Avatar */}
-          {session.user?.image ? (
+          {user.user_metadata?.avatar_url && user.user_metadata.avatar_url.startsWith("http") ? (
             <Image
-              src={session.user.image}
-              alt={session.user.name || "Avatar"}
+              src={user.user_metadata.avatar_url}
+              alt={user.user_metadata?.full_name || "Avatar"}
               width={48}
               height={48}
               className="rounded-full"
+              unoptimized={!user.user_metadata.avatar_url.includes("googleusercontent.com")}
             />
           ) : (
             <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
               <span className="text-lg font-semibold text-white">
-                {session.user?.name?.charAt(0).toUpperCase() || "U"}
+                {user.user_metadata?.full_name?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || "U"}
               </span>
             </div>
           )}
@@ -97,10 +98,10 @@ export function AccountSection() {
           {/* Info */}
           <div>
             <p className="text-sm text-white font-medium">
-              {session.user?.name || "Usuário"}
+              {user.user_metadata?.full_name || "Usuário"}
             </p>
             <p className="text-xs text-text-secondary">
-              {session.user?.email || ""}
+              {user.email || ""}
             </p>
           </div>
         </div>
