@@ -1,7 +1,7 @@
 # Troubleshooting: Google Login não funciona
 
-> Última atualização: 2026-01-27 23:30
-> Status: **EM INVESTIGAÇÃO**
+> Última atualização: 2026-01-27
+> Status: **RESOLVIDO** ✅
 
 ---
 
@@ -163,10 +163,21 @@ Quando testar, coletar:
 
 ## Resolução
 
-_Preencher quando resolvido_
-
 | Campo | Valor |
 |-------|-------|
-| Causa raiz | |
-| Solução aplicada | |
-| Data resolução | |
+| Causa raiz | Variáveis de ambiente do Supabase não configuradas na Vercel |
+| Solução aplicada | Configurar via Vercel CLI: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `OPENAI_API_KEY` |
+| Data resolução | 2026-01-27 |
+| Commit de deploy | `6bc8185` |
+
+### Passos da Solução
+
+1. Instalar Vercel CLI: `npm install -g vercel`
+2. Linkar projeto: `vercel link --yes`
+3. Adicionar variáveis:
+   ```bash
+   echo "URL" | vercel env add NEXT_PUBLIC_SUPABASE_URL production
+   echo "KEY" | vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY production
+   echo "KEY" | vercel env add OPENAI_API_KEY production
+   ```
+4. Forçar redeploy: `git commit --allow-empty -m "trigger" && git push`

@@ -9,16 +9,18 @@
 
 | Campo | Valor |
 |-------|-------|
-| **Feature em andamento** | 🔴 Google Login não funciona em produção |
-| **Status** | DEBUG EM ANDAMENTO |
+| **Feature em andamento** | ✅ Google Login funcionando em produção |
+| **Status** | RESOLVIDO |
 | **Última atualização** | 2026-01-27 |
-| **Doc de troubleshooting** | `docs/back-end/AUTH-TROUBLESHOOTING.md` |
+| **Deploy URL** | https://fit-tracker-murex.vercel.app |
 
-### Problema Atual
-- Login com Google mostra "será implementado em breve" na Vercel
-- Código no GitHub está correto (sem alert)
-- Todas as configurações (Google Console + Supabase) estão corretas
-- **Próximo passo:** Verificar se deploy na Vercel está atualizado
+### Resolução do Problema
+- **Causa raiz:** Variáveis de ambiente do Supabase não estavam configuradas na Vercel
+- **Solução:** Configuradas via Vercel CLI:
+  - `NEXT_PUBLIC_SUPABASE_URL`
+  - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+  - `OPENAI_API_KEY`
+- **Deploy:** Commit `6bc8185` - Build successful
 
 ---
 
@@ -188,6 +190,7 @@
 | 2026-01-21 | Push Notifications | lib/notifications, NotificationSettings, Provider | MVP: lembretes para refeições e peso via Notification API |
 | 2026-01-21 | Autenticação Social | lib/auth, AuthProvider, LoginPage, AccountSection | MVP: login Google/Apple via NextAuth.js, sessão JWT |
 | 2026-01-21 | Config Google OAuth | Credenciais no .env.local, teste de login | Login funcionando! Bug: avatar bloqueado (next.config.js) |
+| 2026-01-27 | Fix Google Login Prod | Vercel env vars, redeploy | Causa: env vars não configuradas na Vercel. Solução: Vercel CLI |
 
 ---
 
