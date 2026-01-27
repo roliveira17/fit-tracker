@@ -307,7 +307,8 @@ export default function ChatPage() {
       type: "snack",
       items: [{
         name: productName,
-        grams,
+        quantity: grams,
+        unit: "g",
         calories: mealItem.calories,
         protein: mealItem.protein,
         carbs: mealItem.carbs,
