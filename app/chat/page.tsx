@@ -303,7 +303,6 @@ export default function ChatPage() {
 
     // Salva no localStorage também
     saveMeal({
-      id: generateMessageId(),
       type: "snack",
       items: [{
         name: productName,
@@ -318,7 +317,7 @@ export default function ChatPage() {
       totalProtein: mealItem.protein,
       totalCarbs: mealItem.carbs,
       totalFat: mealItem.fat,
-      date: new Date().toISOString(),
+      rawText: `Barcode: ${scannedProduct.barcode}`,
     });
 
     showToast("Produto registrado!", "success");
