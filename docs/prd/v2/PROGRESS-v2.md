@@ -9,9 +9,16 @@
 
 | Campo | Valor |
 |-------|-------|
-| **Feature em andamento** | — (todas concluídas!) |
-| **Status** | CONCLUÍDO |
-| **Última atualização** | 2026-01-21 |
+| **Feature em andamento** | 🔴 Google Login não funciona em produção |
+| **Status** | DEBUG EM ANDAMENTO |
+| **Última atualização** | 2026-01-27 |
+| **Doc de troubleshooting** | `docs/back-end/AUTH-TROUBLESHOOTING.md` |
+
+### Problema Atual
+- Login com Google mostra "será implementado em breve" na Vercel
+- Código no GitHub está correto (sem alert)
+- Todas as configurações (Google Console + Supabase) estão corretas
+- **Próximo passo:** Verificar se deploy na Vercel está atualizado
 
 ---
 
