@@ -47,3 +47,11 @@ nul
 
 # Data files (large)
 data/
+docs/db/export/
+
+# Playwright
+playwright-report/
+test-results/
+
+.vercel
+.env*.local

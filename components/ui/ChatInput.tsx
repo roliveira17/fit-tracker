@@ -22,12 +22,14 @@ interface ChatInputProps {
   onStopRecording?: () => void;
   onCancelRecording?: () => void;
   onImageSelect?: (file: File) => void; // Callback para seleção de imagem
+  onBarcodeClick?: () => void; // Callback para abrir scanner de barcode
   disabled?: boolean;
   recordingState?: RecordingState;
   recordingDuration?: number; // Duração em segundos
   recordingError?: string;
   transcribedText?: string; // Texto transcrito para preencher o input
   showImageButton?: boolean; // Mostrar botão de foto (default: true)
+  showBarcodeButton?: boolean; // Mostrar botão de barcode (default: true)
 }
 
 export function ChatInput({
@@ -37,12 +39,14 @@ export function ChatInput({
   onStopRecording,
   onCancelRecording,
   onImageSelect,
+  onBarcodeClick,
   disabled = false,
   recordingState = "idle",
   recordingDuration = 0,
   recordingError,
   transcribedText,
   showImageButton = true,
+  showBarcodeButton = true,
 }: ChatInputProps) {
   const [value, setValue] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -218,6 +222,26 @@ export function ChatInput({
       )}
 
       <div className="flex items-end gap-3 w-full">
+        {/* Botão de barcode */}
+        {showBarcodeButton && onBarcodeClick && (
+          <button
+            onClick={onBarcodeClick}
+            disabled={disabled || isProcessing}
+            className={`
+              flex shrink-0 items-center justify-center
+              size-[52px] rounded-full
+              bg-surface-card text-text-secondary
+              border border-border-subtle
+              hover:text-white hover:bg-surface-dark
+              active:scale-95 transition-all
+              disabled:opacity-50 disabled:cursor-not-allowed
+            `}
+            title="Escanear código de barras"
+          >
+            <span className="material-symbols-outlined">qr_code_scanner</span>
+          </button>
+        )}
+
         {/* Botão de foto */}
         {showImageButton && onImageSelect && (
           <button

@@ -8,6 +8,8 @@ import { TypingIndicator } from "@/components/chat/TypingIndicator";
 import { ChipGroup, type Chip } from "@/components/chat/ChipGroup";
 import { ChatInput, type RecordingState } from "@/components/ui/ChatInput";
 import { ImagePreview } from "@/components/chat/ImagePreview";
+import { BarcodeScanner, ScannedProductCard } from "@/components/import/BarcodeScanner";
+import { offProductToMealItem, type NormalizedProduct } from "@/lib/openfoodfacts";
 import { useAudioRecorder } from "@/hooks/useAudioRecorder";
 import {
   getUserProfile,
@@ -72,6 +74,10 @@ export default function ChatPage() {
   // Estado de imagem
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [isAnalyzingImage, setIsAnalyzingImage] = useState(false);
+
+  // Estado do scanner de barcode
+  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
+  const [scannedProduct, setScannedProduct] = useState<NormalizedProduct | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -227,6 +233,96 @@ export default function ChatPage() {
   const handleRemoveImage = useCallback(() => {
     setSelectedImage(null);
   }, []);
+
+  /**
+   * Abre scanner de barcode
+   */
+  const handleOpenBarcodeScanner = useCallback(() => {
+    setShowBarcodeScanner(true);
+  }, []);
+
+  /**
+   * Fecha scanner de barcode
+   */
+  const handleCloseBarcodeScanner = useCallback(() => {
+    setShowBarcodeScanner(false);
+    setScannedProduct(null);
+  }, []);
+
+  /**
+   * Produto escaneado - mostra card para adicionar
+   */
+  const handleProductScanned = useCallback((product: NormalizedProduct) => {
+    setScannedProduct(product);
+    setShowBarcodeScanner(false);
+  }, []);
+
+  /**
+   * Adiciona produto escaneado como refeição
+   */
+  const handleAddScannedProduct = useCallback(async (grams: number) => {
+    if (!scannedProduct || !profile) return;
+
+    const mealItem = offProductToMealItem(scannedProduct, grams);
+    const productName = scannedProduct.brand
+      ? `${scannedProduct.productName} (${scannedProduct.brand})`
+      : scannedProduct.productName;
+
+    // Adiciona mensagem do usuário
+    const userMessage: ChatMessage = {
+      id: generateMessageId(),
+      role: "user",
+      content: `🔲 [Código de barras: ${productName}]`,
+      timestamp: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, userMessage]);
+
+    // Monta resposta
+    const responseContent = `📦 **Produto escaneado:**\n\n${productName}\n\n**Porção: ${grams}g**\n🔥 ${mealItem.calories} kcal\n🥩 ${mealItem.protein}g proteína\n🍚 ${mealItem.carbs}g carboidratos\n🧈 ${mealItem.fat}g gordura\n\n✓ Registrado!`;
+
+    // Adiciona resposta da AI
+    const aiMessage: ChatMessage = {
+      id: generateMessageId(),
+      role: "assistant",
+      content: responseContent,
+      timestamp: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, aiMessage]);
+
+    // Salva no Supabase se logado
+    if (user) {
+      await logMeal("snack", [{
+        food_name: productName,
+        quantity_g: grams,
+        calories: mealItem.calories,
+        protein_g: mealItem.protein,
+        carbs_g: mealItem.carbs,
+        fat_g: mealItem.fat,
+      }], `Barcode: ${scannedProduct.barcode}`);
+    }
+
+    // Salva no localStorage também
+    saveMeal({
+      id: generateMessageId(),
+      type: "snack",
+      items: [{
+        name: productName,
+        grams,
+        calories: mealItem.calories,
+        protein: mealItem.protein,
+        carbs: mealItem.carbs,
+        fat: mealItem.fat,
+      }],
+      totalCalories: mealItem.calories,
+      totalProtein: mealItem.protein,
+      totalCarbs: mealItem.carbs,
+      totalFat: mealItem.fat,
+      date: new Date().toISOString(),
+    });
+
+    showToast("Produto registrado!", "success");
+    setScannedProduct(null);
+  }, [scannedProduct, profile, user, showToast]);
 
   /**
    * Converte arquivo para base64
@@ -645,6 +741,7 @@ export default function ChatPage() {
               onStopRecording={handleStopRecording}
               onCancelRecording={handleCancelRecording}
               onImageSelect={handleImageSelect}
+              onBarcodeClick={handleOpenBarcodeScanner}
               disabled={isSending}
               recordingState={recordingState}
               recordingDuration={recordingDuration}
@@ -654,6 +751,28 @@ export default function ChatPage() {
           )}
         </div>
       </div>
+
+      {/* Scanner de código de barras */}
+      {showBarcodeScanner && (
+        <BarcodeScanner
+          onProductScanned={handleProductScanned}
+          onError={(error) => showToast(error, "error")}
+          onClose={handleCloseBarcodeScanner}
+        />
+      )}
+
+      {/* Card de produto escaneado */}
+      {scannedProduct && (
+        <ScannedProductCard
+          product={scannedProduct}
+          onAddToMeal={handleAddScannedProduct}
+          onScanAnother={() => {
+            setScannedProduct(null);
+            setShowBarcodeScanner(true);
+          }}
+          onClose={() => setScannedProduct(null)}
+        />
+      )}
 
       {/* Toast de feedback */}
       <Toast
