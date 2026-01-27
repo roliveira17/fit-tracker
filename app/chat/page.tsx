@@ -291,7 +291,8 @@ export default function ChatPage() {
 
     // Salva no Supabase se logado
     if (user) {
-      await logMeal("snack", [{
+      console.log("[Barcode] Salvando no Supabase, user:", user.id);
+      const result = await logMeal("snack", [{
         food_name: productName,
         quantity_g: grams,
         calories: mealItem.calories,
@@ -299,6 +300,15 @@ export default function ChatPage() {
         carbs_g: mealItem.carbs,
         fat_g: mealItem.fat,
       }], `Barcode: ${scannedProduct.barcode}`);
+
+      if (!result) {
+        console.error("[Barcode] Erro ao salvar no Supabase");
+        showToast("Erro ao salvar no servidor", "error");
+      } else {
+        console.log("[Barcode] Salvo com sucesso, meal_id:", result.id);
+      }
+    } else {
+      console.warn("[Barcode] Usuário não autenticado, salvando apenas localmente");
     }
 
     // Salva no localStorage também
