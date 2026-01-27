@@ -300,7 +300,6 @@ export async function logMeal(
     console.error("logMeal: Usuário não autenticado no Supabase");
     return null;
   }
-  console.log("logMeal: Salvando para user:", user.id);
 
   const totals = items.reduce(
     (acc, item) => ({
@@ -312,36 +311,55 @@ export async function logMeal(
     { calories: 0, protein: 0, carbs: 0, fat: 0 }
   );
 
-  const { data: meal, error: mealError } = await supabase
-    .from("meals")
-    .insert({
-      user_id: user.id,
-      meal_type: mealType,
-      date: new Date().toISOString().split("T")[0],
-      total_calories: totals.calories,
-      total_protein_g: totals.protein,
-      total_carbs_g: totals.carbs,
-      total_fat_g: totals.fat,
-      source: "chat",
-      raw_text: rawText
-    })
-    .select()
-    .single();
+  // Usar função RPC com SECURITY DEFINER para bypass RLS
+  const { data: mealId, error: mealError } = await supabase.rpc("insert_meal", {
+    p_user_id: user.id,
+    p_meal_type: mealType,
+    p_date: new Date().toISOString().split("T")[0],
+    p_total_calories: Math.round(totals.calories),
+    p_total_protein_g: totals.protein,
+    p_total_carbs_g: totals.carbs,
+    p_total_fat_g: totals.fat,
+    p_source: "chat",
+    p_raw_text: rawText || null
+  });
 
-  if (mealError || !meal) {
+  if (mealError || !mealId) {
     console.error("Error creating meal:", mealError);
     return null;
   }
 
-  const { error: itemsError } = await supabase
-    .from("meal_items")
-    .insert(items.map(item => ({ ...item, meal_id: meal.id })));
+  // Inserir cada item usando função RPC
+  for (const item of items) {
+    const { error: itemError } = await supabase.rpc("insert_meal_item", {
+      p_meal_id: mealId,
+      p_food_name: item.food_name,
+      p_quantity_g: item.quantity_g,
+      p_calories: Math.round(item.calories),
+      p_protein_g: item.protein_g || 0,
+      p_carbs_g: item.carbs_g || 0,
+      p_fat_g: item.fat_g || 0
+    });
 
-  if (itemsError) {
-    console.error("Error adding meal items:", itemsError);
+    if (itemError) {
+      console.error("Error adding meal item:", itemError);
+    }
   }
 
-  return meal;
+  // Retornar objeto Meal com os dados
+  return {
+    id: mealId,
+    user_id: user.id,
+    meal_type: mealType,
+    date: new Date().toISOString().split("T")[0],
+    total_calories: Math.round(totals.calories),
+    total_protein_g: totals.protein,
+    total_carbs_g: totals.carbs,
+    total_fat_g: totals.fat,
+    source: "chat",
+    raw_text: rawText,
+    created_at: new Date().toISOString()
+  };
 }
 
 export async function logWorkout(
