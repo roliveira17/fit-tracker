@@ -15,13 +15,26 @@ import {
   getChatMessages,
   saveChatMessages,
   clearChatMessages,
+  getMeals,
   saveMeal,
-  saveWorkout,
   saveWeightLog,
+  saveWorkout,
   saveBodyFatLog,
   type UserProfile,
   type ChatMessage,
+  type Meal,
 } from "@/lib/storage";
+import { useAuth } from "@/components/providers/SupabaseAuthProvider";
+import {
+  logWeight,
+  logMeal,
+  logWorkout,
+  logBodyFat,
+  logGlucose,
+  getUserContextForAI,
+  type Meal as SupabaseMeal,
+  type UserContext,
+} from "@/lib/supabase";
 import { generateMessageId } from "@/lib/ai";
 import { Toast } from "@/components/feedback/Toast";
 import { useToast } from "@/hooks/useToast";
@@ -42,6 +55,7 @@ const INITIAL_SUGGESTIONS: Chip[] = [
  */
 export default function ChatPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
@@ -285,24 +299,18 @@ export default function ChatPage() {
 
         responseContent = `📸 **Análise da refeição:**\n\n${analysis.description}\n\n**Alimentos identificados:**\n${itemsList}\n\n**Totais estimados:**\n🔥 ${analysis.totals.calories} kcal\n🥩 ${analysis.totals.protein}g proteína\n🍚 ${analysis.totals.carbs}g carboidratos\n🧈 ${analysis.totals.fat}g gordura\n\n_Confiança: ${analysis.confidence}_\n\n✓ Registrado! Quer corrigir algo?`;
 
-        // Salva a refeição
-        saveMeal({
-          type: "other",
-          items: analysis.items.map((item: { name: string; portion: string; calories: number; protein: number; carbs: number; fat: number }) => ({
-            name: item.name,
-            quantity: 1,
-            unit: item.portion,
+        // Salva a refeição no Supabase se logado
+        if (user) {
+          const mealItems = analysis.items.map((item: { name: string; portion: string; calories: number; protein: number; carbs: number; fat: number }) => ({
+            food_name: item.name,
+            quantity_g: 100, // Estimativa padrão para fotos
             calories: item.calories,
-            protein: item.protein,
-            carbs: item.carbs,
-            fat: item.fat,
-          })),
-          totalCalories: analysis.totals.calories,
-          totalProtein: analysis.totals.protein,
-          totalCarbs: analysis.totals.carbs,
-          totalFat: analysis.totals.fat,
-          rawText: `Foto: ${analysis.description}`,
-        });
+            protein_g: item.protein,
+            carbs_g: item.carbs,
+            fat_g: item.fat,
+          }));
+          await logMeal("snack", mealItems, `Foto: ${analysis.description}`);
+        }
 
         showToast("Refeição registrada!", "success");
       }
@@ -350,6 +358,15 @@ export default function ChatPage() {
     setError(null);
 
     try {
+      // Obtém histórico de refeições do localStorage para contexto inteligente
+      const mealHistory = getMeals().slice(-30);
+
+      // Se usuário está logado, busca contexto completo do Supabase
+      let supabaseContext: UserContext | undefined;
+      if (user) {
+        supabaseContext = await getUserContextForAI() ?? undefined;
+      }
+
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -357,6 +374,8 @@ export default function ChatPage() {
           message: userMessage.content,
           history: messages,
           profile,
+          mealHistory,
+          supabaseContext, // Contexto do Supabase (quando logado)
         }),
       });
 
@@ -376,34 +395,111 @@ export default function ChatPage() {
 
       setMessages((prev) => [...prev, aiMessage]);
 
-      // Salva dados parseados no localStorage
+      // Salva dados parseados
       const { classification, parsedData } = data;
+
       if (parsedData && data.response.includes("✓ Registrado")) {
+        // Sempre salva no localStorage (funciona offline e sem login)
         switch (parsedData.type) {
           case "food":
+            // Salva no localStorage
+            const localItems = parsedData.data.items.map((item: { name: string; grams?: number; quantity?: number; calories: number; protein: number; carbs: number; fat: number }) => ({
+              name: item.name,
+              grams: item.grams || item.quantity || 100,
+              calories: item.calories,
+              protein: item.protein,
+              carbs: item.carbs,
+              fat: item.fat,
+            }));
             saveMeal({
-              type: parsedData.data.mealType,
-              items: parsedData.data.items,
-              totalCalories: parsedData.data.totalCalories,
-              totalProtein: parsedData.data.totalProtein,
-              totalCarbs: parsedData.data.totalCarbs,
-              totalFat: parsedData.data.totalFat,
+              type: parsedData.data.mealType as Meal["type"],
+              items: localItems,
+              totalCalories: localItems.reduce((sum: number, i: { calories: number }) => sum + i.calories, 0),
+              totalProtein: localItems.reduce((sum: number, i: { protein: number }) => sum + i.protein, 0),
+              totalCarbs: localItems.reduce((sum: number, i: { carbs: number }) => sum + i.carbs, 0),
+              totalFat: localItems.reduce((sum: number, i: { fat: number }) => sum + i.fat, 0),
               rawText: parsedData.data.rawText,
             });
+            // Se logado, também salva no Supabase
+            if (user) {
+              const mealItems = parsedData.data.items.map((item: { name: string; grams?: number; quantity?: number; calories: number; protein: number; carbs: number; fat: number }) => ({
+                food_name: item.name,
+                quantity_g: item.grams || item.quantity || 100,
+                calories: item.calories,
+                protein_g: item.protein,
+                carbs_g: item.carbs,
+                fat_g: item.fat,
+              }));
+              const result = await logMeal(
+                parsedData.data.mealType as SupabaseMeal["meal_type"],
+                mealItems,
+                parsedData.data.rawText
+              );
+              if (!result) {
+                console.error("Falha ao salvar refeição no Supabase. User ID:", user.id);
+              } else {
+                console.log("Refeição salva no Supabase:", result.id);
+              }
+            }
             break;
           case "exercise":
+            // Salva no localStorage
             saveWorkout({
-              exercises: parsedData.data.exercises,
+              exercises: parsedData.data.exercises.map((ex: { name: string; type?: string; sets?: number; reps?: number; duration?: number; caloriesBurned?: number }) => ({
+                name: ex.name,
+                type: ex.type || "strength",
+                sets: ex.sets,
+                reps: ex.reps,
+                duration: ex.duration,
+                caloriesBurned: ex.caloriesBurned,
+              })),
               totalDuration: parsedData.data.totalDuration,
               totalCaloriesBurned: parsedData.data.totalCaloriesBurned,
               rawText: parsedData.data.rawText,
             });
+            // Se logado, também salva no Supabase
+            if (user) {
+              const workoutType = parsedData.data.exercises[0]?.type === "cardio" ? "cardio" : "strength";
+              const exercises = parsedData.data.exercises.map((ex: { name: string; sets?: number; reps?: number; duration?: number }) => ({
+                exercise_name: ex.name,
+                sets: ex.sets,
+                reps: ex.reps,
+                duration_min: ex.duration,
+              }));
+              await logWorkout(
+                workoutType,
+                parsedData.data.totalDuration,
+                parsedData.data.totalCaloriesBurned,
+                exercises,
+                parsedData.data.rawText
+              );
+            }
             break;
           case "weight":
+            // Salva no localStorage
             saveWeightLog(parsedData.data.weight, parsedData.data.rawText);
+            // Se logado, também salva no Supabase
+            if (user) {
+              await logWeight(parsedData.data.weight, parsedData.data.rawText);
+            }
             break;
           case "bodyfat":
+            // Salva no localStorage
             saveBodyFatLog(parsedData.data.percentage, parsedData.data.rawText);
+            // Se logado, também salva no Supabase
+            if (user) {
+              await logBodyFat(parsedData.data.percentage, parsedData.data.rawText);
+            }
+            break;
+          case "glucose":
+            // Glicemia só salva no Supabase (requer login)
+            if (user) {
+              await logGlucose(
+                parsedData.data.glucose,
+                parsedData.data.measurementType,
+                parsedData.data.rawText
+              );
+            }
             break;
         }
       }
@@ -415,6 +511,7 @@ export default function ChatPage() {
           exercise: "Treino registrado!",
           weight: "Peso registrado!",
           bodyfat: "BF registrado!",
+          glucose: "Glicemia registrada!",
         };
         showToast(subtypeLabels[classification.subtype] || "Registro salvo!", "success");
       } else if (classification?.type === "correction" && data.response.includes("✓ Corrigido")) {

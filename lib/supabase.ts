@@ -292,8 +292,15 @@ export async function logMeal(
   items: Omit<MealItem, "id" | "meal_id" | "created_at">[],
   rawText?: string
 ): Promise<Meal | null> {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError) {
+    console.error("logMeal: Erro ao obter usuário:", authError.message);
+  }
+  if (!user) {
+    console.error("logMeal: Usuário não autenticado no Supabase");
+    return null;
+  }
+  console.log("logMeal: Salvando para user:", user.id);
 
   const totals = items.reduce(
     (acc, item) => ({
