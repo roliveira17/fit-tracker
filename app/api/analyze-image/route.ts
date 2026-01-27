@@ -1,37 +1,57 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
+import { fetchProductByBarcode, offProductToMealItem } from "@/lib/openfoodfacts";
 
 /**
- * API Route: Análise de Imagem de Refeição
+ * API Route: Análise de Imagem de Refeição ou Código de Barras
  *
- * Recebe uma imagem de refeição e usa GPT-4 Vision para:
- * 1. Identificar os alimentos
- * 2. Estimar porções
- * 3. Calcular macros aproximados
+ * Recebe uma imagem e usa GPT-4 Vision para:
+ * 1. Detectar se é um código de barras ou foto de comida
+ * 2. Se barcode: extrair o número e buscar no Open Food Facts
+ * 3. Se comida: identificar alimentos e calcular macros
  */
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// Prompt do sistema para análise de refeições
-const SYSTEM_PROMPT = `Você é um nutricionista especializado em análise visual de refeições.
-Sua tarefa é analisar fotos de refeições e identificar:
+// Prompt do sistema para análise de refeições E códigos de barras
+const SYSTEM_PROMPT = `Você é um assistente especializado em análise de imagens para um app de nutrição.
+Sua tarefa é analisar a imagem e identificar se é:
+1. Um CÓDIGO DE BARRAS de produto alimentício
+2. Uma FOTO DE REFEIÇÃO/ALIMENTO
 
-1. ALIMENTOS: Liste cada alimento visível na foto
-2. PORÇÕES: Estime a quantidade de cada alimento (em gramas ou unidades)
-3. MACROS: Estime calorias, proteínas, carboidratos e gorduras
+## SE FOR CÓDIGO DE BARRAS:
+- Identifique que é um código de barras
+- Leia os NÚMEROS que aparecem ABAIXO do código de barras (geralmente 8-13 dígitos)
+- O número geralmente está impresso logo abaixo das barras
+- Retorne no formato especial para barcode
 
-REGRAS:
-- Seja preciso mas realista nas estimativas
-- Se não conseguir identificar algo, diga "não identificado"
-- Use medidas brasileiras comuns (colher de sopa, xícara, etc.)
+## SE FOR FOTO DE COMIDA:
+- Liste cada alimento visível
+- Estime porções em gramas
+- Calcule macros aproximados
+
+## REGRAS:
+- Seja preciso na leitura de números de barcode
+- Se for barcode mas não conseguir ler os números claramente, tente mesmo assim
+- Use medidas brasileiras comuns
 - Arredonde valores para facilitar o registro
-- Se a imagem não for de comida, diga educadamente
 
-FORMATO DE RESPOSTA (JSON):
+## FORMATO DE RESPOSTA (JSON):
+
+### Se for CÓDIGO DE BARRAS:
 {
-  "isFood": true/false,
+  "type": "barcode",
+  "barcode": "7891000100103",
+  "confidence": "alta",
+  "notes": "Código de barras lido com sucesso"
+}
+
+### Se for FOTO DE COMIDA:
+{
+  "type": "food",
+  "isFood": true,
   "description": "Descrição geral da refeição",
   "items": [
     {
@@ -49,12 +69,21 @@ FORMATO DE RESPOSTA (JSON):
     "carbs": 45,
     "fat": 20
   },
-  "confidence": "alta/média/baixa",
-  "notes": "Observações adicionais (opcional)"
+  "confidence": "alta",
+  "notes": "Observações adicionais"
+}
+
+### Se NÃO for comida nem barcode:
+{
+  "type": "unknown",
+  "isFood": false,
+  "description": "Descrição do que foi identificado",
+  "notes": "Esta imagem não parece ser de alimento ou código de barras"
 }`;
 
-// Interface para o resultado da análise
+// Interface para o resultado da análise de comida
 export interface FoodAnalysisResult {
+  type?: "food" | "barcode" | "unknown";
   isFood: boolean;
   description: string;
   items: Array<{
@@ -72,6 +101,37 @@ export interface FoodAnalysisResult {
     fat: number;
   };
   confidence: "alta" | "média" | "baixa";
+  notes?: string;
+  // Campos para barcode
+  barcode?: string;
+  product?: {
+    name: string;
+    brand: string | null;
+    imageUrl: string | null;
+  };
+}
+
+// Interface para resposta do GPT
+interface GPTResponse {
+  type: "food" | "barcode" | "unknown";
+  barcode?: string;
+  isFood?: boolean;
+  description?: string;
+  items?: Array<{
+    name: string;
+    portion: string;
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+  }>;
+  totals?: {
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+  };
+  confidence?: "alta" | "média" | "baixa";
   notes?: string;
 }
 
@@ -118,7 +178,7 @@ export async function POST(request: NextRequest) {
           content: [
             {
               type: "text",
-              text: "Analise esta foto de refeição e retorne os dados no formato JSON especificado.",
+              text: "Analise esta imagem. Se for um código de barras, leia o número. Se for comida, identifique os alimentos. Retorne no formato JSON especificado.",
             },
             {
               type: "image_url",
@@ -145,32 +205,130 @@ export async function POST(request: NextRequest) {
     }
 
     // Parseia o JSON da resposta
-    let analysis: FoodAnalysisResult;
+    let gptResponse: GPTResponse;
     try {
-      analysis = JSON.parse(content);
+      gptResponse = JSON.parse(content);
     } catch {
-      // Se não conseguir parsear, retorna erro genérico
       return NextResponse.json(
         { error: "Erro ao processar resposta da análise" },
         { status: 500 }
       );
     }
 
-    // Valida campos mínimos
-    if (typeof analysis.isFood !== "boolean") {
-      analysis.isFood = true;
+    // Se for código de barras, buscar no Open Food Facts
+    if (gptResponse.type === "barcode" && gptResponse.barcode) {
+      const barcode = gptResponse.barcode.replace(/\D/g, ""); // Remove não-dígitos
+
+      if (barcode.length >= 8) {
+        const product = await fetchProductByBarcode(barcode);
+
+        if (product) {
+          // Converte para formato de item de refeição
+          const mealItem = offProductToMealItem(product, 100);
+
+          const analysis: FoodAnalysisResult = {
+            type: "barcode",
+            isFood: true,
+            description: product.brand
+              ? `${product.productName} (${product.brand})`
+              : product.productName,
+            items: [
+              {
+                name: mealItem.name,
+                portion: "100g",
+                calories: mealItem.calories,
+                protein: mealItem.protein,
+                carbs: mealItem.carbs,
+                fat: mealItem.fat,
+              },
+            ],
+            totals: {
+              calories: mealItem.calories,
+              protein: mealItem.protein,
+              carbs: mealItem.carbs,
+              fat: mealItem.fat,
+            },
+            confidence: gptResponse.confidence || "alta",
+            notes: `Produto encontrado via código de barras ${barcode}`,
+            barcode: barcode,
+            product: {
+              name: product.productName,
+              brand: product.brand,
+              imageUrl: product.imageUrl,
+            },
+          };
+
+          return NextResponse.json({
+            success: true,
+            analysis,
+          });
+        } else {
+          // Barcode lido mas produto não encontrado
+          return NextResponse.json({
+            success: true,
+            analysis: {
+              type: "barcode",
+              isFood: false,
+              description: `Código de barras: ${barcode}`,
+              items: [],
+              totals: { calories: 0, protein: 0, carbs: 0, fat: 0 },
+              confidence: gptResponse.confidence || "alta",
+              notes: `Código de barras lido (${barcode}), mas produto não encontrado no banco de dados. Tente digitar o nome do produto.`,
+              barcode: barcode,
+            } as FoodAnalysisResult,
+          });
+        }
+      } else {
+        // Barcode inválido
+        return NextResponse.json({
+          success: true,
+          analysis: {
+            type: "barcode",
+            isFood: false,
+            description: "Código de barras não reconhecido",
+            items: [],
+            totals: { calories: 0, protein: 0, carbs: 0, fat: 0 },
+            confidence: "baixa",
+            notes: "Não consegui ler o código de barras claramente. Tente tirar uma foto mais nítida ou com melhor iluminação.",
+          } as FoodAnalysisResult,
+        });
+      }
     }
-    if (!analysis.items) {
-      analysis.items = [];
+
+    // Se for comida, retorna análise normal
+    if (gptResponse.type === "food" || gptResponse.isFood) {
+      const analysis: FoodAnalysisResult = {
+        type: "food",
+        isFood: true,
+        description: gptResponse.description || "Refeição identificada",
+        items: gptResponse.items || [],
+        totals: gptResponse.totals || { calories: 0, protein: 0, carbs: 0, fat: 0 },
+        confidence: gptResponse.confidence || "média",
+        notes: gptResponse.notes,
+      };
+
+      return NextResponse.json({
+        success: true,
+        analysis,
+      });
     }
-    if (!analysis.totals) {
-      analysis.totals = { calories: 0, protein: 0, carbs: 0, fat: 0 };
-    }
+
+    // Se não for nem comida nem barcode
+    const analysis: FoodAnalysisResult = {
+      type: "unknown",
+      isFood: false,
+      description: gptResponse.description || "Imagem não reconhecida",
+      items: [],
+      totals: { calories: 0, protein: 0, carbs: 0, fat: 0 },
+      confidence: gptResponse.confidence || "baixa",
+      notes: gptResponse.notes || "Não consegui identificar alimentos ou código de barras nesta imagem.",
+    };
 
     return NextResponse.json({
       success: true,
       analysis,
     });
+
   } catch (error) {
     console.error("Erro na análise de imagem:", error);
 
