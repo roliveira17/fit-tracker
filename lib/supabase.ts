@@ -1,0 +1,755 @@
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// Types para as tabelas do banco
+export interface Profile {
+  id: string;
+  name: string;
+  gender: "masculino" | "feminino";
+  birth_date: string;
+  height_cm: number;
+  weight_kg: number;
+  tdee_multiplier: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WeightLog {
+  id: string;
+  user_id: string;
+  weight_kg: number;
+  date: string;
+  source: "chat" | "import_apple" | "import_hevy" | "manual";
+  raw_text?: string;
+  created_at: string;
+}
+
+export interface Meal {
+  id: string;
+  user_id: string;
+  meal_type: "breakfast" | "lunch" | "dinner" | "snack";
+  date: string;
+  total_calories?: number;
+  total_protein_g?: number;
+  total_carbs_g?: number;
+  total_fat_g?: number;
+  source: "chat" | "import_apple" | "manual";
+  raw_text?: string;
+  created_at: string;
+  meal_items?: MealItem[];
+}
+
+export interface MealItem {
+  id: string;
+  meal_id: string;
+  food_id?: string;
+  food_name: string;
+  quantity_g: number;
+  calories: number;
+  protein_g?: number;
+  carbs_g?: number;
+  fat_g?: number;
+  created_at: string;
+}
+
+export interface Workout {
+  id: string;
+  user_id: string;
+  workout_type: "cardio" | "strength" | "mixed";
+  date: string;
+  duration_min?: number;
+  calories_burned?: number;
+  avg_hr?: number;
+  source: "chat" | "import_apple" | "import_hevy" | "manual";
+  raw_text?: string;
+  created_at: string;
+  workout_sets?: WorkoutSet[];
+}
+
+export interface WorkoutSet {
+  id: string;
+  workout_id: string;
+  exercise_name: string;
+  sets?: number;
+  reps?: number;
+  weight_kg?: number;
+  duration_min?: number;
+  created_at: string;
+}
+
+export interface SleepSession {
+  id: string;
+  user_id: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  total_minutes: number;
+  source: "import_apple" | "manual";
+  created_at: string;
+  sleep_stages?: SleepStage[];
+}
+
+export interface SleepStage {
+  id: string;
+  sleep_session_id: string;
+  stage: "awake" | "light" | "deep" | "rem";
+  duration_min: number;
+  percentage?: number;
+  created_at: string;
+}
+
+export interface Food {
+  id: string;
+  user_id?: string;
+  name: string;
+  brand?: string;
+  serving_g: number;
+  calories_per_100g: number;
+  protein_per_100g?: number;
+  carbs_per_100g?: number;
+  fat_per_100g?: number;
+  aliases: string[];
+  created_at: string;
+}
+
+export interface ImportRecord {
+  id: string;
+  user_id: string;
+  source: "apple_health" | "hevy";
+  imported_at: string;
+  records_count: number;
+  duplicates_skipped: number;
+  summary?: {
+    weights?: number;
+    body_fat?: number;
+    workouts?: number;
+    sleep?: number;
+  };
+}
+
+// Response types para RPC
+export interface HomeSummary {
+  date: string;
+  calories_in: number;
+  calories_out: number;
+  protein: number;
+  weight: number | null;
+  workout_minutes: number;
+}
+
+export interface InsightsData {
+  period_days: number;
+  weights: { date: string; weight: number }[];
+  calories_by_day: { date: string; calories: number }[];
+  protein_by_day: { date: string; protein: number }[];
+  avg_sleep_stages: { stage: string; avg_pct: number }[];
+}
+
+// Helper functions
+export async function getProfile(): Promise<Profile | null> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .single();
+
+  if (error) {
+    console.error("Error fetching profile:", error);
+    return null;
+  }
+  return data;
+}
+
+export async function createProfile(profile: Omit<Profile, "id" | "created_at" | "updated_at">): Promise<Profile | null> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .insert({ ...profile, id: user.id })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error creating profile:", error);
+    return null;
+  }
+  return data;
+}
+
+export async function updateProfile(updates: Partial<Profile>): Promise<Profile | null> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .update(updates)
+    .eq("id", user.id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error updating profile:", error);
+    return null;
+  }
+  return data;
+}
+
+export async function getHomeSummary(targetDate?: string): Promise<HomeSummary | null> {
+  const { data, error } = await supabase
+    .rpc("get_home_summary", { target_date: targetDate || new Date().toISOString().split("T")[0] });
+
+  if (error) {
+    console.error("Error fetching home summary:", error);
+    return null;
+  }
+  return data;
+}
+
+export async function getInsights(periodDays: number = 7): Promise<InsightsData | null> {
+  const { data, error } = await supabase
+    .rpc("get_insights", { period_days: periodDays });
+
+  if (error) {
+    console.error("Error fetching insights:", error);
+    return null;
+  }
+  return data;
+}
+
+export async function getBmr(): Promise<number | null> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data, error } = await supabase
+    .rpc("get_bmr", { p_user_id: user.id });
+
+  if (error) {
+    console.error("Error fetching BMR:", error);
+    return null;
+  }
+  return data;
+}
+
+export async function getTdee(): Promise<number | null> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data, error } = await supabase
+    .rpc("get_tdee", { p_user_id: user.id });
+
+  if (error) {
+    console.error("Error fetching TDEE:", error);
+    return null;
+  }
+  return data;
+}
+
+export async function searchFoods(query: string): Promise<Food[]> {
+  const { data, error } = await supabase
+    .from("foods")
+    .select("*")
+    .ilike("name", `%${query}%`)
+    .limit(10);
+
+  if (error) {
+    console.error("Error searching foods:", error);
+    return [];
+  }
+  return data || [];
+}
+
+export async function logWeight(weightKg: number, rawText?: string): Promise<WeightLog | null> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data, error } = await supabase
+    .from("weight_logs")
+    .upsert({
+      user_id: user.id,
+      weight_kg: weightKg,
+      date: new Date().toISOString().split("T")[0],
+      source: "chat",
+      raw_text: rawText
+    }, {
+      onConflict: "user_id,date"
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error logging weight:", error);
+    return null;
+  }
+  return data;
+}
+
+export async function logMeal(
+  mealType: Meal["meal_type"],
+  items: Omit<MealItem, "id" | "meal_id" | "created_at">[],
+  rawText?: string
+): Promise<Meal | null> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const totals = items.reduce(
+    (acc, item) => ({
+      calories: acc.calories + (item.calories || 0),
+      protein: acc.protein + (item.protein_g || 0),
+      carbs: acc.carbs + (item.carbs_g || 0),
+      fat: acc.fat + (item.fat_g || 0)
+    }),
+    { calories: 0, protein: 0, carbs: 0, fat: 0 }
+  );
+
+  const { data: meal, error: mealError } = await supabase
+    .from("meals")
+    .insert({
+      user_id: user.id,
+      meal_type: mealType,
+      date: new Date().toISOString().split("T")[0],
+      total_calories: totals.calories,
+      total_protein_g: totals.protein,
+      total_carbs_g: totals.carbs,
+      total_fat_g: totals.fat,
+      source: "chat",
+      raw_text: rawText
+    })
+    .select()
+    .single();
+
+  if (mealError || !meal) {
+    console.error("Error creating meal:", mealError);
+    return null;
+  }
+
+  const { error: itemsError } = await supabase
+    .from("meal_items")
+    .insert(items.map(item => ({ ...item, meal_id: meal.id })));
+
+  if (itemsError) {
+    console.error("Error adding meal items:", itemsError);
+  }
+
+  return meal;
+}
+
+export async function logWorkout(
+  workoutType: Workout["workout_type"],
+  durationMin?: number,
+  caloriesBurned?: number,
+  exercises?: Omit<WorkoutSet, "id" | "workout_id" | "created_at">[],
+  rawText?: string
+): Promise<Workout | null> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data: workout, error: workoutError } = await supabase
+    .from("workouts")
+    .insert({
+      user_id: user.id,
+      workout_type: workoutType,
+      date: new Date().toISOString().split("T")[0],
+      duration_min: durationMin,
+      calories_burned: caloriesBurned,
+      source: "chat",
+      raw_text: rawText
+    })
+    .select()
+    .single();
+
+  if (workoutError || !workout) {
+    console.error("Error creating workout:", workoutError);
+    return null;
+  }
+
+  if (exercises && exercises.length > 0) {
+    const { error: setsError } = await supabase
+      .from("workout_sets")
+      .insert(exercises.map(ex => ({ ...ex, workout_id: workout.id })));
+
+    if (setsError) {
+      console.error("Error adding workout sets:", setsError);
+    }
+  }
+
+  return workout;
+}
+
+export async function importAppleHealth(data: {
+  weights?: { weight: number; date: string }[];
+  body_fat?: { body_fat: number; date: string }[];
+  workouts?: { type: string; date: string; duration: number; calories: number }[];
+  sleep?: { date: string; start: string; end: string; stages: { stage: string; duration: number; pct: number }[] }[];
+}): Promise<{ imported: number; duplicates_skipped: number } | null> {
+  const { data: result, error } = await supabase.rpc("import_apple_health", {
+    p_weights: data.weights || [],
+    p_body_fat: data.body_fat || [],
+    p_workouts: data.workouts || [],
+    p_sleep: data.sleep || []
+  });
+
+  if (error) {
+    console.error("Error importing Apple Health data:", error);
+    return null;
+  }
+  return result;
+}
+
+export async function importHevy(workouts: {
+  date: string;
+  name: string;
+  exercises: { name: string; sets: { weight: number; reps: number }[] }[];
+}[]): Promise<{ imported: number; duplicates_skipped: number } | null> {
+  const { data: result, error } = await supabase.rpc("import_hevy", {
+    p_workouts: workouts
+  });
+
+  if (error) {
+    console.error("Error importing Hevy data:", error);
+    return null;
+  }
+  return result;
+}
+
+export async function deleteImportedData(source: "apple_health" | "hevy"): Promise<{ deleted: number } | null> {
+  const { data, error } = await supabase.rpc("delete_imported_data", { p_source: source });
+
+  if (error) {
+    console.error("Error deleting imported data:", error);
+    return null;
+  }
+  return data;
+}
+
+export interface BodyFatLog {
+  id: string;
+  user_id: string;
+  body_fat_pct: number;
+  date: string;
+  source: "chat" | "import_apple" | "manual";
+  raw_text?: string;
+  created_at: string;
+}
+
+export async function logBodyFat(percentage: number, rawText?: string): Promise<BodyFatLog | null> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data, error } = await supabase
+    .from("body_fat_logs")
+    .upsert({
+      user_id: user.id,
+      body_fat_pct: percentage,
+      date: new Date().toISOString().split("T")[0],
+      source: "chat",
+      raw_text: rawText
+    }, {
+      onConflict: "user_id,date"
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error logging body fat:", error);
+    return null;
+  }
+  return data;
+}
+
+// ============================================
+// GLICEMIA (Glucose)
+// ============================================
+
+export interface GlucoseLog {
+  id: string;
+  user_id: string;
+  glucose_mg_dl: number;
+  date: string;
+  time: string;
+  measurement_type: "fasting" | "pre_meal" | "post_meal" | "bedtime" | "random" | "cgm";
+  notes?: string;
+  device?: string;
+  source: "chat" | "import_apple" | "import_csv" | "manual";
+  created_at: string;
+}
+
+export interface GlucoseStats {
+  period_days: number;
+  avg_fasting: number | null;
+  avg_post_meal: number | null;
+  min_glucose: number | null;
+  max_glucose: number | null;
+  readings_count: number;
+  time_in_range: number | null;
+  by_day: { date: string; avg: number; count: number }[];
+}
+
+export async function logGlucose(
+  glucoseMgDl: number,
+  measurementType: GlucoseLog["measurement_type"],
+  notes?: string
+): Promise<GlucoseLog | null> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const now = new Date();
+  const { data, error } = await supabase
+    .from("glucose_logs")
+    .insert({
+      user_id: user.id,
+      glucose_mg_dl: glucoseMgDl,
+      date: now.toISOString().split("T")[0],
+      time: now.toTimeString().split(" ")[0],
+      measurement_type: measurementType,
+      notes,
+      source: "chat"
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error logging glucose:", error);
+    return null;
+  }
+  return data;
+}
+
+export interface GlucoseReadingImport {
+  glucose_mg_dl: number;
+  date: string;
+  time: string;
+  measurement_type: GlucoseLog["measurement_type"];
+  notes?: string;
+  device?: string;
+  source?: string;
+}
+
+/**
+ * Importa múltiplas leituras de glicose (para importação de CGM)
+ */
+export async function importGlucoseReadings(
+  readings: GlucoseReadingImport[]
+): Promise<number> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return 0;
+
+  let imported = 0;
+  for (const reading of readings) {
+    const { error } = await supabase
+      .from("glucose_logs")
+      .insert({
+        user_id: user.id,
+        glucose_mg_dl: reading.glucose_mg_dl,
+        date: reading.date,
+        time: reading.time,
+        measurement_type: reading.measurement_type,
+        notes: reading.notes,
+        source: reading.source || "import_csv"
+      });
+
+    if (!error) {
+      imported++;
+    }
+  }
+
+  return imported;
+}
+
+export async function getGlucoseStats(periodDays: number = 7): Promise<GlucoseStats | null> {
+  const { data, error } = await supabase.rpc("get_glucose_stats", { p_days: periodDays });
+
+  if (error) {
+    console.error("Error fetching glucose stats:", error);
+    return null;
+  }
+  return data;
+}
+
+export async function getRecentGlucoseLogs(limit: number = 10): Promise<GlucoseLog[]> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data, error } = await supabase
+    .from("glucose_logs")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("date", { ascending: false })
+    .order("time", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error("Error fetching glucose logs:", error);
+    return [];
+  }
+  return data || [];
+}
+
+// ============================================
+// CONTEXTO PARA AI
+// ============================================
+
+export interface UserContext {
+  profile: Profile | null;
+  recentMeals: { date: string; meal_type: string; total_calories: number; total_protein_g: number }[];
+  recentWorkouts: { date: string; workout_type: string; duration_min: number; calories_burned: number }[];
+  recentWeights: { date: string; weight_kg: number }[];
+  recentGlucose: { date: string; time: string; glucose_mg_dl: number; measurement_type: string }[];
+  todaySummary: HomeSummary | null;
+  glucoseStats: GlucoseStats | null;
+}
+
+/**
+ * Busca contexto completo do usuário para passar para a AI
+ * Inclui: perfil, refeições recentes, treinos, peso, glicemia
+ */
+export async function getUserContextForAI(): Promise<UserContext | null> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  // Buscar dados em paralelo para performance
+  const [
+    profileResult,
+    mealsResult,
+    workoutsResult,
+    weightsResult,
+    glucoseResult,
+    summaryResult,
+    glucoseStatsResult
+  ] = await Promise.all([
+    // Profile
+    supabase.from("profiles").select("*").eq("id", user.id).single(),
+    // Últimas 30 refeições (últimos 7 dias aproximadamente)
+    supabase
+      .from("meals")
+      .select("date, meal_type, total_calories, total_protein_g")
+      .eq("user_id", user.id)
+      .order("date", { ascending: false })
+      .limit(30),
+    // Últimos 14 treinos
+    supabase
+      .from("workouts")
+      .select("date, workout_type, duration_min, calories_burned")
+      .eq("user_id", user.id)
+      .order("date", { ascending: false })
+      .limit(14),
+    // Últimos 30 registros de peso
+    supabase
+      .from("weight_logs")
+      .select("date, weight_kg")
+      .eq("user_id", user.id)
+      .order("date", { ascending: false })
+      .limit(30),
+    // Últimos 50 registros de glicemia (aproximadamente 1 semana de CGM)
+    supabase
+      .from("glucose_logs")
+      .select("date, time, glucose_mg_dl, measurement_type")
+      .eq("user_id", user.id)
+      .order("date", { ascending: false })
+      .order("time", { ascending: false })
+      .limit(50),
+    // Resumo de hoje
+    getHomeSummary(),
+    // Estatísticas de glicemia dos últimos 7 dias
+    getGlucoseStats(7)
+  ]);
+
+  return {
+    profile: profileResult.data,
+    recentMeals: mealsResult.data || [],
+    recentWorkouts: workoutsResult.data || [],
+    recentWeights: weightsResult.data || [],
+    recentGlucose: glucoseResult.data || [],
+    todaySummary: summaryResult,
+    glucoseStats: glucoseStatsResult
+  };
+}
+
+/**
+ * Formata o contexto do usuário como texto para incluir no prompt da AI
+ */
+export function formatUserContextForPrompt(context: UserContext): string {
+  const lines: string[] = [];
+
+  // Profile
+  if (context.profile) {
+    const age = new Date().getFullYear() - new Date(context.profile.birth_date).getFullYear();
+    lines.push(`## Perfil do Usuário`);
+    lines.push(`- Nome: ${context.profile.name}`);
+    lines.push(`- Gênero: ${context.profile.gender}`);
+    lines.push(`- Idade: ${age} anos`);
+    lines.push(`- Altura: ${context.profile.height_cm}cm`);
+    lines.push(`- Peso atual: ${context.profile.weight_kg}kg`);
+    lines.push(``);
+  }
+
+  // Resumo de hoje
+  if (context.todaySummary) {
+    lines.push(`## Hoje (${context.todaySummary.date})`);
+    lines.push(`- Calorias consumidas: ${context.todaySummary.calories_in} kcal`);
+    lines.push(`- Calorias gastas: ${context.todaySummary.calories_out} kcal`);
+    lines.push(`- Proteína: ${context.todaySummary.protein}g`);
+    lines.push(`- Treino: ${context.todaySummary.workout_minutes} min`);
+    lines.push(``);
+  }
+
+  // Refeições recentes (últimos 3 dias)
+  if (context.recentMeals.length > 0) {
+    const last3Days = [...new Set(context.recentMeals.slice(0, 12).map(m => m.date))].slice(0, 3);
+    lines.push(`## Refeições Recentes`);
+    for (const date of last3Days) {
+      const dayMeals = context.recentMeals.filter(m => m.date === date);
+      const totalCal = dayMeals.reduce((sum, m) => sum + (m.total_calories || 0), 0);
+      const totalProt = dayMeals.reduce((sum, m) => sum + (m.total_protein_g || 0), 0);
+      lines.push(`- ${date}: ${totalCal} kcal, ${Math.round(totalProt)}g proteína (${dayMeals.length} refeições)`);
+    }
+    lines.push(``);
+  }
+
+  // Treinos recentes
+  if (context.recentWorkouts.length > 0) {
+    lines.push(`## Treinos Recentes`);
+    for (const w of context.recentWorkouts.slice(0, 5)) {
+      lines.push(`- ${w.date}: ${w.workout_type} (${w.duration_min || 0}min, ${w.calories_burned || 0}kcal)`);
+    }
+    lines.push(``);
+  }
+
+  // Evolução de peso
+  if (context.recentWeights.length > 0) {
+    lines.push(`## Evolução de Peso`);
+    const weights = context.recentWeights.slice(0, 5);
+    for (const w of weights) {
+      lines.push(`- ${w.date}: ${w.weight_kg}kg`);
+    }
+    if (weights.length >= 2) {
+      const diff = weights[0].weight_kg - weights[weights.length - 1].weight_kg;
+      const trend = diff > 0 ? "ganhou" : diff < 0 ? "perdeu" : "manteve";
+      lines.push(`- Tendência: ${trend} ${Math.abs(diff).toFixed(1)}kg no período`);
+    }
+    lines.push(``);
+  }
+
+  // Glicemia
+  if (context.glucoseStats && context.glucoseStats.readings_count > 0) {
+    lines.push(`## Glicemia (últimos 7 dias)`);
+    if (context.glucoseStats.avg_fasting) {
+      lines.push(`- Média em jejum: ${context.glucoseStats.avg_fasting} mg/dL`);
+    }
+    if (context.glucoseStats.avg_post_meal) {
+      lines.push(`- Média pós-refeição: ${context.glucoseStats.avg_post_meal} mg/dL`);
+    }
+    if (context.glucoseStats.time_in_range) {
+      lines.push(`- Tempo no alvo (70-140): ${context.glucoseStats.time_in_range}%`);
+    }
+    if (context.glucoseStats.min_glucose && context.glucoseStats.max_glucose) {
+      lines.push(`- Range: ${context.glucoseStats.min_glucose}-${context.glucoseStats.max_glucose} mg/dL`);
+    }
+    lines.push(``);
+  }
+
+  return lines.join("\n");
+}
