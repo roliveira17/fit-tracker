@@ -44,3 +44,6 @@ next-env.d.ts
 # Block Windows reserved device names
 nul
 
+
+# Data files (large)
+data/
