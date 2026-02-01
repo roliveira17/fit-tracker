@@ -137,6 +137,8 @@ export interface HomeSummary {
   calories_in: number;
   calories_out: number;
   protein: number;
+  carbs: number;
+  fat: number;
   weight: number | null;
   workout_minutes: number;
 }
@@ -146,7 +148,51 @@ export interface InsightsData {
   weights: { date: string; weight: number }[];
   calories_by_day: { date: string; calories: number }[];
   protein_by_day: { date: string; protein: number }[];
+  carbs_by_day: { date: string; carbs: number }[];
+  fat_by_day: { date: string; fat: number }[];
   avg_sleep_stages: { stage: string; avg_pct: number }[];
+  body_fat_by_day: { date: string; body_fat: number }[];
+  calories_burned_by_day: { date: string; calories_burned: number }[];
+  meals_by_type: { meal_type: string; count: number; avg_calories: number }[];
+  top_foods: { food_name: string; times_eaten: number; avg_calories: number }[];
+  glucose: {
+    avg_fasting: number | null;
+    avg_post_meal: number | null;
+    time_in_range: number | null;
+    by_day: { date: string; avg: number; min: number; max: number }[];
+  };
+}
+
+export interface SleepInsightsData {
+  avg_duration_min: number | null;
+  total_nights: number;
+  by_day: {
+    date: string;
+    total_min: number;
+    deep_min: number;
+    rem_min: number;
+    light_min: number;
+    awake_min: number;
+  }[];
+  avg_stages: { stage: string; avg_pct: number }[];
+  best_night: { date: string; total_min: number } | null;
+  worst_night: { date: string; total_min: number } | null;
+  consistency: number | null;
+}
+
+export interface WorkoutProgressionData {
+  total_workouts: number;
+  total_volume: number;
+  avg_duration_min: number | null;
+  volume_by_day: { date: string; volume: number; duration: number }[];
+  top_exercises: {
+    exercise_name: string;
+    times_performed: number;
+    progression: { date: string; max_weight: number; total_volume: number }[];
+    best_weight: number;
+    best_volume: number;
+  }[];
+  workout_types: { type: string; count: number }[];
 }
 
 // Helper functions
@@ -215,6 +261,28 @@ export async function getInsights(periodDays: number = 7): Promise<InsightsData 
 
   if (error) {
     console.error("Error fetching insights:", error);
+    return null;
+  }
+  return data;
+}
+
+export async function getSleepInsights(periodDays: number = 7): Promise<SleepInsightsData | null> {
+  const { data, error } = await supabase
+    .rpc("get_sleep_insights", { p_days: periodDays });
+
+  if (error) {
+    console.error("Error fetching sleep insights:", error);
+    return null;
+  }
+  return data;
+}
+
+export async function getWorkoutProgression(periodDays: number = 7): Promise<WorkoutProgressionData | null> {
+  const { data, error } = await supabase
+    .rpc("get_workout_progression", { p_days: periodDays });
+
+  if (error) {
+    console.error("Error fetching workout progression:", error);
     return null;
   }
   return data;

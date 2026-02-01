@@ -17,6 +17,7 @@ interface LineChartProps {
   unit: string;
   color?: string;
   showTrend?: boolean;
+  referenceRange?: { min: number; max: number };
 }
 
 // Formata data para exibição curta (ex: "17", "18")
@@ -31,6 +32,7 @@ export function LineChart({
   unit,
   color = "primary",
   showTrend = true,
+  referenceRange,
 }: LineChartProps) {
   // Filtra apenas pontos com dados
   const validPoints = data.filter((d) => d.value !== null);
@@ -149,6 +151,24 @@ export function LineChart({
           className="w-full h-full"
           preserveAspectRatio="none"
         >
+          {/* Reference range band */}
+          {referenceRange && (() => {
+            const rangeMin = referenceRange.min;
+            const rangeMax = referenceRange.max;
+            const yMax = chartHeight - 20 - ((rangeMax - (minValue - padding)) / (range + 2 * padding)) * (chartHeight - 40);
+            const yMin = chartHeight - 20 - ((rangeMin - (minValue - padding)) / (range + 2 * padding)) * (chartHeight - 40);
+            return (
+              <rect
+                x="0"
+                y={yMax}
+                width={chartWidth}
+                height={yMin - yMax}
+                fill="#22c55e"
+                opacity={0.08}
+              />
+            );
+          })()}
+
           {/* Grid lines */}
           <line
             x1="0"

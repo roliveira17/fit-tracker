@@ -1,0 +1,2 @@
+-- Migration already applied remotely (subsumed by 20260203_001_insights_extended.sql)
+-- This file is a placeholder to keep local/remote in sync.
