@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Apple Health Export Sample
+  Este é um exemplo do formato XML exportado pelo Apple Health (iPhone/Apple Watch)
+
+  Como obter dados reais:
+  1. iPhone > App Saúde > Perfil > Exportar Dados de Saúde
+  2. O arquivo export.xml vem dentro de um ZIP
+
+  Tipos de dados suportados pelo Fit Track:
+  - HKQuantityTypeIdentifierBodyMass (peso)
+  - HKQuantityTypeIdentifierBodyFatPercentage (% gordura)
+  - HKQuantityTypeIdentifierBloodGlucose (glicemia) [NOVO]
+  - HKCategoryTypeIdentifierSleepAnalysis (sono)
+  - Workouts (treinos)
+-->
+<HealthData locale="pt_BR">
+  <ExportDate value="2026-01-26 10:00:00 -0300"/>
+
+  <Me
+    HKCharacteristicTypeIdentifierDateOfBirth="1990-05-15"
+    HKCharacteristicTypeIdentifierBiologicalSex="HKBiologicalSexMale"
+    HKCharacteristicTypeIdentifierBloodType="HKBloodTypeOPositive"
+    HKCharacteristicTypeIdentifierFitzpatrickSkinType="HKFitzpatrickSkinTypeIII"
+  />
+
+  <!-- ================================ -->
+  <!-- PESO (Body Mass) -->
+  <!-- ================================ -->
+  <Record
+    type="HKQuantityTypeIdentifierBodyMass"
+    sourceName="Balança Xiaomi"
+    sourceVersion="1.0"
+    unit="kg"
+    creationDate="2026-01-01 08:00:00 -0300"
+    startDate="2026-01-01 08:00:00 -0300"
+    endDate="2026-01-01 08:00:00 -0300"
+    value="82.5"
+  />
+  <Record
+    type="HKQuantityTypeIdentifierBodyMass"
+    sourceName="Balança Xiaomi"
+    unit="kg"
+    startDate="2026-01-08 07:45:00 -0300"
+    endDate="2026-01-08 07:45:00 -0300"
+    value="81.8"
+  />
+  <Record
+    type="HKQuantityTypeIdentifierBodyMass"
+    sourceName="Balança Xiaomi"
+    unit="kg"
+    startDate="2026-01-15 08:10:00 -0300"
+    endDate="2026-01-15 08:10:00 -0300"
+    value="81.2"
+  />
+  <Record
+    type="HKQuantityTypeIdentifierBodyMass"
+    sourceName="Balança Xiaomi"
+    unit="kg"
+    startDate="2026-01-22 07:55:00 -0300"
+    endDate="2026-01-22 07:55:00 -0300"
+    value="80.5"
+  />
+
+  <!-- ================================ -->
+  <!-- GORDURA CORPORAL (Body Fat) -->
+  <!-- ================================ -->
+  <Record
+    type="HKQuantityTypeIdentifierBodyFatPercentage"
+    sourceName="Balança Xiaomi"
+    unit="%"
+    startDate="2026-01-01 08:00:00 -0300"
+    endDate="2026-01-01 08:00:00 -0300"
+    value="22.5"
+  />
+  <Record
+    type="HKQuantityTypeIdentifierBodyFatPercentage"
+    sourceName="Balança Xiaomi"
+    unit="%"
+    startDate="2026-01-08 07:45:00 -0300"
+    endDate="2026-01-08 07:45:00 -0300"
+    value="22.1"
+  />
+  <Record
+    type="HKQuantityTypeIdentifierBodyFatPercentage"
+    sourceName="Balança Xiaomi"
+    unit="%"
+    startDate="2026-01-15 08:10:00 -0300"
+    endDate="2026-01-15 08:10:00 -0300"
+    value="21.8"
+  />
+
+  <!-- ================================ -->
+  <!-- GLICEMIA (Blood Glucose) - NOVO -->
+  <!-- ================================ -->
+  <!-- Glicemia em jejum (manhã) -->
+  <Record
+    type="HKQuantityTypeIdentifierBloodGlucose"
+    sourceName="FreeStyle Libre"
+    unit="mg/dL"
+    startDate="2026-01-20 06:30:00 -0300"
+    endDate="2026-01-20 06:30:00 -0300"
+    value="95"
+  />
+  <!-- Pós-prandial (2h após refeição) -->
+  <Record
+    type="HKQuantityTypeIdentifierBloodGlucose"
+    sourceName="FreeStyle Libre"
+    unit="mg/dL"
+    startDate="2026-01-20 09:30:00 -0300"
+    endDate="2026-01-20 09:30:00 -0300"
+    value="142"
+  />
+  <!-- Antes do almoço -->
+  <Record
+    type="HKQuantityTypeIdentifierBloodGlucose"
+    sourceName="FreeStyle Libre"
+    unit="mg/dL"
+    startDate="2026-01-20 12:00:00 -0300"
+    endDate="2026-01-20 12:00:00 -0300"
+    value="88"
+  />
+  <!-- Pós-almoço -->
+  <Record
+    type="HKQuantityTypeIdentifierBloodGlucose"
+    sourceName="FreeStyle Libre"
+    unit="mg/dL"
+    startDate="2026-01-20 14:00:00 -0300"
+    endDate="2026-01-20 14:00:00 -0300"
+    value="135"
+  />
+  <!-- Antes do jantar -->
+  <Record
+    type="HKQuantityTypeIdentifierBloodGlucose"
+    sourceName="FreeStyle Libre"
+    unit="mg/dL"
+    startDate="2026-01-20 19:00:00 -0300"
+    endDate="2026-01-20 19:00:00 -0300"
+    value="92"
+  />
+  <!-- Antes de dormir -->
+  <Record
+    type="HKQuantityTypeIdentifierBloodGlucose"
+    sourceName="FreeStyle Libre"
+    unit="mg/dL"
+    startDate="2026-01-20 22:30:00 -0300"
+    endDate="2026-01-20 22:30:00 -0300"
+    value="105"
+  />
+
+  <!-- Dia 21 - Em jejum -->
+  <Record
+    type="HKQuantityTypeIdentifierBloodGlucose"
+    sourceName="FreeStyle Libre"
+    unit="mg/dL"
+    startDate="2026-01-21 06:45:00 -0300"
+    endDate="2026-01-21 06:45:00 -0300"
+    value="92"
+  />
+  <!-- Pico após café da manhã com carboidratos -->
+  <Record
+    type="HKQuantityTypeIdentifierBloodGlucose"
+    sourceName="FreeStyle Libre"
+    unit="mg/dL"
+    startDate="2026-01-21 08:30:00 -0300"
+    endDate="2026-01-21 08:30:00 -0300"
+    value="168"
+  />
+
+  <!-- ================================ -->
+  <!-- FREQUÊNCIA CARDÍACA -->
+  <!-- ================================ -->
+  <Record
+    type="HKQuantityTypeIdentifierHeartRate"
+    sourceName="Apple Watch de João"
+    unit="count/min"
+    startDate="2026-01-20 15:00:00 -0300"
+    endDate="2026-01-20 15:00:00 -0300"
+    value="72"
+  />
+  <Record
+    type="HKQuantityTypeIdentifierRestingHeartRate"
+    sourceName="Apple Watch de João"
+    unit="count/min"
+    startDate="2026-01-20 00:00:00 -0300"
+    endDate="2026-01-20 23:59:59 -0300"
+    value="58"
+  />
+
+  <!-- ================================ -->
+  <!-- TREINOS (Workouts) -->
+  <!-- ================================ -->
+
+  <!-- Corrida -->
+  <Workout
+    workoutActivityType="HKWorkoutActivityTypeRunning"
+    duration="35.5"
+    durationUnit="min"
+    totalDistance="5.2"
+    totalDistanceUnit="km"
+    totalEnergyBurned="380"
+    totalEnergyBurnedUnit="kcal"
+    sourceName="Apple Watch de João"
+    startDate="2026-01-18 07:00:00 -0300"
+    endDate="2026-01-18 07:35:30 -0300"
+  />
+
+  <!-- Musculação -->
+  <Workout
+    workoutActivityType="HKWorkoutActivityTypeTraditionalStrengthTraining"
+    duration="55"
+    durationUnit="min"
+    totalEnergyBurned="280"
+    totalEnergyBurnedUnit="kcal"
+    sourceName="Apple Watch de João"
+    startDate="2026-01-19 18:00:00 -0300"
+    endDate="2026-01-19 18:55:00 -0300"
+  />
+
+  <!-- HIIT -->
+  <Workout
+    workoutActivityType="HKWorkoutActivityTypeHighIntensityIntervalTraining"
+    duration="25"
+    durationUnit="min"
+    totalEnergyBurned="320"
+    totalEnergyBurnedUnit="kcal"
+    sourceName="Apple Watch de João"
+    startDate="2026-01-21 06:30:00 -0300"
+    endDate="2026-01-21 06:55:00 -0300"
+  />
+
+  <!-- Natação -->
+  <Workout
+    workoutActivityType="HKWorkoutActivityTypeSwimming"
+    duration="40"
+    durationUnit="min"
+    totalDistance="1.5"
+    totalDistanceUnit="km"
+    totalEnergyBurned="350"
+    totalEnergyBurnedUnit="kcal"
+    sourceName="Apple Watch de João"
+    startDate="2026-01-22 12:00:00 -0300"
+    endDate="2026-01-22 12:40:00 -0300"
+  />
+
+  <!-- ================================ -->
+  <!-- SONO (Sleep Analysis) -->
+  <!-- ================================ -->
+
+  <!-- Noite de 19 para 20 de janeiro -->
+  <Record
+    type="HKCategoryTypeIdentifierSleepAnalysis"
+    sourceName="Apple Watch de João"
+    startDate="2026-01-19 23:15:00 -0300"
+    endDate="2026-01-19 23:45:00 -0300"
+    value="HKCategoryValueSleepAnalysisInBed"
+  />
+  <Record
+    type="HKCategoryTypeIdentifierSleepAnalysis"
+    sourceName="Apple Watch de João"
+    startDate="2026-01-19 23:45:00 -0300"
+    endDate="2026-01-20 00:30:00 -0300"
+    value="HKCategoryValueSleepAnalysisAsleepCore"
+  />
+  <Record
+    type="HKCategoryTypeIdentifierSleepAnalysis"
+    sourceName="Apple Watch de João"
+    startDate="2026-01-20 00:30:00 -0300"
+    endDate="2026-01-20 01:45:00 -0300"
+    value="HKCategoryValueSleepAnalysisAsleepDeep"
+  />
+  <Record
+    type="HKCategoryTypeIdentifierSleepAnalysis"
+    sourceName="Apple Watch de João"
+    startDate="2026-01-20 01:45:00 -0300"
+    endDate="2026-01-20 02:30:00 -0300"
+    value="HKCategoryValueSleepAnalysisAsleepREM"
+  />
+  <Record
+    type="HKCategoryTypeIdentifierSleepAnalysis"
+    sourceName="Apple Watch de João"
+    startDate="2026-01-20 02:30:00 -0300"
+    endDate="2026-01-20 02:45:00 -0300"
+    value="HKCategoryValueSleepAnalysisAwake"
+  />
+  <Record
+    type="HKCategoryTypeIdentifierSleepAnalysis"
+    sourceName="Apple Watch de João"
+    startDate="2026-01-20 02:45:00 -0300"
+    endDate="2026-01-20 04:00:00 -0300"
+    value="HKCategoryValueSleepAnalysisAsleepCore"
+  />
+  <Record
+    type="HKCategoryTypeIdentifierSleepAnalysis"
+    sourceName="Apple Watch de João"
+    startDate="2026-01-20 04:00:00 -0300"
+    endDate="2026-01-20 05:15:00 -0300"
+    value="HKCategoryValueSleepAnalysisAsleepDeep"
+  />
+  <Record
+    type="HKCategoryTypeIdentifierSleepAnalysis"
+    sourceName="Apple Watch de João"
+    startDate="2026-01-20 05:15:00 -0300"
+    endDate="2026-01-20 06:30:00 -0300"
+    value="HKCategoryValueSleepAnalysisAsleepREM"
+  />
+
+  <!-- ================================ -->
+  <!-- PASSOS (Step Count) -->
+  <!-- ================================ -->
+  <Record
+    type="HKQuantityTypeIdentifierStepCount"
+    sourceName="iPhone de João"
+    unit="count"
+    startDate="2026-01-20 00:00:00 -0300"
+    endDate="2026-01-20 23:59:59 -0300"
+    value="8542"
+  />
+  <Record
+    type="HKQuantityTypeIdentifierStepCount"
+    sourceName="iPhone de João"
+    unit="count"
+    startDate="2026-01-21 00:00:00 -0300"
+    endDate="2026-01-21 23:59:59 -0300"
+    value="12350"
+  />
+
+</HealthData>

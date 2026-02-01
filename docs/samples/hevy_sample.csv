@@ -1,0 +1,62 @@
+title,start_time,end_time,description,exercise_title,superset_id,set_index,set_type,weight_kg,reps,distance_km,duration_seconds,rpe
+"Push Day A",2026-01-15 18:00:00,2026-01-15 19:15:00,"Treino de peito, ombro e tríceps",Supino Reto com Barra,,1,normal,80,10,,,8
+"Push Day A",2026-01-15 18:00:00,2026-01-15 19:15:00,,Supino Reto com Barra,,2,normal,80,9,,,8
+"Push Day A",2026-01-15 18:00:00,2026-01-15 19:15:00,,Supino Reto com Barra,,3,normal,80,8,,,9
+"Push Day A",2026-01-15 18:00:00,2026-01-15 19:15:00,,Supino Reto com Barra,,4,normal,75,8,,,9
+"Push Day A",2026-01-15 18:00:00,2026-01-15 19:15:00,,Supino Inclinado com Halteres,,1,normal,28,12,,,7
+"Push Day A",2026-01-15 18:00:00,2026-01-15 19:15:00,,Supino Inclinado com Halteres,,2,normal,28,11,,,8
+"Push Day A",2026-01-15 18:00:00,2026-01-15 19:15:00,,Supino Inclinado com Halteres,,3,normal,28,10,,,8
+"Push Day A",2026-01-15 18:00:00,2026-01-15 19:15:00,,Desenvolvimento com Halteres,,1,normal,20,12,,,7
+"Push Day A",2026-01-15 18:00:00,2026-01-15 19:15:00,,Desenvolvimento com Halteres,,2,normal,20,11,,,8
+"Push Day A",2026-01-15 18:00:00,2026-01-15 19:15:00,,Desenvolvimento com Halteres,,3,normal,20,10,,,8
+"Push Day A",2026-01-15 18:00:00,2026-01-15 19:15:00,,Elevação Lateral,,1,normal,10,15,,,7
+"Push Day A",2026-01-15 18:00:00,2026-01-15 19:15:00,,Elevação Lateral,,2,normal,10,14,,,8
+"Push Day A",2026-01-15 18:00:00,2026-01-15 19:15:00,,Elevação Lateral,,3,normal,10,12,,,9
+"Push Day A",2026-01-15 18:00:00,2026-01-15 19:15:00,,Tríceps Corda,,1,normal,25,15,,,7
+"Push Day A",2026-01-15 18:00:00,2026-01-15 19:15:00,,Tríceps Corda,,2,normal,25,14,,,8
+"Push Day A",2026-01-15 18:00:00,2026-01-15 19:15:00,,Tríceps Corda,,3,normal,25,12,,,9
+"Pull Day A",2026-01-17 18:00:00,2026-01-17 19:20:00,"Treino de costas e bíceps",Barra Fixa,,1,normal,0,10,,,8
+"Pull Day A",2026-01-17 18:00:00,2026-01-17 19:20:00,,Barra Fixa,,2,normal,0,9,,,9
+"Pull Day A",2026-01-17 18:00:00,2026-01-17 19:20:00,,Barra Fixa,,3,normal,0,7,,,9
+"Pull Day A",2026-01-17 18:00:00,2026-01-17 19:20:00,,Remada Curvada,,1,normal,70,10,,,7
+"Pull Day A",2026-01-17 18:00:00,2026-01-17 19:20:00,,Remada Curvada,,2,normal,70,10,,,8
+"Pull Day A",2026-01-17 18:00:00,2026-01-17 19:20:00,,Remada Curvada,,3,normal,70,9,,,8
+"Pull Day A",2026-01-17 18:00:00,2026-01-17 19:20:00,,Remada Curvada,,4,normal,65,10,,,8
+"Pull Day A",2026-01-17 18:00:00,2026-01-17 19:20:00,,Puxada Frente,,1,normal,60,12,,,7
+"Pull Day A",2026-01-17 18:00:00,2026-01-17 19:20:00,,Puxada Frente,,2,normal,60,11,,,8
+"Pull Day A",2026-01-17 18:00:00,2026-01-17 19:20:00,,Puxada Frente,,3,normal,60,10,,,8
+"Pull Day A",2026-01-17 18:00:00,2026-01-17 19:20:00,,Rosca Direta com Barra,,1,normal,30,12,,,7
+"Pull Day A",2026-01-17 18:00:00,2026-01-17 19:20:00,,Rosca Direta com Barra,,2,normal,30,11,,,8
+"Pull Day A",2026-01-17 18:00:00,2026-01-17 19:20:00,,Rosca Direta com Barra,,3,normal,30,10,,,9
+"Pull Day A",2026-01-17 18:00:00,2026-01-17 19:20:00,,Rosca Martelo,,1,normal,14,12,,,7
+"Pull Day A",2026-01-17 18:00:00,2026-01-17 19:20:00,,Rosca Martelo,,2,normal,14,11,,,8
+"Pull Day A",2026-01-17 18:00:00,2026-01-17 19:20:00,,Rosca Martelo,,3,normal,14,10,,,8
+"Leg Day",2026-01-19 10:00:00,2026-01-19 11:30:00,"Treino de pernas completo",Agachamento Livre,,1,warmup,40,15,,,5
+"Leg Day",2026-01-19 10:00:00,2026-01-19 11:30:00,,Agachamento Livre,,2,normal,100,8,,,8
+"Leg Day",2026-01-19 10:00:00,2026-01-19 11:30:00,,Agachamento Livre,,3,normal,100,8,,,9
+"Leg Day",2026-01-19 10:00:00,2026-01-19 11:30:00,,Agachamento Livre,,4,normal,100,7,,,9
+"Leg Day",2026-01-19 10:00:00,2026-01-19 11:30:00,,Agachamento Livre,,5,normal,95,8,,,9
+"Leg Day",2026-01-19 10:00:00,2026-01-19 11:30:00,,Leg Press 45,,1,normal,200,12,,,7
+"Leg Day",2026-01-19 10:00:00,2026-01-19 11:30:00,,Leg Press 45,,2,normal,200,12,,,8
+"Leg Day",2026-01-19 10:00:00,2026-01-19 11:30:00,,Leg Press 45,,3,normal,200,10,,,8
+"Leg Day",2026-01-19 10:00:00,2026-01-19 11:30:00,,Cadeira Extensora,,1,normal,50,15,,,7
+"Leg Day",2026-01-19 10:00:00,2026-01-19 11:30:00,,Cadeira Extensora,,2,normal,50,14,,,8
+"Leg Day",2026-01-19 10:00:00,2026-01-19 11:30:00,,Cadeira Extensora,,3,normal,50,12,,,9
+"Leg Day",2026-01-19 10:00:00,2026-01-19 11:30:00,,Mesa Flexora,,1,normal,40,12,,,7
+"Leg Day",2026-01-19 10:00:00,2026-01-19 11:30:00,,Mesa Flexora,,2,normal,40,11,,,8
+"Leg Day",2026-01-19 10:00:00,2026-01-19 11:30:00,,Mesa Flexora,,3,normal,40,10,,,8
+"Leg Day",2026-01-19 10:00:00,2026-01-19 11:30:00,,Panturrilha em Pé,,1,normal,80,20,,,7
+"Leg Day",2026-01-19 10:00:00,2026-01-19 11:30:00,,Panturrilha em Pé,,2,normal,80,18,,,8
+"Leg Day",2026-01-19 10:00:00,2026-01-19 11:30:00,,Panturrilha em Pé,,3,normal,80,15,,,9
+"Push Day B",2026-01-22 18:30:00,2026-01-22 19:45:00,"Variação do Push Day",Supino Reto com Halteres,,1,normal,34,10,,,7
+"Push Day B",2026-01-22 18:30:00,2026-01-22 19:45:00,,Supino Reto com Halteres,,2,normal,34,9,,,8
+"Push Day B",2026-01-22 18:30:00,2026-01-22 19:45:00,,Supino Reto com Halteres,,3,normal,34,8,,,8
+"Push Day B",2026-01-22 18:30:00,2026-01-22 19:45:00,,Crucifixo Inclinado,,1,normal,16,12,,,7
+"Push Day B",2026-01-22 18:30:00,2026-01-22 19:45:00,,Crucifixo Inclinado,,2,normal,16,11,,,8
+"Push Day B",2026-01-22 18:30:00,2026-01-22 19:45:00,,Crucifixo Inclinado,,3,normal,16,10,,,8
+"Push Day B",2026-01-22 18:30:00,2026-01-22 19:45:00,,Arnold Press,,1,normal,18,12,,,7
+"Push Day B",2026-01-22 18:30:00,2026-01-22 19:45:00,,Arnold Press,,2,normal,18,11,,,8
+"Push Day B",2026-01-22 18:30:00,2026-01-22 19:45:00,,Arnold Press,,3,normal,18,10,,,8
+"Push Day B",2026-01-22 18:30:00,2026-01-22 19:45:00,,Tríceps Testa,,1,normal,20,12,,,7
+"Push Day B",2026-01-22 18:30:00,2026-01-22 19:45:00,,Tríceps Testa,,2,normal,20,11,,,8
+"Push Day B",2026-01-22 18:30:00,2026-01-22 19:45:00,,Tríceps Testa,,3,normal,20,10,,,9
