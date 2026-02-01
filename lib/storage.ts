@@ -549,7 +549,7 @@ export function resetApp(): void {
 export interface ImportRecord {
   id: string;
   date: string;
-  source: "hevy" | "apple_health";
+  source: "hevy" | "apple_health" | "cgm";
   status: "success" | "partial" | "error";
   itemsImported: number;
 }

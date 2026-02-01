@@ -3,18 +3,18 @@
 interface SummaryCardProps {
   calories: number;
   protein: number;
+  carbs: number;
+  fat: number;
   deficit: number; // positivo = deficit, negativo = superavit
   hasWorkout: boolean;
   bmr: number;
 }
 
-/**
- * Card de resumo diario
- * Exibe calorias, proteina, treino e deficit
- */
 export function SummaryCard({
   calories,
   protein,
+  carbs,
+  fat,
   deficit,
   hasWorkout,
   bmr,
@@ -77,16 +77,24 @@ export function SummaryCard({
               </div>
             </div>
 
-            <div className="flex items-center justify-between rounded-xl border border-white/5 bg-surface-card px-3 py-2">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[18px] text-primary">
-                  egg_alt
-                </span>
-                <span className="text-xs text-text-secondary">Proteina</span>
-              </div>
-              <span className="text-sm font-semibold text-white">
-                {protein}g
-              </span>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { label: "Proteina", icon: "egg_alt", grams: protein, calPerGram: 4 },
+                { label: "Carbos", icon: "grain", grams: carbs, calPerGram: 4 },
+                { label: "Gordura", icon: "water_drop", grams: fat, calPerGram: 9 },
+              ].map((macro) => {
+                const pct = calories > 0 ? Math.round((macro.grams * macro.calPerGram / calories) * 100) : 0;
+                return (
+                  <div key={macro.label} className="flex flex-col items-center gap-1 rounded-xl border border-white/5 bg-surface-card px-2 py-2">
+                    <span className="material-symbols-outlined text-[16px] text-primary">
+                      {macro.icon}
+                    </span>
+                    <span className="text-[10px] text-text-secondary">{macro.label}</span>
+                    <span className="text-sm font-semibold text-white">{macro.grams}g</span>
+                    <span className="text-[10px] text-white/40">{pct}%</span>
+                  </div>
+                );
+              })}
             </div>
 
             <div className="flex items-center justify-between rounded-xl border border-white/5 bg-surface-card px-3 py-2">

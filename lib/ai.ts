@@ -1,15 +1,19 @@
 import OpenAI from "openai";
-import { type UserProfile } from "./storage";
+import { type UserProfile, type Meal } from "./storage";
 import {
   parseFood,
   parseExercise,
   parseWeight,
   parseBodyFat,
+  parseGlucose,
   type FoodParseResult,
   type ExerciseParseResult,
   type WeightParseResult,
   type BodyFatParseResult,
+  type GlucoseParseResult,
 } from "./parsers";
+import { generateUserContext } from "./food-lookup";
+import { type UserContext, formatUserContextForPrompt } from "./supabase";
 
 /**
  * Cliente OpenAI - inicializado apenas no servidor
@@ -61,6 +65,7 @@ export type DeclarationSubtype =
   | "exercise"  // Exercício/treino
   | "weight"    // Peso corporal
   | "bodyfat"   // Percentual de gordura
+  | "glucose"   // Glicemia
   | "unknown";  // Não identificado
 
 /**
@@ -98,6 +103,7 @@ SUBTIPOS (apenas para "declaration"):
 - "exercise": Treino/exercício
 - "weight": Peso corporal (ex: "peso 78kg", "estou com 80")
 - "bodyfat": Body fat/gordura (ex: "bf 20%", "gordura corporal 18")
+- "glucose": Glicemia (ex: "glicemia 95", "açúcar 120", "glicose em jejum 90")
 - "unknown": Não conseguiu identificar
 
 CONTEXTO DAS ÚLTIMAS MENSAGENS:
@@ -166,21 +172,30 @@ REGRAS DE COMPORTAMENTO:
 - Se o usuário perguntar algo fora do escopo (saúde/fitness), redirecione educadamente
 - Responda sempre em português brasileiro
 
-REGRA CRÍTICA - QUANTIDADES:
-- Se o usuário NÃO informar a quantidade/porção de um alimento, você DEVE perguntar antes de registrar
-- NUNCA assuma quantidades. Pergunte: "Quantos gramas de [alimento]?" ou "Qual a porção?"
-- Só registre quando tiver a quantidade confirmada pelo usuário
-- Exceção: se o usuário disser "porção normal" ou "um prato", você pode estimar
+REGRA INTELIGENTE - QUANTIDADES:
+O sistema usa um banco de dados local de alimentos comuns e histórico do usuário.
+Para cada alimento, siga esta lógica:
 
-EXEMPLO - SEM QUANTIDADE (pergunte):
-Usuário: "comi frango"
-Assistente: Frango grelhado, frito ou assado? E quantos gramas aproximadamente?
+1. **Quantidade especificada** → Registrar direto
+   Exemplo: "200g de frango" → ✓ Registrar
 
-EXEMPLO - COM QUANTIDADE (registre):
-Usuário: "comi 200g de frango grelhado"
-Assistente: ✓ Registrado: Frango grelhado (200g)
-  - 330 kcal, 62g proteína
-  Restam ~${profile.bmr - 330} kcal do seu BMR hoje.
+2. **Alimento padronizado** (ovo, pão francês, banana) → Registrar com porção padrão
+   Exemplo: "comi 2 ovos" → ✓ Registrar (2 x 50g = 100g)
+   Exemplo: "comi arroz e frango" → ✓ Registrar (arroz 150g, frango 150g padrão)
+
+3. **Alimento ambíguo** (pão, queijo, leite, iogurte) → PERGUNTAR tipo
+   Exemplo: "comi pão" → "Qual tipo de pão? (francês, integral, de forma)"
+   Exemplo: "tomei leite" → "Leite integral, desnatado ou semi?"
+
+4. **Alimento no histórico** → Usar quantidade que o usuário costuma usar
+   Se o usuário sempre come "200g de frango", usar essa quantidade quando não especificar
+
+EXEMPLOS:
+- "Almocei arroz e frango" → ✓ Registrar direto (alimentos padronizados)
+- "Comi 2 ovos" → ✓ Registrar direto (ovo é padronizado: 50g cada)
+- "Comi pão" → Perguntar tipo (pão é ambíguo)
+- "Tomei café com leite" → Perguntar sobre o leite
+- "Jantei 200g de salmão com salada" → ✓ Registrar direto
 
 FORMATO DE REGISTRO:
 Quando registrar algo, confirme de forma estruturada:
@@ -197,6 +212,7 @@ export type ParsedData =
   | { type: "exercise"; data: ExerciseParseResult }
   | { type: "weight"; data: WeightParseResult }
   | { type: "bodyfat"; data: BodyFatParseResult }
+  | { type: "glucose"; data: GlucoseParseResult }
   | null;
 
 /**
@@ -217,9 +233,10 @@ function getTypeSpecificInstructions(classification: ClassificationResult): stri
       if (classification.subtype === "food") {
         return `
 INSTRUÇÃO ESPECIAL: Esta é uma DECLARAÇÃO de ALIMENTAÇÃO.
-- Se o usuário informou as quantidades/porções, registre com "✓ Registrado:"
-- Se NÃO informou quantidades, PERGUNTE antes de registrar
-- Nunca assuma quantidades padrão sem perguntar`;
+- Para alimentos PADRONIZADOS (arroz, frango, ovo, etc): registre com porção padrão
+- Para alimentos AMBÍGUOS (pão, queijo, leite, iogurte): pergunte o tipo
+- Se o usuário especificou quantidade: use a quantidade informada
+- Sempre confirme o registro com "✓ Registrado:" e mostre os valores nutricionais`;
       }
       return `
 INSTRUÇÃO ESPECIAL: Esta é uma DECLARAÇÃO factual. Registre automaticamente.
@@ -257,7 +274,8 @@ Exemplo: "Quer me dizer o motivo?" ou "Quantas horas dormiu?"`;
  */
 async function runParser(
   message: string,
-  classification: ClassificationResult
+  classification: ClassificationResult,
+  mealHistory?: Meal[]
 ): Promise<ParsedData> {
   // Só parseia declarações
   if (classification.type !== "declaration") {
@@ -266,7 +284,7 @@ async function runParser(
 
   switch (classification.subtype) {
     case "food": {
-      const data = await parseFood(message);
+      const data = await parseFood(message, mealHistory);
       return { type: "food", data };
     }
     case "exercise": {
@@ -281,6 +299,10 @@ async function runParser(
       const data = await parseBodyFat(message);
       return data ? { type: "bodyfat", data } : null;
     }
+    case "glucose": {
+      const data = await parseGlucose(message);
+      return data ? { type: "glucose", data } : null;
+    }
     default:
       return null;
   }
@@ -288,11 +310,19 @@ async function runParser(
 
 /**
  * Envia mensagem para a AI e retorna resposta com classificação
+ *
+ * @param userMessage Mensagem do usuário
+ * @param chatHistory Histórico de mensagens do chat
+ * @param profile Perfil do usuário
+ * @param mealHistory Histórico de refeições (últimas 30) para contexto - localStorage
+ * @param supabaseContext Contexto completo do Supabase (quando logado)
  */
 export async function sendMessage(
   userMessage: string,
   chatHistory: ChatMessage[],
-  profile: UserProfile
+  profile: UserProfile,
+  mealHistory?: Meal[],
+  supabaseContext?: UserContext
 ): Promise<ChatResponse> {
   const client = getOpenAIClient();
 
@@ -300,11 +330,20 @@ export async function sendMessage(
   const classification = await classifyMessage(userMessage, chatHistory);
 
   // Executa parser em paralelo com a geração de resposta
-  const parserPromise = runParser(userMessage, classification);
+  const parserPromise = runParser(userMessage, classification, mealHistory);
 
   // Adiciona instruções específicas baseadas no tipo
   const typeInstructions = getTypeSpecificInstructions(classification);
-  const systemPrompt = generateSystemPrompt(profile) + typeInstructions;
+
+  // Prioriza contexto do Supabase (mais completo) sobre localStorage
+  let userContext = "";
+  if (supabaseContext) {
+    userContext = "\n\n# HISTÓRICO DO USUÁRIO (Supabase)\n" + formatUserContextForPrompt(supabaseContext);
+  } else if (mealHistory && mealHistory.length > 0) {
+    userContext = "\n\n" + generateUserContext(mealHistory);
+  }
+
+  const systemPrompt = generateSystemPrompt(profile) + typeInstructions + userContext;
 
   // Converte histórico para formato OpenAI
   const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [

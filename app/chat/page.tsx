@@ -9,7 +9,7 @@ import { ChipGroup, type Chip } from "@/components/chat/ChipGroup";
 import { ChatInput, type RecordingState } from "@/components/ui/ChatInput";
 import { ImagePreview } from "@/components/chat/ImagePreview";
 import { BarcodeScanner, ScannedProductCard } from "@/components/import/BarcodeScanner";
-import { offProductToMealItem, type NormalizedProduct } from "@/lib/openfoodfacts";
+import { offProductToMealItem, isLiquidProduct, type NormalizedProduct } from "@/lib/openfoodfacts";
 import { useAudioRecorder } from "@/hooks/useAudioRecorder";
 import {
   getUserProfile,
@@ -264,6 +264,7 @@ export default function ChatPage() {
     if (!scannedProduct || !profile) return;
 
     const mealItem = offProductToMealItem(scannedProduct, grams);
+    const unit = isLiquidProduct(scannedProduct) ? "ml" : "g";
     const productName = scannedProduct.brand
       ? `${scannedProduct.productName} (${scannedProduct.brand})`
       : scannedProduct.productName;
@@ -278,7 +279,7 @@ export default function ChatPage() {
     setMessages((prev) => [...prev, userMessage]);
 
     // Monta resposta
-    const responseContent = `📦 **Produto escaneado:**\n\n${productName}\n\n**Porção: ${grams}g**\n🔥 ${mealItem.calories} kcal\n🥩 ${mealItem.protein}g proteína\n🍚 ${mealItem.carbs}g carboidratos\n🧈 ${mealItem.fat}g gordura\n\n✓ Registrado!`;
+    const responseContent = `📦 **Produto escaneado:**\n\n${productName}\n\n**Porção: ${grams}${unit}**\n🔥 ${mealItem.calories} kcal\n🥩 ${mealItem.protein}g proteína\n🍚 ${mealItem.carbs}g carboidratos\n🧈 ${mealItem.fat}g gordura\n\n✓ Registrado!`;
 
     // Adiciona resposta da AI
     const aiMessage: ChatMessage = {
@@ -306,9 +307,11 @@ export default function ChatPage() {
         showToast("Erro ao salvar no servidor", "error");
       } else {
         console.log("[Barcode] Salvo com sucesso, meal_id:", result.id);
+        showToast("Produto registrado!", "success");
       }
     } else {
       console.warn("[Barcode] Usuário não autenticado, salvando apenas localmente");
+      showToast("Salvo localmente", "info");
     }
 
     // Salva no localStorage também
@@ -317,7 +320,7 @@ export default function ChatPage() {
       items: [{
         name: productName,
         quantity: grams,
-        unit: "g",
+        unit,
         calories: mealItem.calories,
         protein: mealItem.protein,
         carbs: mealItem.carbs,
@@ -330,7 +333,6 @@ export default function ChatPage() {
       rawText: `Barcode: ${scannedProduct.barcode}`,
     });
 
-    showToast("Produto registrado!", "success");
     setScannedProduct(null);
   }, [scannedProduct, profile, user, showToast]);
 

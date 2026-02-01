@@ -23,6 +23,8 @@ import {
   type Meal,
   type Workout,
 } from "@/lib/storage";
+import { useAuth } from "@/components/providers/SupabaseAuthProvider";
+import { getHomeSummary, getTdee, type HomeSummary } from "@/lib/supabase";
 
 /**
  * Formata data para YYYY-MM-DD (formato usado no storage)
@@ -37,11 +39,16 @@ function formatDateKey(date: Date): string {
  */
 export default function HomePage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date());
 
-  // Dados do dia selecionado
+  // Dados do Supabase
+  const [supabaseSummary, setSupabaseSummary] = useState<HomeSummary | null>(null);
+  const [supabaseTdee, setSupabaseTdee] = useState<number | null>(null);
+
+  // Dados do dia selecionado (localStorage fallback)
   const [meals, setMeals] = useState<Meal[]>([]);
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [hasWeightLog, setHasWeightLog] = useState(false);
@@ -69,6 +76,20 @@ export default function HomePage() {
   useEffect(() => {
     const dateKey = formatDateKey(selectedDate);
 
+    // Se usuário logado, busca do Supabase
+    if (user) {
+      const loadSupabaseData = async () => {
+        const [summary, tdee] = await Promise.all([
+          getHomeSummary(dateKey),
+          getTdee()
+        ]);
+        setSupabaseSummary(summary);
+        setSupabaseTdee(tdee);
+      };
+      loadSupabaseData();
+    }
+
+    // Sempre carrega localStorage como fallback
     // Busca refeições do dia
     const dayMeals = getMealsByDate(dateKey);
     setMeals(dayMeals);
@@ -93,18 +114,27 @@ export default function HomePage() {
     // Calcula streak
     const streak = calculateStreak();
     setStreakData(streak);
-  }, [selectedDate]);
+  }, [selectedDate, user]);
 
-  // Calcula totais do dia
-  const totals = {
-    calories: meals.reduce((sum, m) => sum + m.totalCalories, 0),
-    protein: meals.reduce((sum, m) => sum + m.totalProtein, 0),
-    carbs: meals.reduce((sum, m) => sum + m.totalCarbs, 0),
-    fat: meals.reduce((sum, m) => sum + m.totalFat, 0),
-  };
+  // Calcula totais do dia - prefere Supabase se disponível
+  const totals = supabaseSummary
+    ? {
+        calories: supabaseSummary.calories_in,
+        protein: supabaseSummary.protein,
+        carbs: supabaseSummary.carbs,
+        fat: supabaseSummary.fat,
+      }
+    : {
+        calories: meals.reduce((sum, m) => sum + m.totalCalories, 0),
+        protein: meals.reduce((sum, m) => sum + m.totalProtein, 0),
+        carbs: meals.reduce((sum, m) => sum + m.totalCarbs, 0),
+        fat: meals.reduce((sum, m) => sum + m.totalFat, 0),
+      };
 
-  const hasWorkout = workouts.length > 0;
-  const bmr = profile?.bmr || 0;
+  const hasWorkout = supabaseSummary
+    ? supabaseSummary.workout_minutes > 0
+    : workouts.length > 0;
+  const bmr = supabaseTdee || profile?.bmr || 0;
   const deficit = bmr - totals.calories;
 
   // Calcula tendência de peso baseado nos dados de 7 dias
@@ -147,6 +177,8 @@ export default function HomePage() {
           <SummaryCard
             calories={totals.calories}
             protein={totals.protein}
+            carbs={totals.carbs}
+            fat={totals.fat}
             deficit={deficit}
             hasWorkout={hasWorkout}
             bmr={bmr}
