@@ -508,12 +508,14 @@ async function extractAppleHealthXmlStreaming(
         records,
         workouts,
         sleepEntries,
+        glucoseEntries: [], // Glicemia não é processada via streaming ainda
         metadata: {
           exportDate: null,
           locale: null,
           totalRecords: records.length,
           totalWorkouts: workouts.length,
           totalSleepEntries: sleepEntries.length,
+          totalGlucoseEntries: 0,
         },
         errors: [],
       },

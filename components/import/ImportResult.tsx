@@ -5,6 +5,7 @@ interface ImportStats {
   weightLogs: number;
   bodyFatLogs?: number;
   sleepSessions?: number;
+  glucoseReadings?: number;
   duplicatesSkipped: number;
   errors: string[];
 }
@@ -37,7 +38,7 @@ export function ImportResult({ status, stats, onDismiss }: ImportResultProps) {
     },
   }[status];
 
-  const totalImported = stats.workouts + stats.weightLogs + (stats.bodyFatLogs || 0) + (stats.sleepSessions || 0);
+  const totalImported = stats.workouts + stats.weightLogs + (stats.bodyFatLogs || 0) + (stats.sleepSessions || 0) + (stats.glucoseReadings || 0);
 
   return (
     <div className="rounded-xl border border-border-subtle bg-surface-card p-4">
@@ -90,6 +91,14 @@ export function ImportResult({ status, stats, onDismiss }: ImportResultProps) {
                 bedtime
               </span>
               <span>{stats.sleepSessions} noites de sono</span>
+            </div>
+          )}
+          {(stats.glucoseReadings || 0) > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-[18px] text-warning">
+                monitoring
+              </span>
+              <span>{stats.glucoseReadings} leituras de glicemia</span>
             </div>
           )}
         </div>

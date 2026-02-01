@@ -90,6 +90,18 @@ export interface AppleHealthSleepEntry {
 // ============================================================================
 
 /**
+ * Registro de glicemia do Apple Health
+ */
+export interface AppleHealthGlucoseEntry {
+  /** Valor em mg/dL */
+  value: number;
+  /** Data/hora da medição */
+  startDate: string;
+  /** Nome da fonte (ex: FreeStyle Libre) */
+  sourceName?: string;
+}
+
+/**
  * Resultado do parsing do XML
  */
 export interface ParsedAppleHealthData {
@@ -99,6 +111,8 @@ export interface ParsedAppleHealthData {
   workouts: AppleHealthWorkout[];
   /** Entradas de sono */
   sleepEntries: AppleHealthSleepEntry[];
+  /** Entradas de glicemia */
+  glucoseEntries: AppleHealthGlucoseEntry[];
   /** Metadados da exportação */
   metadata: {
     /** Data da exportação */
@@ -111,6 +125,8 @@ export interface ParsedAppleHealthData {
     totalWorkouts: number;
     /** Total de entradas de sono */
     totalSleepEntries: number;
+    /** Total de entradas de glicemia */
+    totalGlucoseEntries: number;
   };
   /** Erros encontrados durante o parsing */
   errors: string[];
@@ -146,6 +162,9 @@ export const SUPPORTED_RECORD_TYPES = {
 
   // Sono
   SLEEP_ANALYSIS: "HKCategoryTypeIdentifierSleepAnalysis",
+
+  // Glicemia (NOVO)
+  BLOOD_GLUCOSE: "HKQuantityTypeIdentifierBloodGlucose",
 } as const;
 
 /** Valores de estágio de sono */
@@ -179,6 +198,7 @@ export function parseAppleHealthXml(xmlContent: string): ParsedAppleHealthData {
   const records: AppleHealthRecord[] = [];
   const workouts: AppleHealthWorkout[] = [];
   const sleepEntries: AppleHealthSleepEntry[] = [];
+  const glucoseEntries: AppleHealthGlucoseEntry[] = [];
 
   try {
     // Configura o parser
@@ -231,6 +251,23 @@ export function parseAppleHealthXml(xmlContent: string): ParsedAppleHealthData {
         continue;
       }
 
+      // Trata glicemia separadamente
+      if (record.type === SUPPORTED_RECORD_TYPES.BLOOD_GLUCOSE) {
+        // Converte para mg/dL se necessário (pode vir em mmol/L)
+        let glucoseValue = parseFloat(record.value) || 0;
+        const unit = record.unit || "";
+        if (unit.toLowerCase().includes("mmol")) {
+          // Converte mmol/L para mg/dL (multiplicar por 18)
+          glucoseValue = Math.round(glucoseValue * 18);
+        }
+        glucoseEntries.push({
+          value: glucoseValue,
+          startDate: record.startDate || "",
+          sourceName: record.sourceName,
+        });
+        continue;
+      }
+
       // Adiciona registro normal
       records.push({
         type: record.type,
@@ -269,12 +306,14 @@ export function parseAppleHealthXml(xmlContent: string): ParsedAppleHealthData {
       records,
       workouts,
       sleepEntries,
+      glucoseEntries,
       metadata: {
         exportDate,
         locale,
         totalRecords: records.length,
         totalWorkouts: workouts.length,
         totalSleepEntries: sleepEntries.length,
+        totalGlucoseEntries: glucoseEntries.length,
       },
       errors,
     };
@@ -450,12 +489,14 @@ function createEmptyResult(errors: string[]): ParsedAppleHealthData {
     records: [],
     workouts: [],
     sleepEntries: [],
+    glucoseEntries: [],
     metadata: {
       exportDate: null,
       locale: null,
       totalRecords: 0,
       totalWorkouts: 0,
       totalSleepEntries: 0,
+      totalGlucoseEntries: 0,
     },
     errors,
   };

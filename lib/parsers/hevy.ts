@@ -1,8 +1,13 @@
 /**
  * Parser para arquivos CSV do Hevy (app de musculação)
  *
- * Formato esperado do CSV:
- * title,start_time,end_time,description,exercise_title,superset_id,set_index,set_type,weight_kg,reps,distance_km,duration_seconds,rpe
+ * Formato esperado do CSV (formato real exportado do Hevy):
+ * "title","start_time","end_time","description","exercise_title","superset_id","exercise_notes","set_index","set_type","weight_kg","reps","distance_km","duration_seconds","rpe"
+ *
+ * Exemplo de linha:
+ * "2","12 Jan 2026, 12:17","12 Jan 2026, 13:07","","Triceps Pushdown",,"",0,"normal",60,8,,,
+ *
+ * Nota: O formato de data é "DD MMM YYYY, HH:mm" (ex: "12 Jan 2026, 12:17")
  */
 
 import type { Workout, WorkoutItem } from "@/lib/storage";
@@ -14,6 +19,7 @@ interface HevyRow {
   description: string;
   exercise_title: string;
   superset_id: string;
+  exercise_notes: string;
   set_index: string;
   set_type: string;
   weight_kg: string;
@@ -52,6 +58,56 @@ function parseCSVLine(line: string): string[] {
   result.push(current.trim());
 
   return result;
+}
+
+/**
+ * Parseia data no formato Hevy: "12 Jan 2026, 12:17"
+ * Retorna Date object ou null se inválido
+ */
+function parseHevyDate(dateStr: string): Date | null {
+  if (!dateStr) return null;
+
+  // Formato: "DD MMM YYYY, HH:mm" (ex: "12 Jan 2026, 12:17")
+  const match = dateStr.match(/^(\d{1,2})\s+(\w+)\s+(\d{4}),?\s*(\d{1,2}):(\d{2})$/);
+  if (match) {
+    const [, day, monthStr, year, hour, minute] = match;
+    const months: Record<string, number> = {
+      jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
+      jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11
+    };
+    const month = months[monthStr.toLowerCase()];
+    if (month !== undefined) {
+      return new Date(parseInt(year), month, parseInt(day), parseInt(hour), parseInt(minute));
+    }
+  }
+
+  // Fallback: tenta parse nativo
+  const date = new Date(dateStr);
+  return isNaN(date.getTime()) ? null : date;
+}
+
+/**
+ * Extrai data no formato YYYY-MM-DD de uma string de data Hevy
+ */
+function extractDateFromHevyTime(dateStr: string): string {
+  const date = parseHevyDate(dateStr);
+  if (date) {
+    return date.toISOString().split("T")[0];
+  }
+
+  // Fallback: tenta extrair manualmente do formato "DD MMM YYYY, HH:mm"
+  const match = dateStr.match(/^(\d{1,2})\s+(\w+)\s+(\d{4})/);
+  if (match) {
+    const [, day, monthStr, year] = match;
+    const months: Record<string, string> = {
+      jan: "01", feb: "02", mar: "03", apr: "04", may: "05", jun: "06",
+      jul: "07", aug: "08", sep: "09", oct: "10", nov: "11", dec: "12"
+    };
+    const month = months[monthStr.toLowerCase()] || "01";
+    return `${year}-${month}-${day.padStart(2, "0")}`;
+  }
+
+  return dateStr.split(" ")[0] || dateStr.split("T")[0] || "";
 }
 
 /**
@@ -124,8 +180,9 @@ export function parseHevyCSV(
 
       if (!title || !startTime || !exerciseTitle) continue;
 
-      // Extrai data do startTime
-      const date = startTime.split(" ")[0] || startTime.split("T")[0];
+      // Extrai data do startTime usando parser específico do Hevy
+      const date = extractDateFromHevyTime(startTime);
+      if (!date) continue;
       const sessionKey = `${title}_${date}`;
 
       if (!sessionsMap.has(sessionKey)) {
@@ -169,12 +226,10 @@ export function parseHevyCSV(
 
     // Calcula duração se tiver start/end time
     if (session.startTime && session.endTime) {
-      try {
-        const start = new Date(session.startTime);
-        const end = new Date(session.endTime);
+      const start = parseHevyDate(session.startTime);
+      const end = parseHevyDate(session.endTime);
+      if (start && end) {
         totalDuration = Math.round((end.getTime() - start.getTime()) / 60000);
-      } catch {
-        // Ignora erro de parse de data
       }
     }
 

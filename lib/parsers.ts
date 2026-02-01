@@ -1,7 +1,20 @@
 import OpenAI from "openai";
+import {
+  lookupMultipleFoods,
+  cacheAIResult,
+  generateUserContext,
+  NutritionInfo,
+} from "./food-lookup";
+import { Meal } from "./storage";
 
 /**
  * Parsers para extrair dados estruturados das mensagens do usuário
+ *
+ * Fluxo de parsing de alimentos:
+ * 1. Extrai alimentos da mensagem
+ * 2. Busca no cache do usuário (padrões pessoais)
+ * 3. Busca na tabela padrão (food-database)
+ * 4. Se não encontrar, consulta IA e salva no cache
  */
 
 let openai: OpenAI | null = null;
@@ -25,6 +38,7 @@ function getOpenAIClient(): OpenAI {
 export interface FoodItem {
   name: string;           // Nome do alimento
   quantity: number;       // Quantidade numérica
+  grams?: number;         // Quantidade em gramas (para compatibilidade com storage)
   unit: string;           // Unidade (g, ml, unidade, fatia, etc)
   calories: number;       // Calorias estimadas
   protein: number;        // Proteína em gramas
@@ -43,6 +57,9 @@ export interface FoodParseResult {
   totalCarbs: number;
   totalFat: number;
   rawText: string;        // Texto original
+  needsQuestion?: boolean; // true se precisa perguntar algo
+  question?: string;       // Pergunta a fazer
+  options?: string[];      // Opções para a pergunta
 }
 
 /**
@@ -83,6 +100,20 @@ export interface BodyFatParseResult {
   rawText: string;
 }
 
+/**
+ * Tipo de medição de glicemia
+ */
+export type GlucoseMeasurementType = "fasting" | "pre_meal" | "post_meal" | "bedtime" | "random" | "cgm";
+
+/**
+ * Resultado do parser de glicemia
+ */
+export interface GlucoseParseResult {
+  glucose: number;        // Glicemia em mg/dL
+  measurementType: GlucoseMeasurementType;
+  rawText: string;
+}
+
 // ============================================
 // PARSERS
 // ============================================
@@ -99,26 +130,159 @@ function inferMealType(): "breakfast" | "lunch" | "dinner" | "snack" {
 }
 
 /**
- * Parser de alimentação
- * Extrai itens de comida de uma mensagem do usuário
+ * Parser de alimentação com sistema inteligente de lookup
+ *
+ * Fluxo:
+ * 1. Busca no cache do usuário (padrões pessoais)
+ * 2. Busca na tabela padrão (food-database)
+ * 3. Se não encontrar, consulta IA e salva no cache
+ *
+ * @param message Mensagem do usuário
+ * @param userHistory Histórico de refeições (opcional, para contexto)
  */
-export async function parseFood(message: string): Promise<FoodParseResult> {
+export async function parseFood(
+  message: string,
+  userHistory?: Meal[]
+): Promise<FoodParseResult> {
+  // 1. Tenta lookup local primeiro (cache + database)
+  const lookup = lookupMultipleFoods(message, userHistory);
+
+  // Se tem perguntas, retorna vazio (IA vai perguntar)
+  if (lookup.hasQuestions.length > 0) {
+    return {
+      mealType: inferMealType(),
+      items: [],
+      totalCalories: 0,
+      totalProtein: 0,
+      totalCarbs: 0,
+      totalFat: 0,
+      rawText: message,
+      needsQuestion: true,
+      question: lookup.hasQuestions[0].question,
+      options: lookup.hasQuestions[0].options,
+    };
+  }
+
+  // 2. Converte resultados encontrados para FoodItem
+  const foundItems: FoodItem[] = lookup.results
+    .filter((r) => r.found && r.food)
+    .map((r) => ({
+      name: r.food!.name,
+      quantity: r.food!.grams,
+      unit: "g",
+      calories: r.food!.calories,
+      protein: r.food!.protein,
+      carbs: r.food!.carbs,
+      fat: r.food!.fat,
+    }));
+
+  // 3. Se tem alimentos que precisam de IA, consulta uma única vez
+  if (lookup.needsAI.length > 0) {
+    const aiItems = await parseUnknownFoodsWithAI(
+      lookup.needsAI,
+      message,
+      userHistory
+    );
+    foundItems.push(...aiItems);
+
+    // Salva no cache para próxima vez
+    for (const item of aiItems) {
+      cacheAIResult({
+        name: item.name,
+        grams: item.quantity,
+        calories: item.calories,
+        protein: item.protein,
+        carbs: item.carbs,
+        fat: item.fat,
+      });
+    }
+  }
+
+  return {
+    mealType: inferMealTypeFromMessage(message),
+    items: foundItems,
+    totalCalories: foundItems.reduce((sum, i) => sum + i.calories, 0),
+    totalProtein: foundItems.reduce((sum, i) => sum + i.protein, 0),
+    totalCarbs: foundItems.reduce((sum, i) => sum + i.carbs, 0),
+    totalFat: foundItems.reduce((sum, i) => sum + i.fat, 0),
+    rawText: message,
+  };
+}
+
+/**
+ * Infere o tipo de refeição a partir da mensagem
+ */
+function inferMealTypeFromMessage(
+  message: string
+): "breakfast" | "lunch" | "dinner" | "snack" | "other" {
+  const normalized = message.toLowerCase();
+
+  if (
+    normalized.includes("café da manhã") ||
+    normalized.includes("cafe da manha") ||
+    normalized.includes("tomei café") ||
+    normalized.includes("tomei cafe")
+  ) {
+    return "breakfast";
+  }
+  if (
+    normalized.includes("almocei") ||
+    normalized.includes("almoço") ||
+    normalized.includes("almoco")
+  ) {
+    return "lunch";
+  }
+  if (
+    normalized.includes("jantei") ||
+    normalized.includes("jantar") ||
+    normalized.includes("janta")
+  ) {
+    return "dinner";
+  }
+  if (
+    normalized.includes("lanche") ||
+    normalized.includes("merenda") ||
+    normalized.includes("snack")
+  ) {
+    return "snack";
+  }
+
+  // Se não especificou, infere pelo horário
+  return inferMealType();
+}
+
+/**
+ * Consulta IA para alimentos desconhecidos
+ * Faz uma única chamada para todos os alimentos não encontrados
+ */
+async function parseUnknownFoodsWithAI(
+  unknownFoods: string[],
+  originalMessage: string,
+  userHistory?: Meal[]
+): Promise<FoodItem[]> {
   const client = getOpenAIClient();
 
-  const prompt = `Você é um parser de alimentos. Analise a mensagem e extraia os alimentos mencionados.
+  // Gera contexto do usuário se tiver histórico
+  const userContext = userHistory
+    ? generateUserContext(userHistory)
+    : "";
+
+  const prompt = `Você é um parser de alimentos. Analise os alimentos abaixo e retorne informações nutricionais.
 Retorne APENAS um JSON válido (sem markdown, sem explicação).
 
-REGRAS:
-- Estime quantidades se não especificadas (porção típica brasileira)
-- Use valores nutricionais médios por 100g e ajuste pela quantidade
-- Se não conseguir identificar, use valores aproximados
-- Sempre retorne números, nunca texto para valores numéricos
+ALIMENTOS PARA ANALISAR:
+${unknownFoods.map((f, i) => `${i + 1}. ${f}`).join("\n")}
 
-MENSAGEM: "${message}"
+CONTEXTO DA MENSAGEM ORIGINAL: "${originalMessage}"
+${userContext}
+
+REGRAS:
+- Use valores nutricionais médios brasileiros
+- Se o alimento não especifica quantidade, use porção padrão brasileira
+- Sempre retorne números, nunca texto para valores numéricos
 
 Responda com JSON no formato:
 {
-  "mealType": "breakfast|lunch|dinner|snack|other",
   "items": [
     {
       "name": "nome do alimento",
@@ -130,10 +294,7 @@ Responda com JSON no formato:
       "fat": 5
     }
   ]
-}
-
-Se houver indicação de refeição (almocei, jantei, café da manhã), use o mealType correspondente.
-Se não houver, infira pelo contexto ou use "snack".`;
+}`;
 
   try {
     const response = await client.chat.completions.create({
@@ -148,7 +309,7 @@ Se não houver, infira pelo contexto ou use "snack".`;
 
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0]);
-      const items: FoodItem[] = (parsed.items || []).map((item: FoodItem) => ({
+      return (parsed.items || []).map((item: FoodItem) => ({
         name: item.name || "Alimento",
         quantity: Number(item.quantity) || 100,
         unit: item.unit || "g",
@@ -157,31 +318,12 @@ Se não houver, infira pelo contexto ou use "snack".`;
         carbs: Number(item.carbs) || 0,
         fat: Number(item.fat) || 0,
       }));
-
-      return {
-        mealType: parsed.mealType || inferMealType(),
-        items,
-        totalCalories: items.reduce((sum, i) => sum + i.calories, 0),
-        totalProtein: items.reduce((sum, i) => sum + i.protein, 0),
-        totalCarbs: items.reduce((sum, i) => sum + i.carbs, 0),
-        totalFat: items.reduce((sum, i) => sum + i.fat, 0),
-        rawText: message,
-      };
     }
   } catch (error) {
-    console.error("Erro no parser de alimentação:", error);
+    console.error("Erro no parser de alimentação (IA):", error);
   }
 
-  // Fallback
-  return {
-    mealType: inferMealType(),
-    items: [],
-    totalCalories: 0,
-    totalProtein: 0,
-    totalCarbs: 0,
-    totalFat: 0,
-    rawText: message,
-  };
+  return [];
 }
 
 /**
@@ -359,6 +501,121 @@ Mensagem: "${message}"`;
     }
   } catch (error) {
     console.error("Erro no parser de BF:", error);
+  }
+
+  return null;
+}
+
+/**
+ * Infere o tipo de medição de glicemia pelo contexto
+ */
+function inferGlucoseMeasurementType(message: string): GlucoseMeasurementType {
+  const lowerMessage = message.toLowerCase();
+
+  // Jejum
+  if (lowerMessage.includes("jejum") ||
+      lowerMessage.includes("manhã") ||
+      lowerMessage.includes("acordei") ||
+      lowerMessage.includes("fasting")) {
+    return "fasting";
+  }
+
+  // Pós-refeição
+  if (lowerMessage.includes("pós") ||
+      lowerMessage.includes("depois") ||
+      lowerMessage.includes("após") ||
+      lowerMessage.includes("comi") ||
+      lowerMessage.includes("almoc") ||
+      lowerMessage.includes("jant")) {
+    return "post_meal";
+  }
+
+  // Pré-refeição
+  if (lowerMessage.includes("antes") ||
+      lowerMessage.includes("pré")) {
+    return "pre_meal";
+  }
+
+  // Antes de dormir
+  if (lowerMessage.includes("dormir") ||
+      lowerMessage.includes("noite") ||
+      lowerMessage.includes("deitar")) {
+    return "bedtime";
+  }
+
+  // Default: random
+  return "random";
+}
+
+/**
+ * Parser de glicemia
+ * Extrai valor de glicemia de uma mensagem
+ */
+export async function parseGlucose(message: string): Promise<GlucoseParseResult | null> {
+  // Regex para casos comuns (glicemia em mg/dL)
+  const patterns = [
+    /glicemia\s*(?:de\s*)?(\d+)\s*(?:mg\/dl)?/i,
+    /glicose\s*(?:de\s*)?(\d+)\s*(?:mg\/dl)?/i,
+    /açúcar\s*(?:de\s*)?(\d+)\s*(?:mg\/dl)?/i,
+    /acucar\s*(?:de\s*)?(\d+)\s*(?:mg\/dl)?/i,
+    /glucose\s*(\d+)/i,
+    /(\d+)\s*mg\/dl/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = message.match(pattern);
+    if (match) {
+      const glucose = parseInt(match[1], 10);
+      // Valores válidos de glicemia: 20-600 mg/dL
+      if (glucose >= 20 && glucose <= 600) {
+        return {
+          glucose,
+          measurementType: inferGlucoseMeasurementType(message),
+          rawText: message,
+        };
+      }
+    }
+  }
+
+  // AI fallback
+  const client = getOpenAIClient();
+  const prompt = `Extraia o valor de glicemia (açúcar no sangue) da mensagem.
+Retorne APENAS JSON: {"glucose": numero_em_mg_dl, "type": "fasting|pre_meal|post_meal|bedtime|random"}
+
+Tipos:
+- fasting: em jejum, manhã
+- pre_meal: antes de comer
+- post_meal: após refeição
+- bedtime: antes de dormir
+- random: outro momento
+
+Se não encontrar glicemia, retorne {"glucose": null}
+
+Mensagem: "${message}"`;
+
+  try {
+    const response = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.1,
+      max_tokens: 50,
+    });
+
+    const content = response.choices[0]?.message?.content?.trim() || "";
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0]);
+      if (parsed.glucose && typeof parsed.glucose === "number" && parsed.glucose >= 20 && parsed.glucose <= 600) {
+        return {
+          glucose: parsed.glucose,
+          measurementType: (parsed.type as GlucoseMeasurementType) || "random",
+          rawText: message,
+        };
+      }
+    }
+  } catch (error) {
+    console.error("Erro no parser de glicemia:", error);
   }
 
   return null;

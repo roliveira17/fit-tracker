@@ -19,10 +19,24 @@ import {
   getImportHistory,
   type ImportRecord,
 } from "@/lib/storage";
+import { useAuth } from "@/components/providers/SupabaseAuthProvider";
+import {
+  importAppleHealth,
+  importHevy,
+  importGlucoseReadings,
+} from "@/lib/supabase";
 import { parseHevyCSV } from "@/lib/parsers/hevy";
+import { parseCGMXlsx, cgmReadingsToSupabaseFormat } from "@/lib/parsers/cgm";
 import { extractAppleHealthXml } from "@/lib/import/appleHealth";
 import { parseAppleHealthXml } from "@/lib/import/appleHealthParser";
 import { mapAppleHealthToEntities } from "@/lib/import/appleHealthMapper";
+import {
+  BarcodeScanner,
+  ScannedProductCard,
+} from "@/components/import/BarcodeScanner";
+import { type NormalizedProduct, offProductToMealItem } from "@/lib/openfoodfacts";
+import { saveMeal } from "@/lib/storage";
+import { logMeal, type Meal as SupabaseMeal } from "@/lib/supabase";
 
 type ImportStatus = "idle" | "processing" | "success" | "partial" | "error";
 
@@ -31,6 +45,7 @@ interface ImportStats {
   weightLogs: number;
   bodyFatLogs: number;
   sleepSessions: number;
+  glucoseReadings: number;
   duplicatesSkipped: number;
   errors: string[];
 }
@@ -40,6 +55,7 @@ interface ImportStats {
  */
 export default function ImportPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [importStatus, setImportStatus] = useState<ImportStatus>("idle");
   const [importStats, setImportStats] = useState<ImportStats>({
@@ -47,10 +63,13 @@ export default function ImportPage() {
     weightLogs: 0,
     bodyFatLogs: 0,
     sleepSessions: 0,
+    glucoseReadings: 0,
     duplicatesSkipped: 0,
     errors: [],
   });
   const [history, setHistory] = useState<ImportRecord[]>([]);
+  const [showScanner, setShowScanner] = useState(false);
+  const [scannedProduct, setScannedProduct] = useState<NormalizedProduct | null>(null);
 
   useEffect(() => {
     if (!isOnboardingComplete()) {
@@ -79,6 +98,7 @@ export default function ImportPage() {
           weightLogs: 0,
           bodyFatLogs: 0,
           sleepSessions: 0,
+          glucoseReadings: 0,
           duplicatesSkipped: 0,
           errors: [zipResult.error || "Erro ao extrair ZIP"],
         });
@@ -102,6 +122,7 @@ export default function ImportPage() {
           weightLogs: 0,
           bodyFatLogs: 0,
           sleepSessions: 0,
+          glucoseReadings: 0,
           duplicatesSkipped: 0,
           errors: ["Nenhum dado encontrado no arquivo"],
         });
@@ -115,6 +136,7 @@ export default function ImportPage() {
           weightLogs: 0,
           bodyFatLogs: 0,
           sleepSessions: 0,
+          glucoseReadings: 0,
           duplicatesSkipped: 0,
           errors: parsedData.errors,
         });
@@ -151,15 +173,54 @@ export default function ImportPage() {
         (mappedData.workouts.length - newWorkouts.length);
 
       // 5. Salva dados
-      const addedWeightLogs = newWeightLogs.length > 0
+      let addedWeightLogs = 0;
+      let addedBodyFatLogs = 0;
+      let addedWorkouts = 0;
+
+      // Se usuário logado, salva no Supabase
+      if (user) {
+        try {
+          const supabaseResult = await importAppleHealth({
+            weights: newWeightLogs.map(w => ({ weight: w.weight, date: w.date })),
+            body_fat: newBodyFatLogs.map(b => ({ body_fat: b.percentage, date: b.date })),
+            workouts: newWorkouts.map(w => ({
+              type: w.exercises[0]?.type || "cardio",
+              date: w.date,
+              duration: w.totalDuration || 0,
+              calories: w.totalCaloriesBurned || 0
+            })),
+            sleep: mappedData.sleepSessions.map(s => ({
+              date: s.date,
+              start: s.startTime,
+              end: s.endTime,
+              stages: [
+                { stage: "deep", duration: s.deepMinutes, pct: s.totalMinutes > 0 ? Math.round((s.deepMinutes / s.totalMinutes) * 100) : 0 },
+                { stage: "rem", duration: s.remMinutes, pct: s.totalMinutes > 0 ? Math.round((s.remMinutes / s.totalMinutes) * 100) : 0 },
+                { stage: "light", duration: s.coreMinutes, pct: s.totalMinutes > 0 ? Math.round((s.coreMinutes / s.totalMinutes) * 100) : 0 },
+                { stage: "awake", duration: s.awakeMinutes, pct: s.totalMinutes > 0 ? Math.round((s.awakeMinutes / s.totalMinutes) * 100) : 0 },
+              ].filter(st => st.duration > 0)
+            }))
+          });
+          if (supabaseResult) {
+            addedWeightLogs = newWeightLogs.length;
+            addedBodyFatLogs = newBodyFatLogs.length;
+            addedWorkouts = newWorkouts.length;
+          }
+        } catch (error) {
+          console.error("Erro ao importar no Supabase:", error);
+        }
+      }
+
+      // Sempre salva no localStorage como fallback
+      addedWeightLogs = newWeightLogs.length > 0
         ? saveWeightLogsBatch(newWeightLogs)
-        : 0;
-      const addedBodyFatLogs = newBodyFatLogs.length > 0
+        : addedWeightLogs;
+      addedBodyFatLogs = newBodyFatLogs.length > 0
         ? saveBodyFatLogsBatch(newBodyFatLogs)
-        : 0;
-      const addedWorkouts = newWorkouts.length > 0
+        : addedBodyFatLogs;
+      addedWorkouts = newWorkouts.length > 0
         ? saveWorkoutsBatch(newWorkouts)
-        : 0;
+        : addedWorkouts;
 
       const totalImported = addedWeightLogs + addedBodyFatLogs + addedWorkouts;
       const hasWarnings = duplicatesSkipped > 0 || parsedData.errors.length > 0;
@@ -169,7 +230,8 @@ export default function ImportPage() {
         workouts: addedWorkouts,
         weightLogs: addedWeightLogs,
         bodyFatLogs: addedBodyFatLogs,
-        sleepSessions: mappedData.sleepSessions.length, // TODO: salvar quando tivermos storage
+        sleepSessions: mappedData.sleepSessions.length,
+        glucoseReadings: 0,
         duplicatesSkipped,
         errors: parsedData.errors,
       });
@@ -202,8 +264,103 @@ export default function ImportPage() {
         weightLogs: 0,
         bodyFatLogs: 0,
         sleepSessions: 0,
+        glucoseReadings: 0,
         duplicatesSkipped: 0,
         errors: ["Erro ao processar arquivo. Verifique se é um ZIP válido do Apple Health."],
+      });
+      setImportStatus("error");
+    }
+  };
+
+  /**
+   * Processa importação de CGM (XLSX)
+   */
+  const handleCGMImport = async (file: File) => {
+    try {
+      const buffer = await file.arrayBuffer();
+      const result = parseCGMXlsx(buffer, file.name);
+
+      if (result.errors.length > 0 && result.readings.length === 0) {
+        setImportStats({
+          workouts: 0,
+          weightLogs: 0,
+          bodyFatLogs: 0,
+          sleepSessions: 0,
+          glucoseReadings: 0,
+          duplicatesSkipped: 0,
+          errors: result.errors,
+        });
+        setImportStatus("error");
+        return;
+      }
+
+      let addedReadings = 0;
+
+      // Se usuário logado, salva no Supabase
+      if (user) {
+        try {
+          const supabaseData = cgmReadingsToSupabaseFormat(result.readings);
+
+          // Salva leituras em batch no Supabase
+          addedReadings = await importGlucoseReadings(
+            supabaseData.map(reading => ({
+              glucose_mg_dl: reading.glucose,
+              date: reading.date,
+              time: reading.time,
+              measurement_type: reading.type as "cgm" | "fasting" | "post_meal" | "random",
+              notes: reading.notes,
+              source: "import_csv",
+            }))
+          );
+        } catch (error) {
+          console.error("Erro ao importar CGM no Supabase:", error);
+          // Continua para mostrar resultado parcial
+        }
+      } else {
+        // Sem login, não salva CGM (precisa de Supabase para glicemia)
+        setImportStats({
+          workouts: 0,
+          weightLogs: 0,
+          bodyFatLogs: 0,
+          sleepSessions: 0,
+          glucoseReadings: 0,
+          duplicatesSkipped: 0,
+          errors: ["Faça login para importar dados de glicemia"],
+        });
+        setImportStatus("error");
+        return;
+      }
+
+      const hasWarnings = result.errors.length > 0;
+
+      setImportStats({
+        workouts: 0,
+        weightLogs: 0,
+        bodyFatLogs: 0,
+        sleepSessions: 0,
+        glucoseReadings: addedReadings,
+        duplicatesSkipped: 0,
+        errors: result.errors,
+      });
+      setImportStatus(hasWarnings ? "partial" : "success");
+
+      saveImportRecord({
+        source: "cgm",
+        status: hasWarnings ? "partial" : "success",
+        itemsImported: addedReadings,
+      });
+
+      setHistory(getImportHistory());
+    } catch (err) {
+      console.error("Erro ao importar CGM:", err);
+      setImportStats({
+        workouts: 0,
+        weightLogs: 0,
+        bodyFatLogs: 0,
+        sleepSessions: 0,
+        glucoseReadings: 0,
+        duplicatesSkipped: 0,
+        errors: ["Erro ao processar arquivo XLSX de glicemia."],
       });
       setImportStatus("error");
     }
@@ -230,6 +387,7 @@ export default function ImportPage() {
             weightLogs: 0,
             bodyFatLogs: 0,
             sleepSessions: 0,
+            glucoseReadings: 0,
             duplicatesSkipped: result.duplicatesSkipped,
             errors: result.errors,
           });
@@ -242,7 +400,33 @@ export default function ImportPage() {
           });
         } else if (result.workouts.length > 0) {
           // Salva workouts
-          const added = saveWorkoutsBatch(result.workouts);
+          let added = 0;
+
+          // Se usuário logado, salva no Supabase
+          if (user) {
+            try {
+              const hevyWorkouts = result.workouts.map(w => ({
+                date: w.date,
+                name: w.exercises.map(e => e.name).join(", "),
+                exercises: w.exercises.map(e => ({
+                  name: e.name,
+                  sets: Array.from({ length: e.sets || 1 }, () => ({
+                    weight: 0,
+                    reps: e.reps || 0
+                  }))
+                }))
+              }));
+              const supabaseResult = await importHevy(hevyWorkouts);
+              if (supabaseResult) {
+                added = result.workouts.length;
+              }
+            } catch (error) {
+              console.error("Erro ao importar Hevy no Supabase:", error);
+            }
+          }
+
+          // Sempre salva no localStorage como fallback
+          added = saveWorkoutsBatch(result.workouts);
 
           const hasWarnings =
             result.errors.length > 0 || result.duplicatesSkipped > 0;
@@ -252,6 +436,7 @@ export default function ImportPage() {
             weightLogs: 0,
             bodyFatLogs: 0,
             sleepSessions: 0,
+            glucoseReadings: 0,
             duplicatesSkipped: result.duplicatesSkipped,
             errors: result.errors,
           });
@@ -269,6 +454,7 @@ export default function ImportPage() {
             weightLogs: 0,
             bodyFatLogs: 0,
             sleepSessions: 0,
+            glucoseReadings: 0,
             duplicatesSkipped: result.duplicatesSkipped,
             errors: ["Nenhum treino novo encontrado no arquivo"],
           });
@@ -286,12 +472,16 @@ export default function ImportPage() {
       } else if (fileName.endsWith(".zip")) {
         // Apple Health
         await handleAppleHealthImport(file);
+      } else if (fileName.endsWith(".xlsx") || fileName.endsWith(".xls")) {
+        // CGM (glicemia)
+        await handleCGMImport(file);
       } else {
         setImportStats({
           workouts: 0,
           weightLogs: 0,
           bodyFatLogs: 0,
           sleepSessions: 0,
+          glucoseReadings: 0,
           duplicatesSkipped: 0,
           errors: ["Formato de arquivo não reconhecido"],
         });
@@ -304,6 +494,7 @@ export default function ImportPage() {
         weightLogs: 0,
         bodyFatLogs: 0,
         sleepSessions: 0,
+        glucoseReadings: 0,
         duplicatesSkipped: 0,
         errors: ["Erro ao ler o arquivo. Verifique se é um arquivo válido."],
       });
@@ -318,9 +509,60 @@ export default function ImportPage() {
       weightLogs: 0,
       bodyFatLogs: 0,
       sleepSessions: 0,
+      glucoseReadings: 0,
       duplicatesSkipped: 0,
       errors: [],
     });
+  };
+
+  // Handlers do Barcode Scanner
+  const handleProductScanned = (product: NormalizedProduct) => {
+    setShowScanner(false);
+    setScannedProduct(product);
+  };
+
+  const handleAddScannedProduct = async (grams: number) => {
+    if (!scannedProduct) return;
+
+    const mealItem = offProductToMealItem(scannedProduct, grams);
+
+    // Salva no localStorage
+    saveMeal({
+      type: "snack",
+      items: [
+        {
+          name: mealItem.name,
+          quantity: mealItem.grams,
+          unit: "g",
+          calories: mealItem.calories,
+          protein: mealItem.protein,
+          carbs: mealItem.carbs,
+          fat: mealItem.fat,
+        },
+      ],
+      totalCalories: mealItem.calories,
+      totalProtein: mealItem.protein,
+      totalCarbs: mealItem.carbs,
+      totalFat: mealItem.fat,
+      rawText: `${grams}g ${mealItem.name} (barcode)`,
+    });
+
+    // Se logado, salva também no Supabase
+    if (user) {
+      await logMeal("snack" as SupabaseMeal["meal_type"], [
+        {
+          food_name: mealItem.name,
+          quantity_g: mealItem.grams,
+          calories: mealItem.calories,
+          protein_g: mealItem.protein,
+          carbs_g: mealItem.carbs,
+          fat_g: mealItem.fat,
+        },
+      ], `${grams}g ${mealItem.name} (barcode)`);
+    }
+
+    setScannedProduct(null);
+    alert(`${mealItem.name} adicionado!`);
   };
 
   if (isLoading) {
@@ -359,7 +601,7 @@ export default function ImportPage() {
           {importStatus === "idle" || importStatus === "processing" ? (
             <FileDropzone
               onFileSelect={handleFileSelect}
-              acceptedFormats={[".csv", ".zip"]}
+              acceptedFormats={[".csv", ".zip", ".xlsx", ".xls"]}
               isLoading={importStatus === "processing"}
             />
           ) : null}
@@ -404,6 +646,47 @@ export default function ImportPage() {
                   </span>
                 </div>
               </div>
+
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-warning/10 text-warning">
+                  <span className="material-symbols-outlined text-[20px]">
+                    monitoring
+                  </span>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-white">CGM (Glicemia)</p>
+                  <p className="text-xs text-text-secondary">
+                    SiSensing, FreeStyle Libre e outros
+                  </p>
+                  <span className="mt-1 inline-block rounded-full border border-success/20 bg-success/10 px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-success">
+                    Disponível
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Barcode Scanner */}
+          <div className="rounded-xl border border-primary/30 bg-primary/5 p-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/20 text-primary">
+                <span className="material-symbols-outlined text-[24px]">
+                  barcode_scanner
+                </span>
+              </div>
+              <div className="flex-1">
+                <p className="text-base font-semibold text-white">Scanner de Código de Barras</p>
+                <p className="text-xs text-text-secondary">
+                  31K+ produtos brasileiros via Open Food Facts
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowScanner(true)}
+                className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-black hover:bg-primary/90"
+              >
+                Escanear
+              </button>
             </div>
           </div>
 
@@ -433,10 +716,47 @@ export default function ImportPage() {
             </ol>
           </div>
 
+          <div className="rounded-xl border border-border-subtle bg-surface-card p-4">
+            <h3 className="text-sm font-medium text-text-secondary mb-3">
+              Como exportar dados de glicemia (CGM)
+            </h3>
+            <ol className="text-sm text-text-secondary list-decimal list-inside space-y-2">
+              <li>Abra o app do seu CGM (SiSensing, Libre, etc.)</li>
+              <li>Procure a opção de exportar dados</li>
+              <li>Exporte como XLSX ou Excel</li>
+              <li>Importe o arquivo aqui</li>
+            </ol>
+            <p className="mt-2 text-xs text-text-tertiary">
+              Requer login para salvar dados de glicemia.
+            </p>
+          </div>
+
           {/* Histórico */}
           <ImportHistory records={history} />
         </div>
       </div>
+
+      {/* Barcode Scanner Modal */}
+      {showScanner && (
+        <BarcodeScanner
+          onProductScanned={handleProductScanned}
+          onError={(error) => console.error("Scanner error:", error)}
+          onClose={() => setShowScanner(false)}
+        />
+      )}
+
+      {/* Scanned Product Card */}
+      {scannedProduct && (
+        <ScannedProductCard
+          product={scannedProduct}
+          onAddToMeal={handleAddScannedProduct}
+          onScanAnother={() => {
+            setScannedProduct(null);
+            setShowScanner(true);
+          }}
+          onClose={() => setScannedProduct(null)}
+        />
+      )}
     </ScreenContainer>
   );
 }

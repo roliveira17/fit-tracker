@@ -3,7 +3,7 @@
 interface ImportRecord {
   id: string;
   date: string;
-  source: "hevy" | "apple_health";
+  source: "hevy" | "apple_health" | "cgm";
   status: "success" | "partial" | "error";
   itemsImported: number;
 }
@@ -49,11 +49,13 @@ export function ImportHistory({ records }: ImportHistoryProps) {
   const sourceIcon = {
     hevy: "description",
     apple_health: "folder_zip",
+    cgm: "monitoring",
   };
 
   const sourceLabel = {
     hevy: "Hevy",
     apple_health: "Apple Health",
+    cgm: "CGM (Glicemia)",
   };
 
   return (

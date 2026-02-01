@@ -9,6 +9,32 @@
 const OFF_API_BASE = "https://world.openfoodfacts.org/api/v2";
 const OFF_API_BR = "https://br.openfoodfacts.org/api/v2";
 
+/**
+ * Fetch com retry e exponential backoff
+ * Retenta apenas em erros de rede/timeout, nao em 404
+ */
+async function fetchWithRetry(
+  url: string,
+  options: RequestInit = {},
+  maxRetries = 3
+): Promise<Response> {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const res = await fetch(url, {
+        ...options,
+        signal: AbortSignal.timeout(5000),
+      });
+      return res;
+    } catch (err) {
+      if (attempt === maxRetries - 1) throw err;
+      const delay = 500 * Math.pow(2, attempt);
+      console.log(`[OFF] Retry ${attempt + 1}/${maxRetries} apos ${delay}ms`);
+      await new Promise((r) => setTimeout(r, delay));
+    }
+  }
+  throw new Error("Max retries exceeded");
+}
+
 export interface OFFProduct {
   code: string;
   product_name: string;
@@ -109,20 +135,25 @@ export async function fetchProductByBarcode(
     ];
 
     for (const url of urls) {
-      const response = await fetch(url, {
-        headers: {
-          "User-Agent": "FitTrack/1.0 (https://fittrack.app)",
-        },
-      });
+      try {
+        const response = await fetchWithRetry(url, {
+          headers: {
+            "User-Agent": "FitTrack/1.0 (https://fittrack.app)",
+          },
+        });
 
-      if (!response.ok) {
+        if (!response.ok) {
+          continue;
+        }
+
+        const data: OFFResponse = await response.json();
+
+        if (data.status === 1 && data.product) {
+          return normalizeProduct(cleanBarcode, data.product);
+        }
+      } catch {
+        // Retry esgotado para esta URL, tenta a proxima
         continue;
-      }
-
-      const data: OFFResponse = await response.json();
-
-      if (data.status === 1 && data.product) {
-        return normalizeProduct(cleanBarcode, data.product);
       }
     }
 
@@ -222,6 +253,14 @@ export function isValidBarcode(barcode: string): boolean {
   const clean = barcode.replace(/[\s-]/g, "");
   // EAN-13, EAN-8, UPC-A, UPC-E
   return /^\d{8,14}$/.test(clean);
+}
+
+/**
+ * Detecta se um produto é líquido com base no campo quantity
+ */
+export function isLiquidProduct(product: NormalizedProduct): boolean {
+  const qty = (product.quantity || "").toLowerCase();
+  return /\d\s*(ml|cl|l|liter|litro)\b/.test(qty);
 }
 
 /**

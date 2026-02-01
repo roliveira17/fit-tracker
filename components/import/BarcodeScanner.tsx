@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
 import { lookupBarcode } from "@/lib/barcode-cache";
-import { offProductToMealItem, type NormalizedProduct } from "@/lib/openfoodfacts";
+import { offProductToMealItem, isLiquidProduct, type NormalizedProduct } from "@/lib/openfoodfacts";
 
 interface BarcodeScannerProps {
   onProductScanned: (product: NormalizedProduct) => void;
@@ -18,12 +18,31 @@ export function BarcodeScanner({
 }: BarcodeScannerProps) {
   const [isScanning, setIsScanning] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState("Verificando cache...");
   const [lastScannedCode, setLastScannedCode] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [cameraPermission, setCameraPermission] = useState<"granted" | "denied" | "prompt">("prompt");
 
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const loadingTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  // Loading states progressivos
+  useEffect(() => {
+    if (isLoading) {
+      setLoadingMessage("Verificando cache...");
+      const t1 = setTimeout(() => setLoadingMessage("Buscando no Open Food Facts..."), 1000);
+      const t2 = setTimeout(() => setLoadingMessage("Conexao lenta... aguarde"), 3000);
+      loadingTimersRef.current = [t1, t2];
+    } else {
+      loadingTimersRef.current.forEach(clearTimeout);
+      loadingTimersRef.current = [];
+    }
+    return () => {
+      loadingTimersRef.current.forEach(clearTimeout);
+      loadingTimersRef.current = [];
+    };
+  }, [isLoading]);
 
   const stopScanner = useCallback(async () => {
     if (scannerRef.current) {
@@ -185,7 +204,20 @@ export function BarcodeScanner({
         {isLoading && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70">
             <div className="mb-4 size-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-            <p className="text-white">Buscando produto...</p>
+            <p className="text-white">{loadingMessage}</p>
+            {loadingMessage.includes("lenta") && (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsLoading(false);
+                  setLastScannedCode(null);
+                  startScanner();
+                }}
+                className="mt-4 rounded-lg bg-white/20 px-6 py-2 text-sm font-medium text-white hover:bg-white/30"
+              >
+                Cancelar
+              </button>
+            )}
           </div>
         )}
 
@@ -258,11 +290,12 @@ export function ScannedProductCard({
   onClose,
 }: ScannedProductCardProps) {
   const [grams, setGrams] = useState(100);
+  const unit = isLiquidProduct(product) ? "ml" : "g";
   const mealItem = offProductToMealItem(product, grams);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
-      <div className="w-full max-w-md rounded-2xl bg-card-dark p-6">
+      <div className="w-full max-w-md rounded-2xl bg-surface-dark border border-white/5 p-6">
         {/* Header com imagem */}
         <div className="mb-4 flex items-start gap-4">
           {product.imageUrl ? (
@@ -318,7 +351,7 @@ export function ScannedProductCard({
 
         {/* Seletor de quantidade */}
         <div className="mb-4">
-          <label className="mb-2 block text-sm text-white/60">Quantidade (g)</label>
+          <label className="mb-2 block text-sm text-white/60">Quantidade ({unit})</label>
           <div className="flex items-center gap-2">
             {[50, 100, 150, 200].map((g) => (
               <button
@@ -331,7 +364,7 @@ export function ScannedProductCard({
                     : "bg-white/10 text-white hover:bg-white/20"
                 }`}
               >
-                {g}g
+                {g}{unit}
               </button>
             ))}
           </div>

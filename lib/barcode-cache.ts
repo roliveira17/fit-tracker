@@ -136,13 +136,37 @@ export async function saveToBarcodeCache(
  * @param barcode - Código de barras
  * @returns Produto normalizado ou null
  */
+/**
+ * Registra evento de analytics no localStorage
+ */
+function logBarcodeAnalytics(barcode: string, source: "cache" | "api" | "not_found", latencyMs: number) {
+  try {
+    const key = "barcode_analytics";
+    const existing = JSON.parse(localStorage.getItem(key) || "[]");
+    existing.push({
+      barcode,
+      source,
+      latencyMs,
+      timestamp: new Date().toISOString(),
+    });
+    // Mantém apenas os últimos 200 eventos
+    if (existing.length > 200) existing.splice(0, existing.length - 200);
+    localStorage.setItem(key, JSON.stringify(existing));
+  } catch {
+    // localStorage indisponível — ignora
+  }
+}
+
 export async function lookupBarcode(
   barcode: string
 ): Promise<{ product: NormalizedProduct | null; source: "cache" | "api" | null }> {
+  const start = Date.now();
+
   // 1. Tenta cache primeiro
   const cached = await getFromBarcodeCache(barcode);
   if (cached) {
     console.log(`[Barcode] Cache hit: ${barcode}`);
+    logBarcodeAnalytics(barcode, "cache", Date.now() - start);
     return { product: cached, source: "cache" };
   }
 
@@ -151,12 +175,14 @@ export async function lookupBarcode(
   const product = await fetchProductByBarcode(barcode);
 
   if (!product) {
+    logBarcodeAnalytics(barcode, "not_found", Date.now() - start);
     return { product: null, source: null };
   }
 
   // 3. Salva no cache
   await saveToBarcodeCache(product);
   console.log(`[Barcode] Salvo no cache: ${barcode}`);
+  logBarcodeAnalytics(barcode, "api", Date.now() - start);
 
   return { product, source: "api" };
 }
