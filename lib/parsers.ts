@@ -6,6 +6,7 @@ import {
   NutritionInfo,
 } from "./food-lookup";
 import { Meal } from "./storage";
+import { OPENAI_MODEL } from "./ai";
 
 /**
  * Parsers para extrair dados estruturados das mensagens do usuário
@@ -147,22 +148,6 @@ export async function parseFood(
   // 1. Tenta lookup local primeiro (cache + database)
   const lookup = lookupMultipleFoods(message, userHistory);
 
-  // Se tem perguntas, retorna vazio (IA vai perguntar)
-  if (lookup.hasQuestions.length > 0) {
-    return {
-      mealType: inferMealType(),
-      items: [],
-      totalCalories: 0,
-      totalProtein: 0,
-      totalCarbs: 0,
-      totalFat: 0,
-      rawText: message,
-      needsQuestion: true,
-      question: lookup.hasQuestions[0].question,
-      options: lookup.hasQuestions[0].options,
-    };
-  }
-
   // 2. Converte resultados encontrados para FoodItem
   const foundItems: FoodItem[] = lookup.results
     .filter((r) => r.found && r.food)
@@ -176,10 +161,18 @@ export async function parseFood(
       fat: r.food!.fat,
     }));
 
+  // Itens ambíguos vão para IA ao invés de bloquear tudo
+  const aiQueue = [...lookup.needsAI];
+  if (lookup.hasQuestions.length > 0) {
+    for (const q of lookup.hasQuestions) {
+      aiQueue.push(q.food);
+    }
+  }
+
   // 3. Se tem alimentos que precisam de IA, consulta uma única vez
-  if (lookup.needsAI.length > 0) {
+  if (aiQueue.length > 0) {
     const aiItems = await parseUnknownFoodsWithAI(
-      lookup.needsAI,
+      aiQueue,
       message,
       userHistory
     );
@@ -298,7 +291,7 @@ Responda com JSON no formato:
 
   try {
     const response = await client.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: OPENAI_MODEL,
       messages: [{ role: "user", content: prompt }],
       temperature: 0.2,
       max_tokens: 500,
@@ -361,7 +354,7 @@ duration é em minutos. sets e reps são opcionais (para musculação).`;
 
   try {
     const response = await client.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: OPENAI_MODEL,
       messages: [{ role: "user", content: prompt }],
       temperature: 0.2,
       max_tokens: 500,
@@ -430,7 +423,7 @@ Mensagem: "${message}"`;
 
   try {
     const response = await client.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: OPENAI_MODEL,
       messages: [{ role: "user", content: prompt }],
       temperature: 0.1,
       max_tokens: 50,
@@ -484,7 +477,7 @@ Mensagem: "${message}"`;
 
   try {
     const response = await client.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: OPENAI_MODEL,
       messages: [{ role: "user", content: prompt }],
       temperature: 0.1,
       max_tokens: 50,
@@ -595,7 +588,7 @@ Mensagem: "${message}"`;
 
   try {
     const response = await client.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: OPENAI_MODEL,
       messages: [{ role: "user", content: prompt }],
       temperature: 0.1,
       max_tokens: 50,

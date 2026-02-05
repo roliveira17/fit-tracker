@@ -1,5 +1,7 @@
 # Progress Backend — Fit Track v3
 
+> **Histórico detalhado** — status consolidado em [`docs/PENDENCIAS.md`](../PENDENCIAS.md).
+
 > Acompanhamento da implementação do backend Supabase.
 > Última atualização: 2026-02-01
 

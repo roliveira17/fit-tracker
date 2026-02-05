@@ -1,7 +1,9 @@
-# FIT TRACK � MIGRA��O DE DESIGN
+# FIT TRACK — MIGRAÇÃO DE DESIGN
 
-> **Tracking de progresso da migra��o para o novo design system.**
-> Atualizado automaticamente ap�s cada etapa.
+> **Histórico detalhado** — status consolidado em [`docs/PENDENCIAS.md`](../PENDENCIAS.md).
+
+> **Tracking de progresso da migração para o novo design system.**
+> Atualizado automaticamente após cada etapa.
 
 ---
 

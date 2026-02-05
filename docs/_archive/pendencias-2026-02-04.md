@@ -1,7 +1,7 @@
 # Fit Track — Pendencias e Progresso
 
 > Arquivo unico de acompanhamento do projeto.
-> Ultima atualizacao: 2026-02-01
+> Ultima atualizacao: 2026-02-04
 
 ---
 
@@ -9,9 +9,9 @@
 
 | Area | Status | Detalhe |
 |------|--------|---------|
-| Backend Supabase (M1-M8) | 100% (50/50) | Todos milestones completos |
+| Backend Supabase (M1-M9) | 100% (53/53) | Todos milestones completos |
 | Frontend v1 (core) | 100% | Onboarding, Chat, Home, Insights, Profile, Import |
-| Frontend v2 (extras) | 95% (59/62) | Audio, foto, Apple Health, auth, export, notificacoes |
+| Frontend v2 (extras) | 97% (60/62) | Audio, foto, Apple Health, auth, export, notificacoes, import calma |
 | Food API | 70% (12/17) | Fases 1-2 completas, Fase 3 pendente |
 | QA / Testes E2E | 53% (8/15) | P0+P1 passando, P2+P3 pendentes |
 | Design System | 100% | 3 fases completas |
@@ -21,20 +21,9 @@
 
 ## Pendencias Ativas
 
-### 1. Home Dashboard — carbs e fat zerados (ALTA)
+### ~~1. Home Dashboard — carbs e fat zerados~~ ✅ RESOLVIDO
 
-**Arquivo:** `app/home/page.tsx:124-125`
-
-```tsx
-carbs: 0, // TODO: Adicionar ao RPC
-fat: 0,   // TODO: Adicionar ao RPC
-```
-
-O RPC `get_home_summary()` retorna apenas `calories_in` e `protein`. Carbs e fat estao hardcoded como 0. O usuario ve dados incompletos de macros no dashboard.
-
-**Correcao necessaria:**
-- Atualizar a funcao SQL `get_home_summary()` no Supabase para retornar `total_carbs_g` e `total_fat_g`
-- Atualizar `app/home/page.tsx` para usar os novos campos
+Corrigido via migration `20260201_001_fix_home_summary_macros.sql`. RPC `get_home_summary()` agora retorna `total_carbs_g` e `total_fat_g`.
 
 ---
 
@@ -151,6 +140,7 @@ Arquivo de compatibilidade com shadcn/ui antigo. Pode ser removido quando todos 
 | M6: Validacao com Dados Reais | 2026-01-26 | 5/5 |
 | M7: v2 Production Fixes | 2026-01-27 | 4/4 |
 | M8: Barcode Scanner Fixes | 2026-02-01 | 3/3 |
+| M9: Glucose Import Pipeline Fix | 2026-02-04 | 3/3 |
 
 ### Frontend v1
 
@@ -174,6 +164,8 @@ Arquivo de compatibilidade com shadcn/ui antigo. Pode ser removido quando todos 
 | Chat com Foto | 2026-01-21 |
 | Push Notifications | 2026-01-21 |
 | Exportacao | 2026-01-21 |
+| Refactoring Import → design "Calma" | 2026-02-04 |
+| Glucose pipeline fix + chat AI | 2026-02-04 |
 
 ### Design System
 
@@ -182,6 +174,40 @@ Arquivo de compatibilidade com shadcn/ui antigo. Pode ser removido quando todos 
 | Setup (Tailwind, fonts, dark mode) | 2026-01-19 |
 | Base Components (12 sets) | 2026-01-19 |
 | Screens (10 telas) | 2026-01-19 |
+
+---
+
+## Sessao 2026-02-04 — Onde Paramos
+
+### Concluido nesta sessao:
+- ✅ Refactoring completo da tela Import → design "Importar com Calma" (light theme cream/green)
+- ✅ Extracao de logica de import para hook `hooks/useImportLogic.ts`
+- ✅ 7 componentes novos em `components/import/calma/`
+- ✅ Fix: Chat AI agora tem acesso a dados de glicemia (system prompt + context)
+- ✅ Fix: Pipeline glucose import → Supabase (CHECK constraint + RPC + error handling)
+- ✅ Fix: `getGlucoseStats` passando `p_user_id` corretamente
+- ✅ Melhoria: Chat mostra media diaria de glicemia em vez de leituras minuto-a-minuto
+- ✅ Migration SQL aplicada no Supabase: `20260207_001_fix_glucose_import.sql`
+
+### Arquivos criados/modificados:
+```
+hooks/useImportLogic.ts              (NOVO - logica extraida do import)
+components/import/calma/             (NOVO - 7 componentes do design calma)
+app/import/page.tsx                  (reescrito - 763→153 linhas)
+lib/ai.ts                            (glicemia no system prompt)
+lib/supabase.ts                      (getGlucoseStats fix + contexto AI diario)
+supabase/migrations/20260207_001_fix_glucose_import.sql (NOVO)
+tailwind.config.ts                   (tokens calma + serif font)
+app/layout.tsx                       (DM Serif Display font)
+app/globals.css                      (animacoes calma)
+```
+
+### Proximos passos (prioridade):
+1. **APPLE HEALTH SLEEP** — Mapear e persistir dados de sono (pendencia #2)
+2. **FREESTYLE LIBRE** — Parser especifico se houver sample do device (pendencia #3)
+3. **TESTES E2E** — Escrever T009-T015
+4. **FOOD API FASE 3** — Otimizacoes (loading states, retry, analytics)
+5. **REFACTORING TELAS** — Continuar aplicando novo design nas demais telas
 
 ---
 

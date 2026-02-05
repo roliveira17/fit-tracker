@@ -1,5 +1,7 @@
 # Progress: Arquitetura Híbrida de APIs de Alimentos
 
+> **Histórico detalhado** — status consolidado em [`docs/PENDENCIAS.md`](../PENDENCIAS.md).
+
 > Última atualização: 2026-01-27 23:00
 
 ## Status Geral

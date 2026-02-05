@@ -33,6 +33,10 @@ export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   timestamp: string;
+  parsedData?: {
+    type: "food" | "exercise" | "weight" | "bodyfat" | "glucose" | "photo_analysis" | "sleep" | "weekly_analysis";
+    data: Record<string, unknown>;
+  };
 }
 
 // ============================================

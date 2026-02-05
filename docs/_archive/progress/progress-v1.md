@@ -1,7 +1,8 @@
 # Progresso do Fit Track
 
+> **Histórico detalhado** — status consolidado em [`docs/PENDENCIAS.md`](../PENDENCIAS.md).
+
 > Arquivo de controle para rastrear o progresso da implementação.
-> Claude Code deve ler este arquivo PRIMEIRO em cada sessão.
 
 ---
 
