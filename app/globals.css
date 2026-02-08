@@ -242,6 +242,44 @@ body {
   font-variation-settings: 'FILL' 1;
 }
 
+/* Animação fade-in-up para chat cards */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-in-up {
+  animation: fade-in-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ========================================
+   CALMA THEME — Animações
+   ======================================== */
+
+/* Pulse dot para indicador "Syncing" */
+@keyframes calma-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+.animate-calma-pulse {
+  animation: calma-pulse 2s ease-in-out infinite;
+}
+
+/* Slide-down para expansão inline dos cards */
+@keyframes calma-slide-down {
+  from { opacity: 0; max-height: 0; transform: translateY(-8px); }
+  to { opacity: 1; max-height: 500px; transform: translateY(0); }
+}
+.animate-calma-slide-down {
+  animation: calma-slide-down 0.3s ease-out forwards;
+  overflow: hidden;
+}
+
 /* Estilo de seleção de texto */
 ::selection {
   background-color: #eb6028;

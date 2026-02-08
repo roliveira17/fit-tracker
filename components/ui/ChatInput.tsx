@@ -125,37 +125,33 @@ export function ChatInput({
   // Durante gravação, mostra interface diferente
   if (isRecording) {
     return (
-      <div className="flex items-center gap-3 w-full">
+      <div className="bg-white rounded-[2rem] p-2 pl-5 shadow-[0_8px_30px_rgb(0,0,0,0.08)] flex items-center gap-1 border border-white/60 backdrop-blur-xl w-full">
         {/* Botão cancelar */}
         <button
           onClick={onCancelRecording}
-          className="flex shrink-0 items-center justify-center size-[52px] rounded-full bg-surface-dark text-text-secondary hover:text-white hover:bg-surface-card transition-colors"
+          className="p-2 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-all duration-200"
         >
-          <span className="material-symbols-outlined">close</span>
+          <span className="material-symbols-outlined text-[20px]">close</span>
         </button>
 
         {/* Indicador de gravação */}
-        <div className="flex-1 bg-surface-card rounded-3xl min-h-[52px] flex items-center justify-center gap-3 px-4">
-          {/* Indicador pulsante vermelho */}
+        <div className="flex-1 flex items-center justify-center gap-3 py-1">
           <span className="relative flex size-3">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full size-3 bg-red-500"></span>
           </span>
-
-          {/* Timer */}
-          <span className="text-white font-medium tabular-nums">
+          <span className="text-gray-800 font-medium tabular-nums">
             {formatDuration(recordingDuration)}
           </span>
-
-          <span className="text-text-secondary text-sm">Gravando...</span>
+          <span className="text-gray-400 text-sm">Gravando...</span>
         </div>
 
         {/* Botão parar e enviar */}
         <button
           onClick={onStopRecording}
-          className="flex shrink-0 items-center justify-center size-[52px] rounded-full bg-primary text-white shadow-lg shadow-primary/30 hover:bg-primary-hover active:scale-95 transition-all"
+          className="w-11 h-11 rounded-full bg-[#3E2723] text-white flex items-center justify-center hover:bg-[#2C1B17] active:scale-95 transition-all duration-200 shadow-sm"
         >
-          <span className="material-symbols-outlined">send</span>
+          <span className="material-symbols-outlined text-[20px]">send</span>
         </button>
       </div>
     );
@@ -164,11 +160,10 @@ export function ChatInput({
   // Durante processamento
   if (isProcessing) {
     return (
-      <div className="flex items-center gap-3 w-full">
-        <div className="flex-1 bg-surface-card rounded-3xl min-h-[52px] flex items-center justify-center gap-3 px-4">
-          {/* Spinner */}
+      <div className="bg-white rounded-[2rem] p-2 pl-5 shadow-[0_8px_30px_rgb(0,0,0,0.08)] flex items-center gap-1 border border-white/60 backdrop-blur-xl w-full">
+        <div className="flex-1 flex items-center justify-center gap-3 py-1">
           <svg
-            className="animate-spin size-5 text-primary"
+            className="animate-spin size-5 text-[#3E2723]"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -187,12 +182,11 @@ export function ChatInput({
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
             ></path>
           </svg>
-          <span className="text-text-secondary text-sm">Transcrevendo...</span>
+          <span className="text-gray-400 text-sm">Transcrevendo...</span>
         </div>
 
-        {/* Botão desabilitado */}
-        <div className="flex shrink-0 items-center justify-center size-[52px] rounded-full bg-surface-dark text-text-secondary">
-          <span className="material-symbols-outlined">mic</span>
+        <div className="w-11 h-11 rounded-full bg-gray-100 text-gray-300 flex items-center justify-center">
+          <span className="material-symbols-outlined text-[20px]">mic</span>
         </div>
       </div>
     );
@@ -213,32 +207,42 @@ export function ChatInput({
 
       {/* Mensagem de erro */}
       {recordingState === "error" && recordingError && (
-        <div className="flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-lg">
+        <div className="flex items-center gap-2 px-4 py-2 bg-red-50 border border-red-200 rounded-xl">
           <span className="material-symbols-outlined text-red-500 text-[18px]">
             error
           </span>
-          <span className="text-red-400 text-sm">{recordingError}</span>
+          <span className="text-red-600 text-sm">{recordingError}</span>
         </div>
       )}
 
-      <div className="flex items-end gap-3 w-full">
+      {/* Single white container — Stitch design */}
+      <div className="bg-white rounded-[1.75rem] min-h-14 py-2 px-5 shadow-[0_8px_30px_rgb(0,0,0,0.08)] flex items-end gap-1 border border-white/60 backdrop-blur-xl w-full">
+        {/* Textarea (auto-resize) */}
+        <div className="flex-1 min-w-0 flex items-center min-h-10">
+          <textarea
+            ref={textareaRef}
+            className="w-full bg-transparent border-none text-gray-800 placeholder-gray-400 focus:ring-0 focus:outline-none p-0 text-[15px] resize-none overflow-hidden leading-6"
+            placeholder={placeholder}
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            disabled={disabled || isProcessing}
+            rows={1}
+          />
+        </div>
+
+        {/* Divider */}
+        <div className="h-5 w-px bg-gray-200 mx-1 shrink-0 mb-2.5" />
+
         {/* Botão de barcode */}
         {showBarcodeButton && onBarcodeClick && (
           <button
             onClick={onBarcodeClick}
             disabled={disabled || isProcessing}
-            className={`
-              flex shrink-0 items-center justify-center
-              size-[52px] rounded-full
-              bg-surface-card text-text-secondary
-              border border-border-subtle
-              hover:text-white hover:bg-surface-dark
-              active:scale-95 transition-all
-              disabled:opacity-50 disabled:cursor-not-allowed
-            `}
+            className="w-9 h-9 mb-0.5 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
             title="Escanear código de barras"
           >
-            <span className="material-symbols-outlined">qr_code_scanner</span>
+            <span className="material-symbols-outlined text-[20px]">qr_code_scanner</span>
           </button>
         )}
 
@@ -247,59 +251,28 @@ export function ChatInput({
           <button
             onClick={handleImageButtonClick}
             disabled={disabled || isProcessing}
-            className={`
-              flex shrink-0 items-center justify-center
-              size-[52px] rounded-full
-              bg-surface-card text-text-secondary
-              border border-border-subtle
-              hover:text-white hover:bg-surface-dark
-              active:scale-95 transition-all
-              disabled:opacity-50 disabled:cursor-not-allowed
-            `}
+            className="w-9 h-9 mb-0.5 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
             title="Enviar foto de refeição"
           >
-            <span className="material-symbols-outlined">photo_camera</span>
+            <span className="material-symbols-outlined text-[20px]">photo_camera</span>
           </button>
         )}
-
-        {/* Input container */}
-        <div
-          className={`
-            flex-1 bg-surface-input rounded-3xl min-h-[52px]
-            flex items-center px-4 py-3
-            border border-border-subtle
-            focus-within:ring-2 focus-within:ring-primary/50
-            transition-shadow
-          `}
-        >
-          <textarea
-            ref={textareaRef}
-            className="w-full bg-transparent border-none text-white placeholder-text-secondary focus:ring-0 focus:outline-none p-0 text-base resize-none overflow-hidden leading-6"
-            placeholder={placeholder}
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={disabled || isProcessing}
-            rows={1}
-            style={{ height: "24px" }}
-          />
-        </div>
 
         {/* Botão de ação (mic ou send) */}
         <button
           onClick={showSendButton ? handleSend : onStartRecording}
           disabled={disabled || isProcessing}
           className={`
-            flex shrink-0 items-center justify-center
-            size-[52px] rounded-full
-            bg-primary text-white
-            shadow-lg shadow-primary/30
-            hover:bg-primary-hover active:scale-95
-            transition-all
+            w-10 h-10 rounded-full flex items-center justify-center
+            active:scale-95 transition-all duration-200 shadow-sm shrink-0
             disabled:opacity-50 disabled:cursor-not-allowed
+            ${showSendButton
+              ? "bg-[#3E2723] text-white hover:bg-[#2C1B17]"
+              : "bg-[#F5E6D3] text-[#8B6914] hover:bg-[#EDD9B8]"
+            }
           `}
         >
-          <span className="material-symbols-outlined">
+          <span className="material-symbols-outlined text-[20px]">
             {showSendButton ? "send" : "mic"}
           </span>
         </button>

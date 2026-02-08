@@ -119,11 +119,27 @@ export default {
         // Icon backgrounds
         "icon-bg": "#392d28",
         "icon-bg-hover": "rgba(235, 96, 40, 0.1)",
+
+        // ========================================
+        // CALMA THEME — Import page light palette
+        // ========================================
+        "calma-bg": "#FDF8F3",
+        "calma-surface": "#FFFFFF",
+        "calma-surface-alt": "#F3EDE6",
+        "calma-primary": "#4F633A",
+        "calma-accent": "#A4D844",
+        "calma-accent-10": "rgba(164, 216, 68, 0.1)",
+        "calma-accent-20": "rgba(164, 216, 68, 0.2)",
+        "calma-text": "#1C1C1A",
+        "calma-text-secondary": "#6B6B6B",
+        "calma-text-muted": "#A0A0A0",
+        "calma-border": "#E5E5E5",
       },
 
-      // Fonte principal
+      // Fontes
       fontFamily: {
         display: ["Inter", "sans-serif"],
+        "serif-display": ["var(--font-serif-display)", "Georgia", "serif"],
       },
 
       // Sombras customizadas
