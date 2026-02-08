@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, DM_Serif_Display } from "next/font/google";
 import "./globals.css";
 import { SupabaseAuthProvider } from "@/components/providers/SupabaseAuthProvider";
 import { NotificationProvider } from "@/components/providers/NotificationProvider";
@@ -9,6 +9,14 @@ const inter = Inter({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
   variable: "--font-sans",
+});
+
+// Fonte display para títulos estilizados (Calma theme)
+const dmSerifDisplay = DM_Serif_Display({
+  subsets: ["latin"],
+  weight: ["400"],
+  style: ["normal", "italic"],
+  variable: "--font-serif-display",
 });
 
 export const metadata: Metadata = {
@@ -30,7 +38,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} ${dmSerifDisplay.variable} font-sans antialiased`}>
         <SupabaseAuthProvider>
           <NotificationProvider>{children}</NotificationProvider>
         </SupabaseAuthProvider>

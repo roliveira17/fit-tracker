@@ -5,11 +5,19 @@ import { useRouter } from "next/navigation";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { MessageBubble } from "@/components/chat/MessageBubble";
 import { TypingIndicator } from "@/components/chat/TypingIndicator";
-import { ChipGroup, type Chip } from "@/components/chat/ChipGroup";
 import { ChatInput, type RecordingState } from "@/components/ui/ChatInput";
 import { ImagePreview } from "@/components/chat/ImagePreview";
-import { BarcodeScanner, ScannedProductCard } from "@/components/import/BarcodeScanner";
+import dynamic from "next/dynamic";
 import { offProductToMealItem, isLiquidProduct, type NormalizedProduct } from "@/lib/openfoodfacts";
+
+const BarcodeScanner = dynamic(
+  () => import("@/components/import/BarcodeScanner").then(m => m.BarcodeScanner),
+  { ssr: false }
+);
+const ScannedProductCard = dynamic(
+  () => import("@/components/import/BarcodeScanner").then(m => m.ScannedProductCard),
+  { ssr: false }
+);
 import { useAudioRecorder } from "@/hooks/useAudioRecorder";
 import {
   getUserProfile,
@@ -40,16 +48,6 @@ import {
 import { generateMessageId } from "@/lib/ai";
 import { Toast } from "@/components/feedback/Toast";
 import { useToast } from "@/hooks/useToast";
-
-/**
- * Sugestões iniciais exibidas quando o chat está vazio
- */
-const INITIAL_SUGGESTIONS: Chip[] = [
-  { label: "Almocei arroz e frango" },
-  { label: "Fiz 30min de esteira" },
-  { label: "Qual meu BMR?" },
-  { label: "Registrar peso" },
-];
 
 /**
  * Página de Chat - Core do produto
@@ -423,12 +421,22 @@ export default function ChatPage() {
         showToast("Refeição registrada!", "success");
       }
 
-      // Adiciona resposta da AI
+      // Adiciona resposta da AI (com parsedData para card de foto)
       const aiMessage: ChatMessage = {
         id: generateMessageId(),
         role: "assistant",
         content: responseContent,
         timestamp: new Date().toISOString(),
+        parsedData: analysis.isFood
+          ? {
+              type: "photo_analysis",
+              data: {
+                items: analysis.items,
+                totals: analysis.totals,
+                description: analysis.description,
+              },
+            }
+          : undefined,
       };
       setMessages((prev) => [...prev, aiMessage]);
 
@@ -493,18 +501,19 @@ export default function ChatPage() {
         throw new Error(data.error || "Erro ao enviar mensagem");
       }
 
-      // Adiciona resposta da AI
+      // Salva dados parseados
+      const { classification, parsedData } = data;
+
+      // Adiciona resposta da AI (com parsedData para cards visuais)
       const aiMessage: ChatMessage = {
         id: generateMessageId(),
         role: "assistant",
         content: data.response,
         timestamp: new Date().toISOString(),
+        parsedData: parsedData || undefined,
       };
 
       setMessages((prev) => [...prev, aiMessage]);
-
-      // Salva dados parseados
-      const { classification, parsedData } = data;
 
       if (parsedData && data.response.includes("✓ Registrado")) {
         // Sempre salva no localStorage (funciona offline e sem login)
@@ -638,9 +647,9 @@ export default function ChatPage() {
 
   if (isLoading) {
     return (
-      <ScreenContainer className="bg-background-dark text-white">
+      <ScreenContainer className="bg-gradient-to-b from-[#FFFBF4] via-[#F6EAD9] to-[#EBDCC5] text-gray-800">
         <div className="flex flex-1 items-center justify-center">
-          <p className="text-text-secondary">Carregando...</p>
+          <p className="text-gray-500">Carregando...</p>
         </div>
       </ScreenContainer>
     );
@@ -649,67 +658,110 @@ export default function ChatPage() {
   const hasMessages = messages.length > 0;
 
   return (
-    <ScreenContainer className="bg-background-dark text-white">
+    <ScreenContainer className="bg-gradient-to-b from-[#FFFBF4] via-[#F6EAD9] to-[#EBDCC5] text-gray-800">
       <div className="flex flex-1 flex-col">
-        <header className="sticky top-0 z-20 -mx-6 mb-2 flex items-center justify-between border-b border-white/10 bg-background-dark/95 px-4 py-3 backdrop-blur-md">
-          <h1 className="text-lg font-bold tracking-tight text-white">Fit Track</h1>
-          <button
-            type="button"
-            className="flex size-10 items-center justify-center rounded-full text-white/70 transition-colors hover:bg-white/10 hover:text-white"
-            aria-label="Configuracoes"
-          >
-            <span className="material-symbols-outlined text-[22px]">
-              settings
-            </span>
-          </button>
+        {/* Header — condicional: base (Ask ativo + X) vs conversa (Track ativo + back + dots) */}
+        <header className="relative z-10 -mx-6 flex items-center justify-between px-6 pt-4 pb-4 shrink-0">
+          {hasMessages ? (
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="w-10 h-10 flex items-center justify-center rounded-full bg-white/40 backdrop-blur-sm text-[#3E2723] hover:bg-white/60 transition-all shadow-sm"
+            >
+              <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+            </button>
+          ) : (
+            <div className="w-10" />
+          )}
+          <div className="bg-[#EBE1CF] p-1 rounded-full flex items-center shadow-inner">
+            <button
+              type="button"
+              className={`px-5 py-2 rounded-full text-sm font-medium transition ${
+                hasMessages
+                  ? "bg-[#3E2723] text-white shadow-md"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              Track
+            </button>
+            <button
+              type="button"
+              className={`px-5 py-2 rounded-full text-sm font-medium transition ${
+                !hasMessages
+                  ? "bg-[#3E2723] text-white shadow-md"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              Ask
+            </button>
+          </div>
+          {hasMessages ? (
+            <button
+              type="button"
+              onClick={handleClearChat}
+              className="w-10 h-10 flex items-center justify-center rounded-full bg-white/40 backdrop-blur-sm text-[#3E2723] hover:bg-white/60 transition-all shadow-sm"
+            >
+              <span className="material-symbols-outlined text-[20px]">more_horiz</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="w-10 h-10 rounded-full bg-white/60 flex items-center justify-center text-gray-800 hover:bg-white transition backdrop-blur-md shadow-sm"
+            >
+              <span className="material-symbols-outlined text-xl">close</span>
+            </button>
+          )}
         </header>
-        {/* Área de mensagens */}
-        <div className="flex flex-1 flex-col gap-6 overflow-y-auto py-3">
-          {/* Estado inicial (sem mensagens) */}
-          {!hasMessages && (
-            <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center">
-              <div className="flex flex-col gap-2">
-                <h1 className="text-2xl font-bold tracking-tight text-white">
-                  Ola, {profile?.name?.split(" ")[0] || "usuario"}!
-                </h1>
-                <p className="text-text-secondary text-sm leading-relaxed">
-                  Pode me dizer o que voce comeu hoje, como foi seu treino ou como esta se sentindo.
-                </p>
-              </div>
 
-              {/* Sugestões rápidas */}
-              <ChipGroup
-                chips={INITIAL_SUGGESTIONS}
-                onChipClick={(text) => handleSendMessage(text)}
-                className="mt-4"
-              />
+        {/* Área de mensagens */}
+        <div className="flex flex-1 flex-col overflow-y-auto px-0 pt-2 pb-4 hide-scrollbar">
+          {/* Estado inicial — 2 sugestoes grandes em grid */}
+          {!hasMessages && (
+            <div className="flex flex-1 flex-col justify-center px-5 pb-32">
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => handleSendMessage("Como esta meu equilibrio nutricional esta semana?")}
+                  className="bg-[#F3E7D5] p-5 rounded-3xl text-left shadow-[0_4px_20px_-2px_rgba(62,39,35,0.05)] hover:shadow-lg transition-all duration-300 active:scale-95 border border-white/40 h-60 flex flex-col justify-between group relative overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <p className="text-[#4A3B32] font-bold text-[1.3rem] leading-tight z-10">
+                    Como esta meu equilibrio nutricional esta semana?
+                  </p>
+                  <div className="w-10 h-10 rounded-full bg-white/40 flex items-center justify-center self-end backdrop-blur-sm z-10">
+                    <span className="material-symbols-outlined text-[#3E2723] text-base opacity-60">
+                      arrow_forward
+                    </span>
+                  </div>
+                </button>
+                <button
+                  onClick={() => handleSendMessage("Sugira um treino rapido para hoje")}
+                  className="bg-[#F3E7D5] p-5 rounded-3xl text-left shadow-[0_4px_20px_-2px_rgba(62,39,35,0.05)] hover:shadow-lg transition-all duration-300 active:scale-95 border border-white/40 h-60 flex flex-col justify-between group relative overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <p className="text-[#4A3B32] font-bold text-[1.3rem] leading-tight z-10">
+                    Sugira um treino rapido para hoje
+                  </p>
+                  <div className="w-10 h-10 rounded-full bg-white/40 flex items-center justify-center self-end backdrop-blur-sm z-10">
+                    <span className="material-symbols-outlined text-[#3E2723] text-base opacity-60">
+                      arrow_forward
+                    </span>
+                  </div>
+                </button>
+              </div>
             </div>
           )}
 
           {/* Lista de mensagens */}
           {hasMessages && (
-            <div className="flex flex-col gap-4">
-              <div className="flex justify-center">
-                <span className="rounded-full bg-white/5 px-3 py-1 text-xs font-medium text-text-secondary">
-                  Hoje
-                </span>
-              </div>
-              <div className="flex justify-end">
-                <button
-                  onClick={handleClearChat}
-                  className="flex items-center gap-1.5 text-xs text-text-secondary transition-colors hover:text-white"
-                >
-                  <span className="material-symbols-outlined text-[16px]">delete_sweep</span>
-                  Limpar historico
-                </button>
-              </div>
-
+            <div className="flex flex-col gap-6 px-4">
               {messages.map((msg) => (
                 <MessageBubble
                   key={msg.id}
                   role={msg.role}
                   content={msg.content}
                   timestamp={msg.timestamp}
+                  parsedData={msg.parsedData}
                 />
               ))}
 
@@ -724,13 +776,13 @@ export default function ChatPage() {
 
         {/* Mensagem de erro */}
         {error && (
-          <div className="mb-2 rounded-lg border border-error/20 bg-error/10 px-3 py-2 text-sm text-error">
+          <div className="mb-2 mx-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
             {error}
           </div>
         )}
 
-        {/* Área de input com suporte a áudio e foto */}
-        <div className="border-t border-white/5 py-4">
+        {/* Input */}
+        <div className="shrink-0 px-0 pt-2 pb-2">
           {/* Preview de imagem selecionada */}
           {selectedImage && (
             <div className="mb-4">
@@ -739,15 +791,15 @@ export default function ChatPage() {
                 onRemove={handleRemoveImage}
                 onSend={handleSendImage}
                 isLoading={isAnalyzingImage}
-                loadingMessage="Analisando refeição..."
+                loadingMessage="Analisando refeicao..."
               />
             </div>
           )}
 
-          {/* Input de texto/áudio (oculto quando tem imagem) */}
+          {/* Input de texto/áudio */}
           {!selectedImage && (
             <ChatInput
-              placeholder="Digite ou grave sua mensagem..."
+              placeholder="Ask literally anything..."
               onSend={handleSendMessage}
               onStartRecording={handleStartRecording}
               onStopRecording={handleStopRecording}

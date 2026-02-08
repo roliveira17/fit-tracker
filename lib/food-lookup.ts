@@ -414,9 +414,9 @@ export function extractFoodsFromMessage(message: string): string[] {
     "bastante",
   ];
 
-  // Separa por vírgulas, "e", "com" mantendo as quantidades
+  // Separa por vírgulas, quebras de linha, "e", "com" mantendo as quantidades
   const parts = normalized
-    .split(/[,]|\s+e\s+|\s+com\s+/g)
+    .split(/[,\n]|\s+e\s+|\s+com\s+/g)
     .map((p) => p.trim())
     .filter((p) => p.length > 0);
 

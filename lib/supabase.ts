@@ -500,18 +500,24 @@ export async function importAppleHealth(data: {
   body_fat?: { body_fat: number; date: string }[];
   workouts?: { type: string; date: string; duration: number; calories: number }[];
   sleep?: { date: string; start: string; end: string; stages: { stage: string; duration: number; pct: number }[] }[];
-}): Promise<{ imported: number; duplicates_skipped: number } | null> {
+}): Promise<{ imported: number; duplicates_skipped: number }> {
   const { data: result, error } = await supabase.rpc("import_apple_health", {
     p_weights: data.weights || [],
     p_body_fat: data.body_fat || [],
     p_workouts: data.workouts || [],
-    p_sleep: data.sleep || []
+    p_sleep: data.sleep || [],
+    p_glucose: []  // Fix: desambiguar entre V1 (4 params) e V2 (5 params) do RPC
   });
 
   if (error) {
     console.error("Error importing Apple Health data:", error);
-    return null;
+    throw new Error(`Falha ao importar no Supabase: ${error.message}`);
   }
+
+  if (!result) {
+    throw new Error("Supabase retornou resultado vazio");
+  }
+
   return result;
 }
 
@@ -663,7 +669,8 @@ export interface GlucoseReadingImport {
 }
 
 /**
- * Importa múltiplas leituras de glicose (para importação de CGM)
+ * Importa múltiplas leituras de glicose via RPC batch (SECURITY DEFINER)
+ * Substitui insert direto por RPC para consistência de segurança
  */
 export async function importGlucoseReadings(
   readings: GlucoseReadingImport[]
@@ -671,30 +678,38 @@ export async function importGlucoseReadings(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return 0;
 
-  let imported = 0;
-  for (const reading of readings) {
-    const { error } = await supabase
-      .from("glucose_logs")
-      .insert({
-        user_id: user.id,
-        glucose_mg_dl: reading.glucose_mg_dl,
-        date: reading.date,
-        time: reading.time,
-        measurement_type: reading.measurement_type,
-        notes: reading.notes,
-        source: reading.source || "import_csv"
-      });
+  if (readings.length === 0) return 0;
 
-    if (!error) {
-      imported++;
-    }
+  const payload = readings.map(r => ({
+    glucose_mg_dl: r.glucose_mg_dl,
+    date: r.date,
+    time: r.time,
+    measurement_type: r.measurement_type,
+    notes: r.notes || null,
+    device: r.device || null,
+    source: r.source || "import_csv",
+  }));
+
+  const { data, error } = await supabase.rpc("import_glucose_readings", {
+    p_readings: payload,
+  });
+
+  if (error) {
+    console.error("Error importing glucose readings:", error);
+    return 0;
   }
 
-  return imported;
+  return data?.imported ?? 0;
 }
 
 export async function getGlucoseStats(periodDays: number = 7): Promise<GlucoseStats | null> {
-  const { data, error } = await supabase.rpc("get_glucose_stats", { p_days: periodDays });
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data, error } = await supabase.rpc("get_glucose_stats", {
+    p_user_id: user.id,
+    p_days: periodDays,
+  });
 
   if (error) {
     console.error("Error fetching glucose stats:", error);
@@ -881,6 +896,29 @@ export function formatUserContextForPrompt(context: UserContext): string {
     }
     if (context.glucoseStats.min_glucose && context.glucoseStats.max_glucose) {
       lines.push(`- Range: ${context.glucoseStats.min_glucose}-${context.glucoseStats.max_glucose} mg/dL`);
+    }
+    lines.push(``);
+  }
+
+  // Glicemia — resumo diário (agrupa leituras por data)
+  if (context.recentGlucose && context.recentGlucose.length > 0) {
+    lines.push(`## Glicemia — Resumo Diário`);
+
+    const byDate = new Map<string, number[]>();
+    for (const g of context.recentGlucose) {
+      const values = byDate.get(g.date) || [];
+      values.push(g.glucose_mg_dl);
+      byDate.set(g.date, values);
+    }
+
+    const sortedDates = [...byDate.keys()].sort().reverse().slice(0, 14);
+
+    for (const date of sortedDates) {
+      const values = byDate.get(date)!;
+      const avg = Math.round(values.reduce((a, b) => a + b, 0) / values.length);
+      const min = Math.min(...values);
+      const max = Math.max(...values);
+      lines.push(`- ${date}: média ${avg} mg/dL (min ${min}, max ${max}, ${values.length} leituras)`);
     }
     lines.push(``);
   }

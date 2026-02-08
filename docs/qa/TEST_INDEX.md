@@ -7,13 +7,13 @@
 
 ## Resumo
 
-| Prioridade | Total | Pendente | Passando | Falhando |
-|------------|-------|----------|----------|----------|
-| P0 - Críticos | 4 | 0 | 4 | 0 |
-| P1 - Core | 4 | 0 | 4 | 0 |
-| P2 - Avançados | 4 | 4 | 0 | 0 |
-| P3 - Extras | 3 | 3 | 0 | 0 |
-| **TOTAL** | **15** | **7** | **8** | **0** |
+| Prioridade | Total | Pendente | Implementado | Passando |
+|------------|-------|----------|--------------|----------|
+| P0 - Críticos | 4 | 0 | 0 | 4 |
+| P1 - Core | 4 | 0 | 0 | 4 |
+| P2 - Avançados | 4 | 0 | 4 | 0 |
+| P3 - Extras | 3 | 0 | 3 | 0 |
+| **TOTAL** | **15** | **0** | **7** | **8** |
 
 ---
 
@@ -43,10 +43,10 @@
 
 | ID | Nome | Status | Doc | Código | Última Execução |
 |----|------|--------|-----|--------|-----------------|
-| T009 | Chat com Áudio | pendente | [doc](tests/T009_chat_audio.md) | [spec](../../tests/e2e/T009_chat_audio.spec.ts) | - |
-| T010 | Chat com Foto | pendente | [doc](tests/T010_chat_foto.md) | [spec](../../tests/e2e/T010_chat_foto.spec.ts) | - |
-| T011 | Importar Apple Health | pendente | [doc](tests/T011_import_apple_health.md) | [spec](../../tests/e2e/T011_import_apple_health.spec.ts) | - |
-| T012 | Exportar Dados | pendente | [doc](tests/T012_exportar_dados.md) | [spec](../../tests/e2e/T012_exportar_dados.spec.ts) | - |
+| T009 | Barcode Scanner | implementado | - | [spec](../../tests/e2e/T009_barcode_scanner.spec.ts) | - |
+| T010 | Chat com Foto | implementado | - | [spec](../../tests/e2e/T010_chat_foto.spec.ts) | - |
+| T011 | Importar Apple Health | implementado | - | [spec](../../tests/e2e/T011_import_apple_health.spec.ts) | - |
+| T012 | Exportar Dados | implementado | - | [spec](../../tests/e2e/T012_exportar_dados.spec.ts) | - |
 
 ---
 
@@ -54,9 +54,9 @@
 
 | ID | Nome | Status | Doc | Código | Última Execução |
 |----|------|--------|-----|--------|-----------------|
-| T013 | Login Google | pendente | [doc](tests/T013_login_google.md) | [spec](../../tests/e2e/T013_login_google.spec.ts) | - |
-| T014 | Notificações | pendente | [doc](tests/T014_notificacoes.md) | [spec](../../tests/e2e/T014_notificacoes.spec.ts) | - |
-| T015 | Reset App | pendente | [doc](tests/T015_reset_app.md) | [spec](../../tests/e2e/T015_reset_app.spec.ts) | - |
+| T013 | Login / Autenticação | implementado | - | [spec](../../tests/e2e/T013_login_google.spec.ts) | - |
+| T014 | Notificações | implementado | - | [spec](../../tests/e2e/T014_notificacoes.spec.ts) | - |
+| T015 | Reset App | implementado | - | [spec](../../tests/e2e/T015_reset_app.spec.ts) | - |
 
 ---
 

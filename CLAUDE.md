@@ -1,77 +1,204 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Instrucoes para Claude Code ao trabalhar neste repositorio.
 
-## Project Overview
+## Visao Geral
 
-Fit Track v3 — AI-powered fitness tracking app (food, workouts, sleep, glucose). Built with Next.js 16 + React 19, Supabase backend, and OpenAI for natural language parsing. Documentation and UI copy are in **Portuguese (pt-BR)**.
+Fit Track v3 — app de tracking fitness com IA (alimentacao, treinos, sono, glicemia). Documentacao e UI em **portugues (pt-BR)**.
 
-Deployed at: https://fit-tracker-murex.vercel.app
-
-## Commands
-
-```bash
-npm run dev          # Dev server with Turbopack
-npm run dev:clean    # Kill stale node processes, remove .next/dev/lock, restart (Windows/PowerShell)
-npm run build        # Production build
-npm run lint         # Next.js linting
-npx playwright test  # Run all E2E tests (starts dev server automatically)
-npx playwright test tests/e2e/T001-onboarding.spec.ts  # Run a single test
+```
+TIPO:       Fullstack Web App (Mobile-First)
+FRAMEWORK:  Next.js 16 (App Router) + React 19
+LINGUAGEM:  TypeScript 5.9
+BACKEND:    Supabase (PostgreSQL + Auth + RLS)
+AI:         OpenAI GPT-4o-mini
+DEPLOY:     Vercel — https://fit-tracker-murex.vercel.app
+TESTES:     Playwright (E2E) + Vitest (unit)
 ```
 
-## Architecture
+---
 
-### Data Flow: Chat → Persistence
+## Comandos
 
-1. User sends message via `/chat` page → POST to `/api/chat/route.ts`
-2. `lib/ai.ts` classifies intent and calls OpenAI GPT-4o-mini to parse food/exercise/weight/body fat/glucose
-3. `lib/parsers.ts` normalizes parsed data into typed structures
-4. Data saved via `lib/supabase.ts` RPC calls (authenticated) or `lib/storage.ts` localStorage (offline fallback)
+```bash
+npm run dev          # Dev server com Turbopack
+npm run dev:clean    # Mata processos, limpa lock, reinicia (Windows/PowerShell)
+npm run build        # Build de producao
+npm run lint         # Next.js linting
+npx playwright test  # Testes E2E (sobe dev server automaticamente)
+npx playwright test tests/e2e/T001-onboarding.spec.ts  # Teste individual
+```
 
-### Dual Storage Strategy
+---
 
-- **`lib/supabase.ts`**: Primary storage when authenticated. All writes use RPC functions with `SECURITY DEFINER` to bypass RLS. Key RPCs: `get_home_summary()`, `get_insights()`, `import_apple_health()`, `import_hevy()`.
-- **`lib/storage.ts`**: localStorage fallback for offline use and unauthenticated state. Mirrors the same data types.
+## Principios de Desenvolvimento
+
+1. Simplicidade primeiro. Nao abstrair prematuramente.
+2. Codigo legivel > codigo esperto.
+3. Falhar rapido e explicitamente.
+4. Menos codigo e melhor.
+5. Fazer funcionar, fazer certo, fazer rapido. Nessa ordem.
+
+## Code Style
+
+- Strict typing, zero `any`.
+- Named exports.
+- Funcoes puras quando possivel.
+- Early returns para evitar nesting.
+- Maximo ~20 linhas por funcao.
+- Maximo 3 parametros. Se mais, usar objeto.
+- Nomes descritivos, sem abreviacoes ambiguas.
+
+## Tratamento de Erros
+
+- Nunca catch vazio ou silencioso.
+- Logar com contexto: { operacao, entidade, id, erro }.
+- Nao expor detalhes internos em respostas ao usuario.
+
+## Testes
+
+- Testar comportamento, nao implementacao.
+- Todo bug corrigido ganha teste de regressao.
+- Nomes descritivos: 'deve rejeitar pedido sem estoque'.
+
+## Git
+
+- Conventional Commits: feat, fix, refactor, test, docs, chore.
+- Commits atomicos — cada um compila e testa.
+- Nunca commitar secrets, .env, dados pessoais.
+
+## Seguranca
+
+- Input validation em toda fronteira.
+- Secrets em variaveis de ambiente, nunca hardcoded.
+- Dependencias atualizadas.
+
+---
+
+## Arquitetura
+
+### Data Flow: Chat → Persistencia
+
+1. Usuario envia mensagem via `/chat` → POST `/api/chat/route.ts`
+2. `lib/ai.ts` classifica intent e chama GPT-4o-mini para parsing
+3. `lib/parsers.ts` normaliza dados em estruturas tipadas
+4. Dados salvos via `lib/supabase.ts` (RPCs) ou `lib/storage.ts` (localStorage fallback)
+
+### Dual Storage
+
+- **`lib/supabase.ts`**: Primario quando autenticado. Todas escritas via RPC com `SECURITY DEFINER`.
+  - RPCs chave: `get_home_summary()`, `get_insights()`, `import_apple_health()`, `import_hevy()`, `import_glucose_readings()`
+- **`lib/storage.ts`**: Fallback localStorage para uso offline/anonimo. Espelha os mesmos tipos.
 
 ### Food Lookup Pipeline
 
-`lib/food-lookup.ts` orchestrates multi-source food resolution:
-1. `lib/food-cache.ts` (in-memory cache) → 2. `lib/food-database.ts` (embedded 1,196-line PT-BR food DB) → 3. `lib/tbca-database.ts` (TBCA Brazilian food table, 17MB JSON in `data/`) → 4. `lib/openfoodfacts.ts` (OpenFoodFacts API for barcodes) → 5. OpenAI fallback
+`lib/food-lookup.ts` orquestra resolucao multi-source:
+1. `lib/food-cache.ts` (cache in-memory)
+2. `lib/food-database.ts` (130 alimentos PT-BR)
+3. `lib/tbca-database.ts` (TBCA, 5.668 alimentos, 17MB em `data/`)
+4. `lib/openfoodfacts.ts` (API para barcodes)
+5. OpenAI fallback
 
 ### Import System
 
-`app/import/page.tsx` handles three import types:
-- **Apple Health**: ZIP → XML extraction via JSZip → parsing in `lib/import/appleHealth*.ts` → Supabase RPC
-- **Hevy**: CSV parsing in `lib/parsers/hevy.ts`
-- **Barcode scanning**: `components/import/BarcodeScanner.tsx` uses html5-qrcode → OpenFoodFacts API → `lib/barcode-cache.ts`
+`app/import/page.tsx` com 4 fontes (UI usa tema "Calma" light — cream/green):
+- **Apple Health**: ZIP → XML via JSZip → parsing em `lib/import/appleHealth*.ts` → Supabase RPC
+- **Hevy**: CSV parsing em `lib/parsers/hevy.ts`
+- **CGM (Glicemia)**: XLSX parsing em `lib/parsers/cgm.ts` → RPC `import_glucose_readings()`
+- **Barcode**: `components/import/BarcodeScanner.tsx` via html5-qrcode → OpenFoodFacts → `lib/barcode-cache.ts`
+
+Logica de import extraida para `hooks/useImportLogic.ts`. Componentes Calma em `components/import/calma/`.
 
 ### Auth
 
-Supabase Auth with Google OAuth. Provider setup in `components/providers/SupabaseAuthProvider.tsx`. Auth helpers in `lib/auth.ts`. All database tables have RLS policies.
+Supabase Auth com Google OAuth. Provider em `components/providers/SupabaseAuthProvider.tsx`. Helpers em `lib/auth.ts`. Todas tabelas tem RLS.
 
-## Key Conventions
+### Navegacao
 
-- **Path alias**: `@/*` maps to project root (e.g., `@/lib/storage`, `@/components/ui/Button`)
-- **Supabase RPCs over direct table access**: All authenticated writes go through RPC functions with `SECURITY DEFINER`, not direct table inserts
-- **Mobile-first**: Design targets 390x844 viewport. Playwright tests use this viewport.
-- **Design system colors**: Primary orange `#eb6028`, custom Tailwind tokens in `tailwind.config.ts`
-- **Component library**: Custom components in `components/ui/` (not raw shadcn/ui — there's a legacy `button.tsx` being migrated)
+```
+Bottom Tabs: [Chat] [Home] [Importar] [Insights] [Profile]
+Onboarding:  Welcome → Feature Tour (4 telas) → Perfil Basico → Chat
+```
 
-## Database
+---
 
-Migrations in `supabase/migrations/` (run in order). Schema documented in `docs/back-end/data-model.md`. Core tables: `profiles`, `meals`/`meal_items`, `workouts`/`workout_sets`, `sleep_sessions`/`sleep_stages`, `weight_logs`, `body_fat_logs`, `glucose_logs`, `foods`, `import_records`.
+## Convencoes
 
-## Environment Variables
+- **Path alias**: `@/*` mapeia para raiz do projeto
+- **Supabase RPCs**: Todas escritas autenticadas via RPC SECURITY DEFINER, nunca INSERT direto
+- **Mobile-first**: Viewport 390x844. Playwright testa neste tamanho
+- **Cores**: Primary orange `#eb6028`, tokens custom no `tailwind.config.ts`
+- **Tema Calma**: Import page usa tema light separado (cream `#FDF8F3` / green `#4F633A`). Tokens `calma-*`
+- **DM Serif Display**: Titulos hero na Import page. Variavel `--font-serif-display`
+- **Componentes**: Custom em `components/ui/`, nao shadcn/ui puro
 
-Required in `.env.local` (see `.env.example`):
-- `OPENAI_API_KEY` — OpenAI API key (server-side only)
-- `NEXT_PUBLIC_SUPABASE_URL` — Supabase project URL
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Supabase anonymous key
-- `SUPABASE_SERVICE_ROLE_KEY` — Supabase service role key (server-side only)
+---
+
+## Banco de Dados
+
+Migrations em `supabase/migrations/` (executar em ordem no SQL Editor do Supabase Dashboard).
+
+Tabelas: `profiles`, `meals`/`meal_items`, `workouts`/`workout_sets`, `sleep_sessions`/`sleep_stages`, `weight_logs`, `body_fat_logs`, `glucose_logs`, `foods`, `barcode_cache`, `import_records`.
+
+Schema em `docs/specs/backend-data-model.md`.
+
+---
+
+## Variaveis de Ambiente
+
+Em `.env.local` (ver `.env.example`):
+- `OPENAI_API_KEY` — OpenAI (server-side)
+- `NEXT_PUBLIC_SUPABASE_URL` — URL do projeto Supabase
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Chave anonima
+- `SUPABASE_SERVICE_ROLE_KEY` — Service role (server-side)
+
+---
+
+## Estrutura de Documentacao
+
+```
+ROADMAP.md                  # Status, pendencias, proximos passos
+docs/
+├── specs/                  # Especificacoes de features
+│   ├── prd-master.md       # PRD principal
+│   ├── 10-onboarding.md    # Spec por feature (10-60)
+│   ├── v2-*.md             # Features v2
+│   ├── backend-*.md        # Backend specs
+│   ├── food-api-*.md       # Food API
+│   └── design-*.md         # Design system
+├── decisions/              # ADRs (Architecture Decision Records)
+│   ├── 001-auth-rls.md     # Auth + RLS
+│   └── 002-barcode-api.md  # Barcode pipeline
+├── learnings/              # Licoes aprendidas
+│   ├── o-que-funciona.md   # Padroes que deram certo
+│   └── armadilhas.md       # Bugs dificeis e solucoes
+├── context/                # Contexto de negocio
+│   ├── business-context.md # Persona do usuario
+│   ├── glossario.md        # Termos e definicoes
+│   └── samples.md          # Dados de teste e referencia
+├── qa/                     # Testes E2E
+│   ├── TEST_INDEX.md       # Indice de test cases
+│   └── tests/              # T001-T008 specs
+├── _prompts/               # Templates de prompts
+└── _archive/               # Docs concluidos/historicos
+```
+
+Antes de implementar, ler spec. Ao finalizar, atualizar ROADMAP.md e learnings.
+
+---
+
+## Compact Instructions
+
+Ao compactar, preservar:
+- Arquivos modificados na sessao
+- Comandos de teste que passaram/falharam
+- Decisoes tomadas e motivos
+- Estado atual das tarefas
+
+---
 
 ## Known Issues
 
-Tracked in `docs/PENDENCIAS.md`. Key ones:
-- Home dashboard carbs/fat hardcoded to 0 (RPC `get_home_summary` needs update)
-- Apple Health sleep data parsed but not persisted
-- FreeStyle Libre CGM uses generic parser instead of device-specific one
+Rastreados em `ROADMAP.md`. Principais:
+- Apple Health sleep data parsed mas nao persistida
+- FreeStyle Libre CGM usa parser generico

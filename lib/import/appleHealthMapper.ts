@@ -250,11 +250,16 @@ function mapWorkouts(
 function mapSleepSessions(
   sleepEntries: AppleHealthSleepEntry[]
 ): Omit<SleepSession, "id">[] {
+  // Debug: log inicial
+  console.log(`[mapSleepSessions] Processando ${sleepEntries.length} entradas de sono`);
+
   // Agrupa por noite
   const nightsMap = groupSleepByNight(sleepEntries);
+  console.log(`[mapSleepSessions] Agrupadas em ${nightsMap.size} noites`);
   const sessions: Omit<SleepSession, "id">[] = [];
 
   for (const [nightDate, entries] of nightsMap) {
+    console.log(`[mapSleepSessions] Noite ${nightDate}: ${entries.length} entradas`);
     // Calcula duração de cada estágio
     let totalMinutes = 0;
     let deepMinutes = 0;
@@ -302,8 +307,13 @@ function mapSleepSessions(
         case SLEEP_VALUES.IN_BED:
           // "Na cama" não conta como sono
           break;
+        default:
+          console.warn(`[mapSleepSessions] Valor de sono desconhecido: ${entry.value}`);
+          break;
       }
     }
+
+    console.log(`[mapSleepSessions] Noite ${nightDate} - Total: ${totalMinutes}min, Deep: ${deepMinutes}, REM: ${remMinutes}, Core: ${coreMinutes}, Awake: ${awakeMinutes}`);
 
     // Só adiciona se tiver dados de sono válidos
     if (totalMinutes > 0 && startTime && endTime) {
@@ -318,9 +328,13 @@ function mapSleepSessions(
         awakeMinutes,
         source: source || "Apple Health",
       });
+      console.log(`[mapSleepSessions] ✓ Sessão adicionada para ${nightDate}`);
+    } else {
+      console.warn(`[mapSleepSessions] ✗ Sessão ignorada para ${nightDate} (totalMinutes: ${totalMinutes}, startTime: ${!!startTime}, endTime: ${!!endTime})`);
     }
   }
 
+  console.log(`[mapSleepSessions] Total de sessões mapeadas: ${sessions.length}`);
   return sessions;
 }
 

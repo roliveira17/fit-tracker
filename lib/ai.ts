@@ -16,6 +16,12 @@ import { generateUserContext } from "./food-lookup";
 import { type UserContext, formatUserContextForPrompt } from "./supabase";
 
 /**
+ * Modelo OpenAI configurável via env var
+ * Permite trocar sem alterar código (ex: gpt-4o, gpt-4o-mini, gpt-3.5-turbo)
+ */
+export const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
+
+/**
  * Cliente OpenAI - inicializado apenas no servidor
  */
 let openai: OpenAI | null = null;
@@ -27,6 +33,39 @@ function getOpenAIClient(): OpenAI {
     });
   }
   return openai;
+}
+
+/**
+ * Wrapper para chamadas OpenAI com retry e exponential backoff
+ * 3 tentativas: 1s, 2s, 4s de delay entre retries
+ * Timeout de 15s por tentativa
+ */
+async function callOpenAIWithRetry<T>(
+  fn: () => Promise<T>,
+  maxRetries = 3
+): Promise<T> {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      const isLastAttempt = attempt === maxRetries - 1;
+      const isRetryable =
+        err instanceof Error &&
+        (err.message.includes("timeout") ||
+         err.message.includes("ECONNRESET") ||
+         err.message.includes("429") ||
+         err.message.includes("500") ||
+         err.message.includes("502") ||
+         err.message.includes("503"));
+
+      if (isLastAttempt || !isRetryable) throw err;
+
+      const delay = 1000 * Math.pow(2, attempt);
+      console.log(`[AI] Retry ${attempt + 1}/${maxRetries} apos ${delay}ms`);
+      await new Promise(r => setTimeout(r, delay));
+    }
+  }
+  throw new Error("Max retries exceeded");
 }
 
 /**
@@ -115,12 +154,14 @@ Responda APENAS com JSON no formato:
 {"type": "...", "subtype": "...", "confidence": "high|medium|low"}`;
 
   try {
-    const response = await client.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [{ role: "user", content: classificationPrompt }],
-      temperature: 0.1, // Baixa temperatura para respostas consistentes
-      max_tokens: 100,
-    });
+    const response = await callOpenAIWithRetry(() =>
+      client.chat.completions.create({
+        model: OPENAI_MODEL,
+        messages: [{ role: "user", content: classificationPrompt }],
+        temperature: 0.1,
+        max_tokens: 100,
+      })
+    );
 
     const content = response.choices[0]?.message?.content?.trim() || "";
 
@@ -161,8 +202,9 @@ SUAS RESPONSABILIDADES:
 1. Registrar alimentação - quando o usuário disser o que comeu
 2. Registrar treinos - quando o usuário relatar exercícios
 3. Registrar peso - quando o usuário informar pesagem
-4. Responder perguntas sobre nutrição, treino e dados
-5. Calcular balanço calórico baseado no BMR
+4. Registrar e consultar glicemia - quando o usuário informar valores ou perguntar sobre dados de glicemia
+5. Responder perguntas sobre nutrição, treino, glicemia e dados
+6. Calcular balanço calórico baseado no BMR
 
 REGRAS DE COMPORTAMENTO:
 - Seja direto e conciso
@@ -356,12 +398,14 @@ export async function sendMessage(
   ];
 
   const [aiResponse, parsedData] = await Promise.all([
-    client.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages,
-      temperature: 0.7,
-      max_tokens: 500,
-    }),
+    callOpenAIWithRetry(() =>
+      client.chat.completions.create({
+        model: OPENAI_MODEL,
+        messages,
+        temperature: 0.7,
+        max_tokens: 500,
+      })
+    ),
     parserPromise,
   ]);
 
