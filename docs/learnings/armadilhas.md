@@ -168,3 +168,35 @@ EXCEPTION
 ```
 
 **Licao:** Em RPCs que processam lotes, sempre capturar `WHEN OTHERS` para que um registro ruim nao destrua o lote inteiro. Contar skipped para diagnostico.
+
+---
+
+## 10. Playwright strict mode violation com regex
+
+**Sintoma:** Teste E2E falha com "strict mode violation: getByText(...) resolved to N elements".
+
+**Causa raiz:** `page.getByText(/regex/)` encontra multiplos elementos no DOM que casam com a regex. Playwright no strict mode (padrão) rejeita quando mais de 1 elemento é encontrado.
+
+**Solucao:** Adicionar `.first()` ao locator:
+```typescript
+await expect(page.getByText(/texto/i).first()).toBeVisible();
+```
+
+**Licao:** Sempre usar `.first()` quando a regex pode casar com mais de um elemento. Alternativa: usar texto mais específico ou `{ exact: true }`.
+
+---
+
+## 11. Dev server zombie bloqueia porta 3000
+
+**Sintoma:** `npm run dev` falha com "Port 3000 is in use" e "Unable to acquire lock at .next/dev/lock".
+
+**Causa raiz:** Processo Node.js da sessão anterior ficou rodando como zombie. O arquivo `.next/dev/lock` persiste.
+
+**Solucao:**
+```bash
+taskkill //F //PID <PID>   # matar processo na porta
+rm -f .next/dev/lock       # remover lock
+npm run dev                # reiniciar
+```
+
+**Licao:** O script `dev:clean` do package.json ja resolve isso automaticamente no PowerShell.

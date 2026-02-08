@@ -58,6 +58,13 @@ Padroes que deram certo no desenvolvimento do Fit Track v3.
 - Testes rodam independentes — basta `npx playwright test`
 - Viewport mobile configurado globalmente
 
+### E2E tests: padroes que funcionam
+- `page.locator('input[type="file"]').setInputFiles({...})` para testar upload sem arquivo real
+- `page.route("**/api/...", ...)` para mockar APIs — mas verificar estrutura exata do response
+- `section.locator("button").first().waitFor({ timeout: 3000 }).then(() => true).catch(() => false)` para features opcionais (ex: Notification API)
+- `test.skip()` para pular testes quando recurso do browser não está disponível (headless Chromium não suporta Notification API)
+- Sempre usar `.first()` quando regex pode casar com múltiplos elementos (strict mode violation)
+
 ## Workflow
 
 ### PENDENCIAS.md como fonte unica de verdade
