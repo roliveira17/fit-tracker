@@ -21,9 +21,9 @@
 
 ## Pendencias Ativas
 
-### 1. Import Apple Health — Correção de Persistência no Supabase  ✅ [2026-02-07]
+### 1. Import Apple Health — Correção de Persistência no Supabase  ✅ [2026-02-08]
 
-**Status:** Corrigido. 5 bugs encontrados e resolvidos na sessao 2026-02-07.
+**Status:** Corrigido e migration aplicada. 5 bugs resolvidos (codigo 2026-02-07) + migration no Supabase (2026-02-08).
 
 **Problemas Corrigidos (2026-02-05):**
 - ✅ Erro no Supabase era silenciosamente ignorado → `importAppleHealth` agora lança exceção
@@ -43,7 +43,7 @@
 - `components/import/calma/ImportResultCalma.tsx`: Fix 5 (feedback visual)
 - `supabase/migrations/20260208_001_fix_import_rpc.sql`: Fix 3 (DROP V1 + WHEN OTHERS)
 
-**Migration pendente:** Executar `20260208_001_fix_import_rpc.sql` no SQL Editor do Supabase Dashboard.
+**Migration aplicada:** ✅ `20260208_001_fix_import_rpc.sql` executada no SQL Editor do Supabase em 2026-02-08.
 
 ---
 
@@ -109,24 +109,24 @@ Arquivo `components/ui/button.tsx` e compatibilidade com shadcn/ui antigo. Pode 
 
 ---
 
-## Sessao 2026-02-08 — Onde Paramos
+## Sessao 2026-02-08 (2a) — Onde Paramos
 
 ### Concluido nesta sessao:
-- Testes E2E T010-T015 implementados e passando (35 passed, 3 skipped)
-- TEST_INDEX.md atualizado com status dos novos testes
-- QA coverage: 100% dos testes planejados implementados (15/15)
+- ✅ Migration `20260208_001_fix_import_rpc.sql` executada no Supabase (DROP V1 + WHEN OTHERS)
+- Verificado: apenas 1 versao da RPC `import_apple_health` existe (sem ambiguidade)
 
-### Sessao anterior (2026-02-07):
+### Sessoes anteriores (2026-02-08 / 2026-02-07):
+- Testes E2E T010-T015 implementados e passando (35 passed, 3 skipped)
+- QA coverage: 100% (15/15)
 - Fix: 5 bugs no pipeline Apple Health Import → Supabase
-- Migration SQL criada: `20260208_001_fix_import_rpc.sql`
-- 3 novos commands em `.claude/commands/`
+- Migration SQL criada + 3 novos commands em `.claude/commands/`
 
 ### Proximos passos (prioridade):
-1. **EXECUTAR MIGRATION** — Rodar `20260208_001_fix_import_rpc.sql` no SQL Editor do Supabase
-2. **TESTAR IMPORT** — Re-testar Apple Health import com login para validar os 5 fixes
-3. **APPLE HEALTH SLEEP** — Verificar dados de sono apos import (pendencia #2)
-4. **FREESTYLE LIBRE** — Parser especifico se houver sample do device
-5. **FOOD API FASE 3** — Otimizacoes (loading states, retry, analytics)
+1. **TESTAR IMPORT** — Re-testar Apple Health import com login para validar os fixes end-to-end
+2. **APPLE HEALTH SLEEP** — Verificar dados de sono apos import (pendencia #2)
+3. **FREESTYLE LIBRE** — Parser especifico se houver sample do device
+4. **FOOD API FASE 3** — Otimizacoes (loading states, retry, analytics)
+5. **V2 FEATURES** — Preview pre-import + barra de progresso
 
 ---
 
