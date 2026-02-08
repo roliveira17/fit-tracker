@@ -120,3 +120,51 @@ const { data: result, error } = await supabase.rpc("import_apple_health", {
 **Solucao correta (longo prazo):** Criar migration para fazer `DROP FUNCTION IF EXISTS import_apple_health(JSONB, JSONB, JSONB, JSONB)` antes de recriar V2.
 
 **Licao:** Quando mudar assinatura de RPC no PostgreSQL, sempre fazer `DROP FUNCTION IF EXISTS` com a assinatura antiga antes de `CREATE OR REPLACE` com a nova.
+
+**Update 2026-02-07:** Migration `20260208_001_fix_import_rpc.sql` faz DROP da V1 permanentemente.
+
+---
+
+## 7. Dedup client-side usando localStorage bloqueia import no Supabase
+
+**Sintoma:** Import Apple Health mostra "sucesso" mas 0 registros chegam ao Supabase. Dados so existem em localStorage.
+
+**Causa raiz:** Antes de enviar ao Supabase, o codigo filtrava "duplicatas" lendo de `getWeightLogs()`, `getBodyFatLogs()`, `getWorkouts()` — todas funcoes de localStorage. Se o usuario ja tinha importado antes (offline ou antes de fazer login), todos os registros com datas iguais eram filtrados. O RPC recebia arrays vazios.
+
+**Solucao:** Quando `user` esta presente (logado), enviar TODOS os dados ao Supabase sem dedup client-side. O servidor lida com duplicatas via `UNIQUE constraint + EXCEPTION WHEN unique_violation` no RPC. Dedup por localStorage so se aplica ao path offline.
+
+**Licao:** Nunca usar localStorage como fonte de dedup quando o destino eh o servidor. Dual storage (Supabase + localStorage) exige logica de dedup separada para cada path.
+
+---
+
+## 8. Race condition: user null durante import
+
+**Sintoma:** Dados vao para localStorage mesmo com usuario logado. Console mostra "⚠️ Dados salvos em localStorage (modo offline)".
+
+**Causa raiz:** O `isLoading` do hook `useImportLogic` controlava apenas se o historico de import carregou (sincrono, localStorage). Nao esperava o `isLoading` do `useAuth()` (assincrono, `getSession()`). Se o usuario selecionava o ZIP antes do auth resolver, `user` era `null`.
+
+**Solucao:** Combinar os dois loading states:
+```typescript
+const { user, isLoading: authLoading } = useAuth();
+// ...
+return { isLoading: isLoading || authLoading, ... };
+```
+
+**Licao:** Quando uma pagina depende de auth, sempre incluir o loading state do auth provider no loading da pagina. Nao assumir que auth resolve antes da UI ficar interativa.
+
+---
+
+## 9. EXCEPTION WHEN unique_violation nao captura CHECK violations
+
+**Sintoma:** Um unico registro com peso fora de 30-300kg ou body fat fora de 1-60% causa rollback de TODA a importacao — inclusive registros validos ja inseridos.
+
+**Causa raiz:** Os loops de INSERT no RPC `import_apple_health` tinham `EXCEPTION WHEN unique_violation` mas nao capturavam outros erros (check_violation, not_null_violation, etc). Em PostgreSQL, uma excecao nao capturada propaga para fora e faz rollback de toda a transacao.
+
+**Solucao:** Adicionar `WHEN OTHERS` em todos os loops:
+```sql
+EXCEPTION
+  WHEN unique_violation THEN v_duplicates := v_duplicates + 1;
+  WHEN OTHERS THEN v_skipped := v_skipped + 1;
+```
+
+**Licao:** Em RPCs que processam lotes, sempre capturar `WHEN OTHERS` para que um registro ruim nao destrua o lote inteiro. Contar skipped para diagnostico.

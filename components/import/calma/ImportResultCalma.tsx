@@ -90,6 +90,15 @@ export function ImportResultCalma({
         </div>
       )}
 
+      {/* Storage destination */}
+      {stats.savedTo && status !== "error" && (
+        <p className={`text-xs mt-1 ${stats.savedTo === "supabase" ? "text-green-600" : "text-amber-600"}`}>
+          {stats.savedTo === "supabase"
+            ? "Dados salvos na nuvem"
+            : "Dados salvos localmente (faça login para sincronizar)"}
+        </p>
+      )}
+
       {/* Duplicates warning */}
       {stats.duplicatesSkipped > 0 && (
         <p className="text-xs text-amber-600 mt-1">

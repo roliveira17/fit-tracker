@@ -1,7 +1,7 @@
 # Fit Track v3 — Roadmap e Progresso
 
 > Arquivo unico de acompanhamento do projeto.
-> Ultima atualizacao: 2026-02-04
+> Ultima atualizacao: 2026-02-07
 
 ---
 
@@ -9,7 +9,7 @@
 
 | Area | Status | Detalhe |
 |------|--------|---------|
-| Backend Supabase (M1-M9) | 100% (53/53) | Todos milestones completos |
+| Backend Supabase (M1-M10) | 100% (56/56) | Todos milestones completos |
 | Frontend v1 (core) | 100% | Onboarding, Chat, Home, Insights, Profile, Import |
 | Frontend v2 (extras) | 97% (60/62) | Audio, foto, Apple Health, auth, export, notificacoes, import calma |
 | Food API | 70% (12/17) | Fases 1-2 completas, Fase 3 pendente |
@@ -21,9 +21,9 @@
 
 ## Pendencias Ativas
 
-### 1. Import Apple Health — Correção de Persistência no Supabase  🏗️ [2026-02-05]
+### 1. Import Apple Health — Correção de Persistência no Supabase  ✅ [2026-02-07]
 
-**Status:** Correção implementada + Fix RPC ambiguidade. Aguardando teste do usuário.
+**Status:** Corrigido. 5 bugs encontrados e resolvidos na sessao 2026-02-07.
 
 **Problemas Corrigidos (2026-02-05):**
 - ✅ Erro no Supabase era silenciosamente ignorado → `importAppleHealth` agora lança exceção
@@ -31,18 +31,19 @@
 - ✅ UI mostrava "sucesso" mesmo com Supabase vazio → Mensagens de erro explícitas
 - ✅ Ambiguidade RPC (2 versões no Supabase) → Adicionado `p_glucose: []` para desambiguar
 
-**Arquivos modificados:**
-- `lib/supabase.ts`: linha 498-522 (lança exceção + `p_glucose: []`)
-- `hooks/useImportLogic.ts`: linha 147-240 (separação Supabase/localStorage + melhor erro)
-- `lib/import/appleHealthMapper.ts`: logs de debug para sono
-- Docs: `docs/learnings/apple-health-fix-2026-02-05.md` (completo)
+**Problemas Corrigidos (2026-02-07):**
+- ✅ Dedup usava localStorage mesmo para usuario logado → Agora envia TUDO ao Supabase (server-side dedup)
+- ✅ Race condition: `user` podia ser null antes do auth resolver → Loading combinado auth + import
+- ✅ CHECK violations causavam rollback total do RPC → Migration com `WHEN OTHERS` em todos os loops
+- ✅ Hevy import gravava em localStorage incondicionalmente → Movido para `else` block
+- ✅ Sem feedback visual Supabase vs localStorage → UI mostra "nuvem" ou "local"
 
-**Próximo passo:**
-- Usuário deve testar import com login
-- Se funcionar: marcar como ✅ concluído
-- Se falhar: investigar erro específico
+**Arquivos modificados (2026-02-07):**
+- `hooks/useImportLogic.ts`: Fixes 1, 2, 4, 5
+- `components/import/calma/ImportResultCalma.tsx`: Fix 5 (feedback visual)
+- `supabase/migrations/20260208_001_fix_import_rpc.sql`: Fix 3 (DROP V1 + WHEN OTHERS)
 
-**Sono ainda pendente:** Ver item #2 abaixo.
+**Migration pendente:** Executar `20260208_001_fix_import_rpc.sql` no SQL Editor do Supabase Dashboard.
 
 ---
 
@@ -108,25 +109,21 @@ Arquivo `components/ui/button.tsx` e compatibilidade com shadcn/ui antigo. Pode 
 
 ---
 
-## Sessao 2026-02-04 — Onde Paramos
+## Sessao 2026-02-07 — Onde Paramos
 
 ### Concluido nesta sessao:
-- Refactoring completo da tela Import → design "Importar com Calma" (light theme cream/green)
-- Extracao de logica de import para hook `hooks/useImportLogic.ts`
-- 7 componentes novos em `components/import/calma/`
-- Fix: Chat AI agora tem acesso a dados de glicemia (system prompt + context)
-- Fix: Pipeline glucose import → Supabase (CHECK constraint + RPC + error handling)
-- Fix: `getGlucoseStats` passando `p_user_id` corretamente
-- Melhoria: Chat mostra media diaria de glicemia em vez de leituras minuto-a-minuto
-- Migration SQL aplicada no Supabase: `20260207_001_fix_glucose_import.sql`
-- Reorganizacao completa da documentacao do projeto
+- Fix: 5 bugs no pipeline Apple Health Import → Supabase (dedup, race condition, CHECK rollback, Hevy double-write, feedback visual)
+- Migration SQL criada: `20260208_001_fix_import_rpc.sql` (DROP V1 ambigua + WHEN OTHERS em todos os loops)
+- 3 novos commands em `.claude/commands/`: `debug-import.md`, `run-tests.md`, `check-supabase.md`
+- Avaliacao de agent teams: concluido que nao vale a pena para o estado atual do projeto
 
 ### Proximos passos (prioridade):
-1. **APPLE HEALTH SLEEP** — Mapear e persistir dados de sono (pendencia #1)
-2. **FREESTYLE LIBRE** — Parser especifico se houver sample do device (pendencia #2)
-3. **TESTES E2E** — Escrever T009-T015
-4. **FOOD API FASE 3** — Otimizacoes (loading states, retry, analytics)
-5. **REFACTORING TELAS** — Continuar aplicando novo design nas demais telas
+1. **EXECUTAR MIGRATION** — Rodar `20260208_001_fix_import_rpc.sql` no SQL Editor do Supabase
+2. **TESTAR IMPORT** — Re-testar Apple Health import com login para validar os 5 fixes
+3. **APPLE HEALTH SLEEP** — Verificar dados de sono apos import (pendencia #2)
+4. **FREESTYLE LIBRE** — Parser especifico se houver sample do device
+5. **TESTES E2E** — Escrever T009-T015
+6. **FOOD API FASE 3** — Otimizacoes (loading states, retry, analytics)
 
 ---
 
@@ -145,6 +142,7 @@ Arquivo `components/ui/button.tsx` e compatibilidade com shadcn/ui antigo. Pode 
 | M7: v2 Production Fixes | 2026-01-27 | 4/4 |
 | M8: Barcode Scanner Fixes | 2026-02-01 | 3/3 |
 | M9: Glucose Import Pipeline Fix | 2026-02-04 | 3/3 |
+| M10: Apple Health Import Fix | 2026-02-07 | 5/5 |
 
 ### Frontend v1
 

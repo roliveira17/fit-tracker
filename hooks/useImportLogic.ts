@@ -41,6 +41,7 @@ export interface ImportStats {
   glucoseReadings: number;
   duplicatesSkipped: number;
   errors: string[];
+  savedTo?: "supabase" | "local";
 }
 
 const EMPTY_STATS: ImportStats = {
@@ -55,7 +56,7 @@ const EMPTY_STATS: ImportStats = {
 
 export function useImportLogic() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [importStatus, setImportStatus] = useState<ImportStatus>("idle");
   const [importStats, setImportStats] = useState<ImportStats>({ ...EMPTY_STATS });
@@ -126,39 +127,18 @@ export function useImportLogic() {
         heartRate: mappedData.heartRateSeries.length
       });
 
-      const existingWeightLogs = getWeightLogs();
-      const existingBodyFatLogs = getBodyFatLogs();
-      const existingWorkouts = getWorkouts();
-
-      const existingWeightDates = new Set(existingWeightLogs.map((w) => w.date));
-      const existingBodyFatDates = new Set(existingBodyFatLogs.map((b) => b.date));
-      const existingWorkoutDates = new Set(existingWorkouts.map((w) => w.date));
-
-      const newWeightLogs = mappedData.weightLogs.filter(
-        (w) => !existingWeightDates.has(w.date)
-      );
-      const newBodyFatLogs = mappedData.bodyFatLogs.filter(
-        (b) => !existingBodyFatDates.has(b.date)
-      );
-      const newWorkouts = mappedData.workouts.filter(
-        (w) => !existingWorkoutDates.has(w.date)
-      );
-
-      const duplicatesSkipped =
-        (mappedData.weightLogs.length - newWeightLogs.length) +
-        (mappedData.bodyFatLogs.length - newBodyFatLogs.length) +
-        (mappedData.workouts.length - newWorkouts.length);
-
       let addedWeightLogs = 0;
       let addedBodyFatLogs = 0;
       let addedWorkouts = 0;
+      let duplicatesSkipped = 0;
+      let savedTo: "supabase" | "local" = "local";
 
       if (user) {
-        // Usuário logado: salva APENAS no Supabase (não usa localStorage)
+        // Usuário logado: envia TUDO ao Supabase (server-side lida com duplicatas via UNIQUE constraint)
         const supabaseResult = await importAppleHealth({
-          weights: newWeightLogs.map(w => ({ weight: w.weight, date: w.date })),
-          body_fat: newBodyFatLogs.map(b => ({ body_fat: b.percentage, date: b.date })),
-          workouts: newWorkouts.map(w => ({
+          weights: mappedData.weightLogs.map(w => ({ weight: w.weight, date: w.date })),
+          body_fat: mappedData.bodyFatLogs.map(b => ({ body_fat: b.percentage, date: b.date })),
+          workouts: mappedData.workouts.map(w => ({
             type: w.exercises[0]?.type || "cardio",
             date: w.date,
             duration: w.totalDuration || 0,
@@ -177,14 +157,34 @@ export function useImportLogic() {
           }))
         });
 
-        // Se chegou aqui sem erro, sucesso!
-        addedWeightLogs = newWeightLogs.length;
-        addedBodyFatLogs = newBodyFatLogs.length;
-        addedWorkouts = newWorkouts.length;
+        addedWeightLogs = supabaseResult.imported > 0 ? mappedData.weightLogs.length : 0;
+        addedBodyFatLogs = supabaseResult.imported > 0 ? mappedData.bodyFatLogs.length : 0;
+        addedWorkouts = supabaseResult.imported > 0 ? mappedData.workouts.length : 0;
+        duplicatesSkipped = supabaseResult.duplicates_skipped;
+        savedTo = "supabase";
 
         console.log(`✓ Dados salvos no Supabase: ${supabaseResult.imported} registros, ${supabaseResult.duplicates_skipped} duplicatas`);
       } else {
-        // Sem usuário: usa localStorage como fallback offline
+        // Sem usuário: dedup contra localStorage e salva localmente
+        const existingWeightDates = new Set(getWeightLogs().map((w) => w.date));
+        const existingBodyFatDates = new Set(getBodyFatLogs().map((b) => b.date));
+        const existingWorkoutDates = new Set(getWorkouts().map((w) => w.date));
+
+        const newWeightLogs = mappedData.weightLogs.filter(
+          (w) => !existingWeightDates.has(w.date)
+        );
+        const newBodyFatLogs = mappedData.bodyFatLogs.filter(
+          (b) => !existingBodyFatDates.has(b.date)
+        );
+        const newWorkouts = mappedData.workouts.filter(
+          (w) => !existingWorkoutDates.has(w.date)
+        );
+
+        duplicatesSkipped =
+          (mappedData.weightLogs.length - newWeightLogs.length) +
+          (mappedData.bodyFatLogs.length - newBodyFatLogs.length) +
+          (mappedData.workouts.length - newWorkouts.length);
+
         addedWeightLogs = newWeightLogs.length > 0
           ? saveWeightLogsBatch(newWeightLogs)
           : 0;
@@ -194,6 +194,7 @@ export function useImportLogic() {
         addedWorkouts = newWorkouts.length > 0
           ? saveWorkoutsBatch(newWorkouts)
           : 0;
+        savedTo = "local";
 
         console.log("⚠️ Dados salvos em localStorage (modo offline)");
       }
@@ -209,6 +210,7 @@ export function useImportLogic() {
         glucoseReadings: 0,
         duplicatesSkipped,
         errors: parsedData.errors,
+        savedTo,
       });
 
       if (totalImported === 0 && duplicatesSkipped > 0) {
@@ -376,9 +378,9 @@ export function useImportLogic() {
             } catch (error) {
               console.error("Erro ao importar Hevy no Supabase:", error);
             }
+          } else {
+            added = saveWorkoutsBatch(result.workouts);
           }
-
-          added = saveWorkoutsBatch(result.workouts);
 
           const hasWarnings =
             result.errors.length > 0 || result.duplicatesSkipped > 0;
@@ -486,7 +488,7 @@ export function useImportLogic() {
   };
 
   return {
-    isLoading,
+    isLoading: isLoading || authLoading,
     importStatus,
     importStats,
     history,

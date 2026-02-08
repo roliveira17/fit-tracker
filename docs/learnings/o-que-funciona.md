@@ -10,6 +10,7 @@ Padroes que deram certo no desenvolvimento do Fit Track v3.
 - Supabase como primario quando autenticado, localStorage como fallback offline
 - Mesmos tipos de dados em ambos — facilita migracao quando usuario faz login
 - `lib/supabase.ts` e `lib/storage.ts` espelham a mesma interface
+- **Importante:** Dedup deve ser separado por path. Supabase usa UNIQUE constraints server-side. localStorage usa dedup client-side. Nunca misturar (ver armadilha #7)
 
 ### RPCs SECURITY DEFINER
 - Todas as escritas autenticadas passam por RPCs em vez de INSERT direto
@@ -63,3 +64,8 @@ Padroes que deram certo no desenvolvimento do Fit Track v3.
 - Um arquivo centraliza status, blockers e proximos passos
 - Sessoes datadas ("Onde Paramos") facilitam continuidade entre sessoes
 - Historico de milestones documenta o que ja foi feito e quando
+
+### Investigacao com agentes em paralelo
+- Usar 3 agentes Explore com hipoteses diferentes acelera debug de problemas cross-domain
+- Agente 1: frontend flow, Agente 2: database/SQL, Agente 3: auth/session
+- Cada agente retorna analise independente — cruzar resultados revela bugs que nenhum acharia sozinho
