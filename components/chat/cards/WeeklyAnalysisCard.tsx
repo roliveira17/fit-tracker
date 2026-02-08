@@ -36,8 +36,8 @@ export function WeeklyAnalysisCard({
   return (
     <>
       {/* Title */}
-      <h2 className="text-2xl font-medium text-[#3E2723] mb-4 tracking-tight">
-        Analise da Semana
+      <h2 className="font-serif-display text-2xl text-[#3E2723] font-medium mb-4 tracking-tight">
+        Análise da Semana
       </h2>
 
       {/* Summary */}
@@ -78,7 +78,7 @@ export function WeeklyAnalysisCard({
             {recommendations.map((rec, i) => (
               <p
                 key={i}
-                className="text-[15px] italic text-[#3E2723]/90 leading-relaxed"
+                className="text-[15px] italic text-[#3E2723]/90 leading-relaxed font-serif-display"
               >
                 &ldquo;{rec.text}&rdquo;
               </p>

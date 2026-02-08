@@ -29,14 +29,14 @@ export function MealCard({ items, mealType }: MealCardProps) {
 
   const mealLabel =
     mealType === "breakfast"
-      ? "Cafe da Manha"
+      ? "Café da Manhã"
       : mealType === "lunch"
-        ? "Almoco"
+        ? "Almoço"
         : mealType === "dinner"
           ? "Jantar"
           : mealType === "snack"
             ? "Lanche"
-            : "Refeicao";
+            : "Refeição";
 
   // Dot color based on dominant macro of each item
   function getDotColor(item: MealItem) {
@@ -53,9 +53,9 @@ export function MealCard({ items, mealType }: MealCardProps) {
       <div className="relative flex justify-between items-start mb-6">
         <div>
           <span className="inline-block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5 bg-gray-50 px-2 py-0.5 rounded-md">
-            Diario Alimentar
+            Diário Alimentar
           </span>
-          <h2 className="text-[1.5rem] font-bold text-gray-900 leading-tight">
+          <h2 className="font-serif-display text-[1.5rem] text-gray-900 leading-tight">
             {mealLabel} Registrado
           </h2>
         </div>
@@ -96,9 +96,9 @@ export function MealCard({ items, mealType }: MealCardProps) {
       <div className="bg-gray-50/80 rounded-3xl p-5 border border-gray-100 relative z-10">
         <div className="flex justify-between items-center mb-3">
           <span className="text-[13px] font-bold text-gray-500 uppercase tracking-wide">
-            Total Calorico
+            Total Calórico
           </span>
-          <span className="text-[1.75rem] font-bold text-[#44563C] tabular-nums leading-none">
+          <span className="font-serif-display text-[1.75rem] text-[#44563C] tabular-nums leading-none">
             {totalCalories}
           </span>
         </div>
@@ -118,18 +118,18 @@ export function MealCard({ items, mealType }: MealCardProps) {
           />
         </div>
 
-        <div className="flex justify-between text-[11px] font-bold tracking-wider uppercase text-gray-400 px-1">
-          <div className="flex items-center gap-2">
+        <div className="flex justify-between text-[11px] font-bold tracking-wider text-gray-400 px-1">
+          <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-[#44563C]" />
-            <span>Proteina</span>
+            <span className="text-[#44563C]">p ({proteinPct}%)</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-[#E0A458]" />
-            <span>Carbs</span>
+            <span className="text-[#E0A458]">c ({carbsPct}%)</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-[#C7B299]" />
-            <span>Gordura</span>
+            <span className="text-[#C7B299]">g ({fatPct}%)</span>
           </div>
         </div>
       </div>

@@ -48,6 +48,7 @@ import {
 import { generateMessageId } from "@/lib/ai";
 import { Toast } from "@/components/feedback/Toast";
 import { useToast } from "@/hooks/useToast";
+import { EditMealSheet, type EditableFoodItem } from "@/components/chat/EditMealSheet";
 
 /**
  * Página de Chat - Core do produto
@@ -76,6 +77,12 @@ export default function ChatPage() {
   // Estado do scanner de barcode
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
   const [scannedProduct, setScannedProduct] = useState<NormalizedProduct | null>(null);
+
+  // Estado do EditMealSheet (foto → editar → salvar)
+  const [editMealData, setEditMealData] = useState<{
+    foods: EditableFoodItem[];
+    totals: { calories: number; protein: number; carbs: number; fat: number };
+  } | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -403,22 +410,7 @@ export default function ChatPage() {
           )
           .join("\n");
 
-        responseContent = `📸 **Análise da refeição:**\n\n${analysis.description}\n\n**Alimentos identificados:**\n${itemsList}\n\n**Totais estimados:**\n🔥 ${analysis.totals.calories} kcal\n🥩 ${analysis.totals.protein}g proteína\n🍚 ${analysis.totals.carbs}g carboidratos\n🧈 ${analysis.totals.fat}g gordura\n\n_Confiança: ${analysis.confidence}_\n\n✓ Registrado! Quer corrigir algo?`;
-
-        // Salva a refeição no Supabase se logado
-        if (user) {
-          const mealItems = analysis.items.map((item: { name: string; portion: string; calories: number; protein: number; carbs: number; fat: number }) => ({
-            food_name: item.name,
-            quantity_g: 100, // Estimativa padrão para fotos
-            calories: item.calories,
-            protein_g: item.protein,
-            carbs_g: item.carbs,
-            fat_g: item.fat,
-          }));
-          await logMeal("snack", mealItems, `Foto: ${analysis.description}`);
-        }
-
-        showToast("Refeição registrada!", "success");
+        responseContent = `📸 **Análise da refeição:**\n\n${analysis.description}\n\n**Alimentos identificados:**\n${itemsList}\n\n**Totais estimados:**\n🔥 ${analysis.totals.calories} kcal\n🥩 ${analysis.totals.protein}g proteína\n🍚 ${analysis.totals.carbs}g carboidratos\n🧈 ${analysis.totals.fat}g gordura\n\n_Confiança: ${analysis.confidence}_\n\nClique em **Adicionar ao Diário** para registrar.`;
       }
 
       // Adiciona resposta da AI (com parsedData para card de foto)
@@ -450,6 +442,59 @@ export default function ChatPage() {
       setIsAnalyzingImage(false);
     }
   }, [selectedImage, isAnalyzingImage, profile, showToast]);
+
+  /**
+   * Abre EditMealSheet com dados da análise de foto
+   */
+  const handleEditMeal = useCallback((data: {
+    foods: EditableFoodItem[];
+    totals: { calories: number; protein: number; carbs: number; fat: number };
+  }) => {
+    setEditMealData(data);
+  }, []);
+
+  /**
+   * Salva refeição editada (do EditMealSheet)
+   */
+  const handleSaveMeal = useCallback(async (editedFoods: EditableFoodItem[]) => {
+    const totalCalories = editedFoods.reduce((s, f) => s + f.calories, 0);
+    const totalProtein = editedFoods.reduce((s, f) => s + f.protein, 0);
+    const totalCarbs = editedFoods.reduce((s, f) => s + f.carbs, 0);
+    const totalFat = editedFoods.reduce((s, f) => s + f.fat, 0);
+
+    if (user) {
+      const mealItems = editedFoods.map((item) => ({
+        food_name: item.name,
+        quantity_g: parseFloat(item.quantity) || 100,
+        calories: item.calories,
+        protein_g: item.protein,
+        carbs_g: item.carbs,
+        fat_g: item.fat,
+      }));
+      await logMeal("snack", mealItems, "Foto: análise");
+    }
+
+    saveMeal({
+      type: "snack",
+      items: editedFoods.map((f) => ({
+        name: f.name,
+        quantity: parseFloat(f.quantity) || 100,
+        unit: "g",
+        calories: f.calories,
+        protein: f.protein,
+        carbs: f.carbs,
+        fat: f.fat,
+      })),
+      totalCalories,
+      totalProtein,
+      totalCarbs,
+      totalFat,
+      rawText: "Foto: análise",
+    });
+
+    setEditMealData(null);
+    showToast("Refeição registrada!", "success");
+  }, [user, showToast]);
 
   /**
    * Envia mensagem para a AI (chamado pelo ChatInput)
@@ -659,6 +704,8 @@ export default function ChatPage() {
 
   return (
     <ScreenContainer className="bg-gradient-to-b from-[#FFFBF4] via-[#F6EAD9] to-[#EBDCC5] text-gray-800">
+      {/* Decorative warm glow */}
+      <div className="absolute top-0 right-0 w-64 h-64 bg-yellow-200/20 rounded-full blur-3xl pointer-events-none mix-blend-multiply" />
       <div className="flex flex-1 flex-col">
         {/* Header — condicional: base (Ask ativo + X) vs conversa (Track ativo + back + dots) */}
         <header className="relative z-10 -mx-6 flex items-center justify-between px-6 pt-4 pb-4 shrink-0">
@@ -686,13 +733,16 @@ export default function ChatPage() {
             </button>
             <button
               type="button"
-              className={`px-5 py-2 rounded-full text-sm font-medium transition ${
+              className={`relative px-6 py-2 rounded-full text-sm font-medium transition ${
                 !hasMessages
                   ? "bg-[#3E2723] text-white shadow-md"
-                  : "text-gray-600 hover:text-gray-900"
+                  : "bg-white text-[#3E2723] shadow-[0_2px_8px_rgba(0,0,0,0.05)]"
               }`}
             >
               Ask
+              {hasMessages && (
+                <span className="absolute right-2.5 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-green-500" />
+              )}
             </button>
           </div>
           {hasMessages ? (
@@ -725,8 +775,8 @@ export default function ChatPage() {
                   className="bg-[#F3E7D5] p-5 rounded-3xl text-left shadow-[0_4px_20px_-2px_rgba(62,39,35,0.05)] hover:shadow-lg transition-all duration-300 active:scale-95 border border-white/40 h-60 flex flex-col justify-between group relative overflow-hidden"
                 >
                   <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <p className="text-[#4A3B32] font-bold text-[1.3rem] leading-tight z-10">
-                    Como esta meu equilibrio nutricional esta semana?
+                  <p className="text-[#4A3B32] font-serif-display text-[1.4rem] leading-tight z-10">
+                    Como está meu equilíbrio nutricional esta semana?
                   </p>
                   <div className="w-10 h-10 rounded-full bg-white/40 flex items-center justify-center self-end backdrop-blur-sm z-10">
                     <span className="material-symbols-outlined text-[#3E2723] text-base opacity-60">
@@ -739,8 +789,8 @@ export default function ChatPage() {
                   className="bg-[#F3E7D5] p-5 rounded-3xl text-left shadow-[0_4px_20px_-2px_rgba(62,39,35,0.05)] hover:shadow-lg transition-all duration-300 active:scale-95 border border-white/40 h-60 flex flex-col justify-between group relative overflow-hidden"
                 >
                   <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <p className="text-[#4A3B32] font-bold text-[1.3rem] leading-tight z-10">
-                    Sugira um treino rapido para hoje
+                  <p className="text-[#4A3B32] font-serif-display text-[1.4rem] leading-tight z-10">
+                    Sugira um treino rápido para hoje
                   </p>
                   <div className="w-10 h-10 rounded-full bg-white/40 flex items-center justify-center self-end backdrop-blur-sm z-10">
                     <span className="material-symbols-outlined text-[#3E2723] text-base opacity-60">
@@ -762,6 +812,7 @@ export default function ChatPage() {
                   content={msg.content}
                   timestamp={msg.timestamp}
                   parsedData={msg.parsedData}
+                  onEditMeal={handleEditMeal}
                 />
               ))}
 
@@ -799,7 +850,7 @@ export default function ChatPage() {
           {/* Input de texto/áudio */}
           {!selectedImage && (
             <ChatInput
-              placeholder="Ask literally anything..."
+              placeholder="Ask literally anything"
               onSend={handleSendMessage}
               onStartRecording={handleStartRecording}
               onStopRecording={handleStopRecording}
@@ -837,6 +888,14 @@ export default function ChatPage() {
           onClose={() => setScannedProduct(null)}
         />
       )}
+
+      {/* EditMealSheet — editar alimentos da foto */}
+      <EditMealSheet
+        isOpen={editMealData !== null}
+        onClose={() => setEditMealData(null)}
+        foods={editMealData?.foods || []}
+        onSave={handleSaveMeal}
+      />
 
       {/* Toast de feedback */}
       <Toast
