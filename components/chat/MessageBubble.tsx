@@ -7,6 +7,7 @@ import {
   PhotoAnalysisCard,
   SleepCard,
   WeeklyAnalysisCard,
+  GlucoseAnalysisCard,
 } from "@/components/chat/cards";
 import { getWeightLogsLastDays } from "@/lib/storage";
 
@@ -15,11 +16,17 @@ interface ParsedData {
   data: Record<string, unknown>;
 }
 
+interface EditMealData {
+  foods: Array<{ name: string; quantity: string; calories: number; protein: number; carbs: number; fat: number }>;
+  totals: { calories: number; protein: number; carbs: number; fat: number };
+}
+
 interface MessageBubbleProps {
   role: "user" | "assistant";
   content: string;
   timestamp?: string;
   parsedData?: ParsedData;
+  onEditMeal?: (data: EditMealData) => void;
 }
 
 /**
@@ -32,6 +39,7 @@ export function MessageBubble({
   role,
   content,
   parsedData,
+  onEditMeal,
 }: MessageBubbleProps) {
   const isUser = role === "user";
 
@@ -65,11 +73,11 @@ export function MessageBubble({
       {/* Content */}
       <div className="flex-1 min-w-0 flex flex-col gap-1 items-start">
         {parsedData ? (
-          <div className="bg-white p-5 rounded-[1.75rem] rounded-tl-sm shadow-[0_4px_20px_-2px_rgba(62,39,35,0.08)] border border-white/40 overflow-hidden">
-            <CardRenderer parsedData={parsedData} textContent={content} />
+          <div className="bg-white p-6 rounded-[1.75rem] rounded-tl-sm shadow-[0_4px_20px_-2px_rgba(62,39,35,0.08)] border border-white/40 overflow-hidden">
+            <CardRenderer parsedData={parsedData} textContent={content} onEditMeal={onEditMeal} />
           </div>
         ) : (
-          <div className="bg-white p-5 rounded-[1.75rem] rounded-tl-sm shadow-[0_4px_20px_-2px_rgba(62,39,35,0.08)] border border-white/40">
+          <div className="bg-white p-6 rounded-[1.75rem] rounded-tl-sm shadow-[0_4px_20px_-2px_rgba(62,39,35,0.08)] border border-white/40">
             <div className="text-[15px] leading-relaxed text-[#3E2723]/80">
               {content.split("\n").map((line, i) => (
                 <span key={i}>
@@ -81,7 +89,7 @@ export function MessageBubble({
           </div>
         )}
         <span className="text-xs font-medium text-[#3E2723]/40 pl-2">
-          Assistente
+          Fit AI
         </span>
       </div>
     </div>
@@ -111,9 +119,11 @@ function formatLine(line: string) {
 function CardRenderer({
   parsedData,
   textContent,
+  onEditMeal,
 }: {
   parsedData: ParsedData;
   textContent: string;
+  onEditMeal?: (data: EditMealData) => void;
 }) {
   const d = parsedData.data;
 
@@ -163,7 +173,10 @@ function CardRenderer({
     }
 
     case "weight": {
-      const recentWeights = getWeightLogsLastDays(7);
+      // Prefer Supabase history (from enriched parsedData), fall back to localStorage
+      const recentWeights = Array.isArray(d.recentWeights)
+        ? (d.recentWeights as Array<{ date: string; weight: number }>)
+        : getWeightLogsLastDays(7);
       return (
         <WeightCard
           weight={Number(d.weight || 0)}
@@ -174,7 +187,9 @@ function CardRenderer({
     }
 
     case "bodyfat": {
-      const recentWeights = getWeightLogsLastDays(7);
+      const recentWeights = Array.isArray(d.recentWeights)
+        ? (d.recentWeights as Array<{ date: string; weight: number }>)
+        : getWeightLogsLastDays(7);
       return (
         <WeightCard
           weight={0}
@@ -196,13 +211,38 @@ function CardRenderer({
         })
       );
       const totals = d.totals as Record<string, number> | undefined;
+      const prot = Number(totals?.protein || 0);
+      const crb = Number(totals?.carbs || 0);
+      const ft = Number(totals?.fat || 0);
+      const cal = Number(totals?.calories || 0);
+
+      const handleAddToDiary = onEditMeal
+        ? () => {
+            const fullFoods = (d.items as Array<Record<string, unknown>>)?.map(
+              (item) => ({
+                name: String(item.name || ""),
+                quantity: String(item.portion || ""),
+                calories: Number(item.calories || 0),
+                protein: Number(item.protein || 0),
+                carbs: Number(item.carbs || 0),
+                fat: Number(item.fat || 0),
+              })
+            );
+            onEditMeal({
+              foods: fullFoods || [],
+              totals: { calories: cal, protein: prot, carbs: crb, fat: ft },
+            });
+          }
+        : undefined;
+
       return (
         <PhotoAnalysisCard
           foods={foods || []}
-          totalCalories={Number(totals?.calories || 0)}
-          protein={Number(totals?.protein || 0)}
-          carbs={Number(totals?.carbs || 0)}
-          fat={Number(totals?.fat || 0)}
+          totalCalories={cal}
+          protein={prot}
+          carbs={crb}
+          fat={ft}
+          onAddToDiary={handleAddToDiary}
         />
       );
     }
@@ -223,6 +263,7 @@ function CardRenderer({
           score={d.score ? Number(d.score) : undefined}
           stages={stages}
           insight={d.insight ? String(d.insight) : undefined}
+          timestamp={d.timestamp ? String(d.timestamp) : undefined}
         />
       );
     }
@@ -246,6 +287,31 @@ function CardRenderer({
           metrics={metrics}
           recommendations={recommendations}
           summary={d.summary ? String(d.summary) : undefined}
+        />
+      );
+    }
+
+    case "glucose_analysis": {
+      const byDay = (d.byDay as Array<Record<string, unknown>>)?.map((day) => ({
+        date: String(day.date || ""),
+        avg: Number(day.avg || 0),
+        min: Number(day.min || 0),
+        max: Number(day.max || 0),
+        count: Number(day.count || 0),
+      }));
+      return (
+        <GlucoseAnalysisCard
+          timeInRange={d.timeInRange != null ? Number(d.timeInRange) : null}
+          avgGlucose={d.avgGlucose != null ? Number(d.avgGlucose) : null}
+          avgFasting={d.avgFasting != null ? Number(d.avgFasting) : null}
+          avgPostMeal={d.avgPostMeal != null ? Number(d.avgPostMeal) : null}
+          minGlucose={d.minGlucose != null ? Number(d.minGlucose) : null}
+          maxGlucose={d.maxGlucose != null ? Number(d.maxGlucose) : null}
+          readingsCount={Number(d.readingsCount || 0)}
+          byDay={byDay || []}
+          status={(d.status as "good" | "warning" | "low") || "good"}
+          summary={String(d.summary || "")}
+          recommendation={String(d.recommendation || "")}
         />
       );
     }

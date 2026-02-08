@@ -92,7 +92,7 @@ export function WeightCard({
     <>
       {/* Header: title + checkmark */}
       <div className="flex justify-between items-start mb-2">
-        <h2 className="text-[1.75rem] font-bold text-[#3E2723] leading-tight">
+        <h2 className="font-serif-display text-[1.75rem] text-[#3E2723] leading-tight">
           {title}
         </h2>
         <div className="bg-[#F2F8F2] text-[#2E7D32] rounded-full p-1.5 flex items-center justify-center">
