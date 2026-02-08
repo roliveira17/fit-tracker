@@ -89,7 +89,14 @@
       "Bash(test:*)",
       "Bash(git mv:*)",
       "Bash(git rm:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(git checkout:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr merge:*)",
+      "Bash(git pull:*)",
+      "Bash(git -C c:projetosgymrats log --oneline -30)",
+      "Bash(git fetch:*)"
     ],
     "additionalDirectories": [
       "c:\\projetos\\gymrats"

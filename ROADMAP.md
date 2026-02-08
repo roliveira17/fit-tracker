@@ -12,6 +12,7 @@
 | Backend Supabase (M1-M10) | 100% (56/56) | Todos milestones completos |
 | Frontend v1 (core) | 100% | Onboarding, Chat, Home, Insights, Profile, Import |
 | Frontend v2 (extras) | 97% (60/62) | Audio, foto, Apple Health, auth, export, notificacoes, import calma |
+| Chat Cards Retrofit (Stitch) | 100% (8/8) | Todos cards retrofitados + 2 pipelines novos |
 | Food API | 70% (12/17) | Fases 1-2 completas, Fase 3 pendente |
 | QA / Testes E2E | 100% (15/15) | Todos implementados, 35 pass + 3 skip |
 | Design System | 100% | 3 fases completas (setup, componentes, telas) |
@@ -109,24 +110,42 @@ Arquivo `components/ui/button.tsx` e compatibilidade com shadcn/ui antigo. Pode 
 
 ---
 
-## Sessao 2026-02-08 (2a) — Onde Paramos
+## Sessao 2026-02-08 (3a) — Onde Paramos
 
 ### Concluido nesta sessao:
-- ✅ Migration `20260208_001_fix_import_rpc.sql` executada no Supabase (DROP V1 + WHEN OTHERS)
-- Verificado: apenas 1 versao da RPC `import_apple_health` existe (sem ambiguidade)
+- ✅ Retrofit visual de TODOS os chat cards para design Stitch (8 cards)
+- ✅ Pipeline Weekly Analysis (classificacao + builder deterministico + card)
+- ✅ Pipeline Glucose Analysis (classificacao + builder + card com ring SVG + barras)
+- ✅ PhotoAnalysisCard: botao "Adicionar ao Diario" + EditMealSheet (bottom sheet)
+- ✅ Removido auto-save de foto — usuario agora edita antes de salvar
+- ✅ BottomSheet componente reutilizavel criado
+- ✅ Label IA: "Assistente" → "Fit AI"
+- ✅ Toggle Ask: estilo muda em modo conversa (branco + dot verde)
 
-### Sessoes anteriores (2026-02-08 / 2026-02-07):
+### Cards retrofitados (Stitch design):
+| Card | Mudancas |
+|------|----------|
+| MealCard | Serif title, macro % abreviado (p/c/g), dot por macro dominante |
+| WorkoutCard | Serif title, banner margins, chip styling, accent fix |
+| WeightCard | Serif title, dados reais Supabase no sparkline |
+| PhotoAnalysisCard | Serif title, macro %, botao sempre visivel, EditMealSheet |
+| SleepCard | Serif title/metric/insight, timestamp no badge |
+| WeeklyAnalysisCard | Serif title/quote, border color |
+| GlucoseAnalysisCard | NOVO — ring SVG, stats grid, barras diarias |
+| ChatInput | Rounded, font size, icon sizes, mic color |
+| TypingIndicator | Tokens light (era dark) |
+
+### Sessoes anteriores (2026-02-08):
+- Migration `20260208_001_fix_import_rpc.sql` executada no Supabase
 - Testes E2E T010-T015 implementados e passando (35 passed, 3 skipped)
-- QA coverage: 100% (15/15)
 - Fix: 5 bugs no pipeline Apple Health Import → Supabase
-- Migration SQL criada + 3 novos commands em `.claude/commands/`
 
 ### Proximos passos (prioridade):
-1. **TESTAR IMPORT** — Re-testar Apple Health import com login para validar os fixes end-to-end
-2. **APPLE HEALTH SLEEP** — Verificar dados de sono apos import (pendencia #2)
-3. **FREESTYLE LIBRE** — Parser especifico se houver sample do device
-4. **FOOD API FASE 3** — Otimizacoes (loading states, retry, analytics)
-5. **V2 FEATURES** — Preview pre-import + barra de progresso
+1. **TESTAR CARDS** — Validar todos os cards no app real (enviar mensagens que trigam cada tipo)
+2. **TESTAR IMPORT** — Re-testar Apple Health import com login
+3. **APPLE HEALTH SLEEP** — Verificar dados de sono apos import
+4. **RETROFIT DEMAIS TELAS** — Home, Insights, Profile (proximo lote Stitch)
+5. **FOOD API FASE 3** — Otimizacoes (loading states, retry, analytics)
 
 ---
 
@@ -171,6 +190,7 @@ Arquivo `components/ui/button.tsx` e compatibilidade com shadcn/ui antigo. Pode 
 | Exportacao | 2026-01-21 | 9/9 |
 | Refactoring Import → design "Calma" | 2026-02-04 | Completo |
 | Glucose pipeline fix + chat AI | 2026-02-04 | Completo |
+| Chat Cards Retrofit (Stitch) | 2026-02-08 | 8/8 cards + 2 pipelines |
 
 ### Design System
 
