@@ -1,7 +1,7 @@
 # Fit Track v3 — Roadmap e Progresso
 
 > Arquivo unico de acompanhamento do projeto.
-> Ultima atualizacao: 2026-02-08
+> Ultima atualizacao: 2026-02-09
 
 ---
 
@@ -14,7 +14,7 @@
 | Frontend v2 (extras) | 97% (60/62) | Audio, foto, Apple Health, auth, export, notificacoes, import calma |
 | Food API | 70% (12/17) | Fases 1-2 completas, Fase 3 pendente |
 | QA / Testes E2E | 100% (15/15) | Todos implementados, 35 pass + 3 skip |
-| Design System | 100% | 3 fases completas (setup, componentes, telas) |
+| Design System | 80% | Retrofit Stitch (light) em andamento |
 | Deploy | Ativo | https://fit-tracker-murex.vercel.app |
 
 ---
@@ -109,24 +109,34 @@ Arquivo `components/ui/button.tsx` e compatibilidade com shadcn/ui antigo. Pode 
 
 ---
 
-## Sessao 2026-02-08 (2a) — Onde Paramos
+## Sessao 2026-02-09 — Onde Paramos
 
 ### Concluido nesta sessao:
-- ✅ Migration `20260208_001_fix_import_rpc.sql` executada no Supabase (DROP V1 + WHEN OTHERS)
-- Verificado: apenas 1 versao da RPC `import_apple_health` existe (sem ambiguidade)
+- ✅ Retrofit Home page para design Stitch (light/Calma)
+- ✅ Retrofit Profile page para design Stitch
+- ✅ Retrofit Onboarding profile page
+- ✅ Header e FAB com suporte a tema light
+- ✅ Design system unificado: ScreenContainer default light (#F5F3EF)
+- ✅ BottomNav unificado (1 componente, tema light, Material Symbols, 5 tabs)
+- ✅ Removido BottomNav duplicado de Insights e Profile
+- ✅ 25 componentes Insights migrados dark → light
+- ✅ SegmentedControl migrado para tema light
+- ✅ Engines Insights criadas: score (0-100), deltas (semana-vs-semana), correlacoes (cross-domain)
+- ✅ Novos componentes SVG: ScoreRing, CalorieRing, Sparkline, FrequencyDots, MacroBar, HighlightCard
+- ✅ 6 secoes de dominio: Nutricao, Treino, Sono, Glicemia, Corpo, Correlacoes
+- ✅ 12 testes E2E atualizados para novo layout
+- ✅ Build passando, push feito, PR #2 atualizada
 
-### Sessoes anteriores (2026-02-08 / 2026-02-07):
-- Testes E2E T010-T015 implementados e passando (35 passed, 3 skipped)
-- QA coverage: 100% (15/15)
-- Fix: 5 bugs no pipeline Apple Health Import → Supabase
-- Migration SQL criada + 3 novos commands em `.claude/commands/`
+### Pendente — para proxima sessao:
+1. **INSIGHTS NAO ABRE** — Pagina de Insights nao renderiza corretamente apos retrofit. Precisa debug e fix.
+2. **CORES DO CHAT** — Chat ainda usa tema diferente (gradient cream). Alinhar com design light unificado.
+3. **BOTTOM NAV REDESIGN** — Botoes do menu estao feios. Redesenhar inspirado no app Lex (icones limpos, sem badges, estilo minimalista).
+4. **TESTAR IMPORT** — Re-testar Apple Health import com login
+5. **APPLE HEALTH SLEEP** — Verificar dados de sono apos import
 
-### Proximos passos (prioridade):
-1. **TESTAR IMPORT** — Re-testar Apple Health import com login para validar os fixes end-to-end
-2. **APPLE HEALTH SLEEP** — Verificar dados de sono apos import (pendencia #2)
-3. **FREESTYLE LIBRE** — Parser especifico se houver sample do device
-4. **FOOD API FASE 3** — Otimizacoes (loading states, retry, analytics)
-5. **V2 FEATURES** — Preview pre-import + barra de progresso
+### Sessoes anteriores:
+- 2026-02-08: Migration Apple Health, testes E2E T010-T015
+- 2026-02-07: Fix 5 bugs Apple Health Import pipeline
 
 ---
 
@@ -179,6 +189,7 @@ Arquivo `components/ui/button.tsx` e compatibilidade com shadcn/ui antigo. Pode 
 | Setup (Tailwind, fonts, dark mode) | 2026-01-19 | 4/4 |
 | Base Components (12 sets) | 2026-01-19 | 12/12 |
 | Screens (10 telas) | 2026-01-19 | 10/10 |
+| Retrofit Stitch (light unificado) | 2026-02-09 | Em andamento — Home/Profile ok, Insights/Chat pendente |
 
 ### Food API
 

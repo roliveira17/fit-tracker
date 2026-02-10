@@ -29,10 +29,18 @@ Padroes que deram certo no desenvolvimento do Fit Track v3.
 - Pagina ficou com 153 linhas (so layout e composicao)
 - Facilita teste unitario da logica separada da UI
 
+### Tema Light Unificado (Retrofit Stitch)
+- Default `bg-[#F5F3EF] text-gray-800` no ScreenContainer — todas as paginas herdam automaticamente
+- Cards brancos (`bg-white shadow-soft rounded-2xl`) sobre fundo cinza claro
+- Accent color `calma-primary` (verde #4F633A) para botoes e destaques ativos
+- Tokens `calma-*` no Tailwind para manter consistencia
+- Paginas que precisam de bg diferente (Chat, Import) sobreescrevem via `className` no ScreenContainer
+- **Migracao dark→light em lote:** usar PowerShell Get-ChildItem + -replace para trocar tokens em massa (bg-surface-card→bg-white, text-text-secondary→text-gray-500, etc)
+
 ### Tema Calma (Import Page)
 - Tema light separado (cream/green) com tokens `calma-*` no Tailwind
 - Componentes isolados em `components/import/calma/`
-- DM Serif Display para titulos hero — contraste visual com tema principal (dark/orange)
+- DM Serif Display para titulos hero
 
 ### Mobile-First 390x844
 - Viewport do iPhone 12/13 como referencia
