@@ -6,6 +6,18 @@
       "env": {
         "STITCH_PROJECT_ID": "fit-tracker-485023"
       }
+    },
+    "supabase": {
+      "command": "npx",
+      "args": ["-y", "supabase-mcp-server@latest"]
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp@latest"]
+    },
+    "vercel": {
+      "command": "npx",
+      "args": ["-y", "vercel-mcp@latest"]
     }
   }
 }

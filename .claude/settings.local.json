@@ -89,7 +89,9 @@
       "Bash(test:*)",
       "Bash(git mv:*)",
       "Bash(git rm:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(del \"c:\\\\projetos\\\\gymrats\\\\components\\\\insights\\\\InsightText.tsx\")",
+      "Bash(del \"c:\\\\projetos\\\\gymrats\\\\app\\\\auth\\\\callback\\\\route.ts\")"
     ],
     "additionalDirectories": [
       "c:\\projetos\\gymrats"
