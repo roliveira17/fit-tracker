@@ -6,9 +6,8 @@ import { usePathname } from "next/navigation";
 // ========================================
 // BOTTOM NAV - Navegação inferior
 // ========================================
-// 2 variantes:
-// 1. Simple - 4 tabs padrão
-// 2. WithFAB - 4 tabs + botão central flutuante
+// 2 variantes: simple (4 tabs) | with-fab (4 tabs + botão central)
+// 2 temas: dark (padrão) | light (para páginas Calma/Stitch)
 
 interface NavItem {
   href: string;
@@ -18,6 +17,7 @@ interface NavItem {
 
 interface BottomNavProps {
   variant?: "simple" | "with-fab";
+  theme?: "dark" | "light";
   onFabClick?: () => void;
 }
 
@@ -40,13 +40,12 @@ const navItemsRight: NavItem[] = [
   { href: "/profile", label: "Perfil", icon: "person" },
 ];
 
-export function BottomNav({ variant = "simple", onFabClick }: BottomNavProps) {
+export function BottomNav({ variant = "simple", theme = "dark", onFabClick }: BottomNavProps) {
   const pathname = usePathname();
+  const isLight = theme === "light";
 
-  // Verifica se o item está ativo
   const isActive = (href: string) => pathname === href;
 
-  // Componente de item de navegação
   const NavItemComponent = ({ item }: { item: NavItem }) => {
     const active = isActive(item.href);
 
@@ -55,8 +54,8 @@ export function BottomNav({ variant = "simple", onFabClick }: BottomNavProps) {
         href={item.href}
         className={`flex flex-col items-center gap-1 p-2 transition-colors ${
           active
-            ? "text-primary"
-            : "text-text-secondary hover:text-white"
+            ? isLight ? "text-calma-primary" : "text-primary"
+            : isLight ? "text-gray-400 hover:text-calma-primary" : "text-text-secondary hover:text-white"
         }`}
       >
         <span
@@ -65,6 +64,9 @@ export function BottomNav({ variant = "simple", onFabClick }: BottomNavProps) {
           {item.icon}
         </span>
         <span className="text-[10px] font-medium">{item.label}</span>
+        {active && isLight && (
+          <div className="w-1 h-1 bg-calma-primary rounded-full" />
+        )}
       </Link>
     );
   };
@@ -74,7 +76,11 @@ export function BottomNav({ variant = "simple", onFabClick }: BottomNavProps) {
   // ========================================
   if (variant === "simple") {
     return (
-      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/5 bg-background-dark/95 backdrop-blur max-w-md mx-auto">
+      <nav className={`fixed bottom-0 left-0 right-0 z-40 backdrop-blur max-w-md mx-auto ${
+        isLight
+          ? "bg-white/95 border-t border-gray-100 shadow-soft"
+          : "bg-background-dark/95 border-t border-white/5"
+      }`}>
         <div className="flex justify-around items-center py-3 pb-6">
           {navItems.map((item) => (
             <NavItemComponent key={item.href} item={item} />
@@ -89,9 +95,12 @@ export function BottomNav({ variant = "simple", onFabClick }: BottomNavProps) {
   // ========================================
   if (variant === "with-fab") {
     return (
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-background-dark border-t border-white/10 pb-6 pt-2 max-w-md mx-auto">
+      <nav className={`fixed bottom-0 left-0 right-0 z-40 pb-6 pt-2 max-w-md mx-auto ${
+        isLight
+          ? "bg-white border-t border-gray-100 shadow-soft"
+          : "bg-background-dark border-t border-white/10"
+      }`}>
         <div className="flex justify-around items-center">
-          {/* Itens da esquerda */}
           {navItemsLeft.map((item) => (
             <NavItemComponent key={item.href} item={item} />
           ))}
@@ -100,13 +109,16 @@ export function BottomNav({ variant = "simple", onFabClick }: BottomNavProps) {
           <div className="relative -top-5">
             <button
               onClick={onFabClick}
-              className="flex size-14 items-center justify-center rounded-full bg-primary text-white shadow-lg shadow-primary/30 active:scale-95 transition-transform"
+              className={`flex size-14 items-center justify-center rounded-full text-white shadow-xl active:scale-95 transition-transform ${
+                isLight
+                  ? "bg-calma-primary shadow-calma-primary/30"
+                  : "bg-primary shadow-primary/30"
+              }`}
             >
               <span className="material-symbols-outlined text-[28px]">add</span>
             </button>
           </div>
 
-          {/* Itens da direita */}
           {navItemsRight.map((item) => (
             <NavItemComponent key={item.href} item={item} />
           ))}

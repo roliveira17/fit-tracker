@@ -149,6 +149,8 @@ export default {
         "primary-lg": "0 20px 25px -5px rgba(235, 96, 40, 0.3)",
         // Efeito glow (brilho)
         glow: "0 0 20px rgba(235, 96, 40, 0.4)",
+        // Sombra suave para cards light
+        soft: "0 4px 20px -2px rgba(0, 0, 0, 0.05)",
       },
 
       // Border radius padrão
