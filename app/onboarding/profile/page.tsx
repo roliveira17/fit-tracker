@@ -1,13 +1,7 @@
-﻿"use client";
+"use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { ScreenContainer } from "@/components/layout/ScreenContainer";
-import { Header } from "@/components/layout/Header";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
 import {
   saveUserProfile,
   setOnboardingComplete,
@@ -16,13 +10,10 @@ import {
 import { useAuth } from "@/components/providers/SupabaseAuthProvider";
 import { createProfile } from "@/lib/supabase";
 
-/**
- * Tipos para o formulário de perfil
- */
 interface ProfileForm {
   name: string;
   gender: string;
-  birthDate: string;
+  age: string;
   height: string;
   weight: string;
 }
@@ -30,30 +21,11 @@ interface ProfileForm {
 interface FormErrors {
   name?: string;
   gender?: string;
-  birthDate?: string;
+  age?: string;
   height?: string;
   weight?: string;
 }
 
-/**
- * Calcula a idade a partir da data de nascimento
- */
-function calculateAge(birthDate: string): number {
-  const today = new Date();
-  const birth = new Date(birthDate);
-  let age = today.getFullYear() - birth.getFullYear();
-  const monthDiff = today.getMonth() - birth.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-    age--;
-  }
-  return age;
-}
-
-/**
- * Calcula o BMR usando a fórmula Mifflin-St Jeor
- * Homem:  BMR = 10 × peso(kg) + 6.25 × altura(cm) − 5 × idade + 5
- * Mulher: BMR = 10 × peso(kg) + 6.25 × altura(cm) − 5 × idade − 161
- */
 function calculateBMR(
   weight: number,
   height: number,
@@ -61,19 +33,11 @@ function calculateBMR(
   gender: string
 ): number {
   const base = 10 * weight + 6.25 * height - 5 * age;
-  if (gender === "masculino") {
-    return Math.round(base + 5);
-  } else if (gender === "feminino") {
-    return Math.round(base - 161);
-  }
-  // Para "prefiro não informar", usa média entre os dois
+  if (gender === "masculino") return Math.round(base + 5);
+  if (gender === "feminino") return Math.round(base - 161);
   return Math.round(base - 78);
 }
 
-/**
- * Tela de Perfil Básico
- * Coleta dados para cálculo de BMR e personalização
- */
 export default function ProfilePage() {
   const router = useRouter();
   const { user } = useAuth();
@@ -82,246 +46,328 @@ export default function ProfilePage() {
   const [form, setForm] = useState<ProfileForm>({
     name: "",
     gender: "",
-    birthDate: "",
+    age: "25",
     height: "",
     weight: "",
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
 
-  /**
-   * Atualiza um campo do formulário
-   */
   const updateField = (field: keyof ProfileForm, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
-    // Limpa o erro do campo quando o usuário começa a digitar
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
   };
 
-  /**
-   * Valida todos os campos do formulário
-   */
+  const liveBMR = useMemo(() => {
+    const w = parseFloat(form.weight);
+    const h = parseFloat(form.height);
+    const a = parseInt(form.age);
+    if (!w || !h || !a || !form.gender) return null;
+    if (w <= 0 || h <= 0 || a <= 0) return null;
+    return calculateBMR(w, h, a, form.gender);
+  }, [form.weight, form.height, form.age, form.gender]);
+
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
-    // Nome: obrigatório
     if (!form.name.trim()) {
       newErrors.name = "Nome é obrigatório";
     }
 
-    // Gênero: obrigatório
     if (!form.gender) {
       newErrors.gender = "Selecione uma opção";
     }
 
-    // Data de nascimento: obrigatório e idade mínima 13 anos
-    if (!form.birthDate) {
-      newErrors.birthDate = "Data de nascimento é obrigatória";
-    } else {
-      const age = calculateAge(form.birthDate);
-      if (age < 13) {
-        newErrors.birthDate = "Idade mínima é 13 anos";
-      }
+    const age = parseInt(form.age);
+    if (!form.age) {
+      newErrors.age = "Idade é obrigatória";
+    } else if (isNaN(age) || age < 13 || age > 100) {
+      newErrors.age = "Idade deve ser entre 13 e 100 anos";
     }
 
-    // Altura: obrigatório e > 120 cm
     const height = parseFloat(form.height);
     if (!form.height) {
-      newErrors.height = "Altura é obrigatória";
+      newErrors.height = "Obrigatório";
     } else if (isNaN(height) || height <= 120) {
-      newErrors.height = "Altura deve ser maior que 120 cm";
+      newErrors.height = "Mínimo 120 cm";
     }
 
-    // Peso: obrigatório e > 35 kg
     const weight = parseFloat(form.weight);
     if (!form.weight) {
-      newErrors.weight = "Peso é obrigatório";
+      newErrors.weight = "Obrigatório";
     } else if (isNaN(weight) || weight <= 35) {
-      newErrors.weight = "Peso deve ser maior que 35 kg";
+      newErrors.weight = "Mínimo 35 kg";
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  /**
-   * Submete o formulário
-   */
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
     setIsSubmitting(true);
 
-    // Calcula BMR
-    const age = calculateAge(form.birthDate);
+    const age = parseInt(form.age);
     const weight = parseFloat(form.weight);
     const height = parseFloat(form.height);
     const bmr = calculateBMR(weight, height, age, form.gender);
 
-    // Cria o perfil do usuário
+    const currentYear = new Date().getFullYear();
+    const birthDate = `${currentYear - age}-01-01`;
+
     const userProfile: UserProfile = {
       name: form.name.trim(),
       gender: form.gender as "masculino" | "feminino" | "outro",
-      birthDate: form.birthDate,
+      birthDate,
       height,
       weight,
       bmr,
       createdAt: new Date().toISOString(),
     };
 
-    // Salva no localStorage (sempre, para fallback offline)
     saveUserProfile(userProfile);
     setOnboardingComplete(true);
 
-    // Se usuário está logado, salva também no Supabase
     if (user) {
       try {
         await createProfile({
           name: form.name.trim(),
           gender: form.gender as "masculino" | "feminino",
-          birth_date: form.birthDate,
+          birth_date: birthDate,
           height_cm: height,
           weight_kg: weight,
-          tdee_multiplier: 1.2, // Sedentário como padrão inicial
+          tdee_multiplier: 1.2,
         });
-        console.log("Perfil salvo no Supabase");
       } catch (error) {
         console.error("Erro ao salvar perfil no Supabase:", error);
-        // Continua mesmo se falhar no Supabase (localStorage já está salvo)
       }
     }
 
-    console.log("Perfil salvo:", userProfile);
-
-    // Navega para o Chat
     router.push("/chat");
   };
 
+  const incrementAge = () => {
+    const current = parseInt(form.age) || 25;
+    if (current < 100) updateField("age", String(current + 1));
+  };
+
+  const decrementAge = () => {
+    const current = parseInt(form.age) || 25;
+    if (current > 13) updateField("age", String(current - 1));
+  };
+
   return (
-    <ScreenContainer className="bg-background-dark text-white">
-      <Header
-        title="Perfil Básico"
-        showBackButton
-        onBack={() => router.back()}
-      />
+    <div className="min-h-screen bg-[#F9F9F6] flex flex-col relative">
+      {/* Back button */}
+      <div className="px-6 pt-6">
+        <button
+          onClick={() => router.back()}
+          className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-[#2D3028] hover:bg-gray-50 transition-colors"
+        >
+          <span className="material-symbols-outlined">arrow_back</span>
+        </button>
+      </div>
 
-      <div className="flex flex-1 flex-col gap-6 py-4">
-        {/* Campo: Nome */}
-        <div className="flex flex-col gap-2">
-          <Label
-            htmlFor="name"
-            className="text-xs font-medium uppercase tracking-wider text-text-secondary"
-          >
-            Nome
-          </Label>
-          <Input
-            id="name"
-            placeholder="Digite seu nome"
-            value={form.name}
-            onChange={(e) => updateField("name", e.target.value)}
-            error={!!errors.name}
-            className="w-full rounded-lg border-border-subtle bg-surface-input px-4 py-3.5 text-white placeholder:text-text-muted focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-0 transition-all"
-          />
-          {errors.name && (
-            <span className="text-xs font-medium text-error">{errors.name}</span>
-          )}
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto px-6 pt-2 pb-36">
+        {/* Title */}
+        <div className="mt-4 mb-8 text-center">
+          <h1 className="font-serif-display text-3xl text-[#2D3028] mb-2 tracking-tight">
+            Configuração de Perfil
+          </h1>
+          <p className="text-sm text-[#787B73]">
+            Vamos personalizar sua jornada.
+          </p>
         </div>
 
-        {/* Campo: Gênero */}
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="gender" className="text-xs font-medium uppercase tracking-wider text-text-secondary">Gênero</Label>
-          <Select
-            id="gender"
-            value={form.gender}
-            onChange={(e) => updateField("gender", e.target.value)}
-            error={!!errors.gender}
-            className="w-full rounded-lg border-border-subtle bg-surface-input px-4 py-3.5 text-white focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-0 transition-all"
-          >
-            <option value="">Selecione</option>
-            <option value="masculino">Masculino</option>
-            <option value="feminino">Feminino</option>
-            <option value="outro">Prefiro não informar</option>
-          </Select>
-          {errors.gender && (
-            <span className="text-xs font-medium text-error">
-              {errors.gender}
+        {/* BMR Card */}
+        <div className="bg-[#D2F072]/30 border border-[#D2F072]/50 rounded-2xl p-6 mb-8 text-center relative overflow-hidden">
+          <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#D2F072] rounded-full blur-3xl opacity-40" />
+          <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-[#4B6338] rounded-full blur-3xl opacity-10" />
+          <div className="relative z-10">
+            <span className="block text-xs uppercase tracking-widest font-bold text-[#4B6338] mb-2 opacity-80">
+              Metabolismo Basal Estimado
             </span>
-          )}
-        </div>
-
-        {/* Campo: Data de nascimento */}
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="birthDate" className="text-xs font-medium uppercase tracking-wider text-text-secondary">Data de nascimento</Label>
-          <Input
-            id="birthDate"
-            type="date"
-            value={form.birthDate}
-            onChange={(e) => updateField("birthDate", e.target.value)}
-            error={!!errors.birthDate}
-            className="w-full rounded-lg border-border-subtle bg-surface-input px-4 py-3.5 text-white focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-0 transition-all"
-          />
-          {errors.birthDate && (
-            <span className="text-xs font-medium text-error">
-              {errors.birthDate}
-            </span>
-          )}
-        </div>
-
-        {/* Campos: Altura e Peso (lado a lado) */}
-        <div className="grid grid-cols-2 gap-4">
-          {/* Altura */}
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="height" className="text-xs font-medium uppercase tracking-wider text-text-secondary">Altura (cm)</Label>
-            <Input
-              id="height"
-              type="number"
-              placeholder="175"
-              value={form.height}
-              onChange={(e) => updateField("height", e.target.value)}
-              error={!!errors.height}
-              className="w-full rounded-lg border-border-subtle bg-surface-input px-4 py-3.5 text-white placeholder:text-text-muted focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-0 transition-all"
-            />
-            {errors.height && (
-              <span className="text-xs font-medium text-error">
-                {errors.height}
+            <div className="flex items-baseline justify-center gap-1 text-[#4B6338]">
+              <span className="font-serif-display text-5xl font-bold">
+                {liveBMR ? liveBMR.toLocaleString("pt-BR") : "—"}
               </span>
-            )}
-          </div>
-
-          {/* Peso */}
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="weight" className="text-xs font-medium uppercase tracking-wider text-text-secondary">Peso (kg)</Label>
-            <Input
-              id="weight"
-              type="number"
-              placeholder="80"
-              value={form.weight}
-              onChange={(e) => updateField("weight", e.target.value)}
-              error={!!errors.weight}
-              className="w-full rounded-lg border-border-subtle bg-surface-input px-4 py-3.5 text-white placeholder:text-text-muted focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-0 transition-all"
-            />
-            {errors.weight && (
-              <span className="text-xs font-medium text-error">
-                {errors.weight}
-              </span>
+              <span className="text-lg font-medium opacity-80">kcal</span>
+            </div>
+            {liveBMR && (
+              <div className="mt-3 inline-flex items-center gap-1 px-3 py-1 bg-white/60 rounded-full">
+                <span className="material-symbols-outlined text-[#4B6338] text-sm">
+                  local_fire_department
+                </span>
+                <span className="text-xs font-semibold text-[#4B6338]">
+                  Manutenção Diária
+                </span>
+              </div>
             )}
           </div>
         </div>
 
-        {/* Espaçador flexível */}
-        <div className="flex-1" />
+        {/* Form */}
+        <div className="space-y-5">
+          {/* Nome */}
+          <div>
+            <label className="block text-xs font-semibold text-[#787B73] uppercase tracking-wider mb-2 ml-1">
+              Nome
+            </label>
+            <div className={`bg-white rounded-xl shadow-sm p-1 flex items-center border ${errors.name ? "border-red-300" : "border-transparent"} focus-within:border-[#4B6338]/30 transition-all`}>
+              <div className="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center ml-1 text-[#787B73]">
+                <span className="material-symbols-outlined text-xl">person</span>
+              </div>
+              <input
+                type="text"
+                placeholder="Seu nome"
+                value={form.name}
+                onChange={(e) => updateField("name", e.target.value)}
+                className="w-full bg-transparent border-none focus:ring-0 focus:outline-none text-[#2D3028] placeholder-gray-400 font-medium h-12 px-3"
+              />
+            </div>
+            {errors.name && (
+              <span className="text-xs font-medium text-red-500 mt-1 ml-1">{errors.name}</span>
+            )}
+          </div>
 
-        {/* Botão de submit */}
-        <Button
-          className="w-full h-14 rounded-2xl bg-primary text-lg font-semibold text-white shadow-lg shadow-primary/30 transition-all duration-200 hover:bg-primary/90 active:scale-[0.98]"
+          {/* Sexo Biológico */}
+          <div>
+            <label className="block text-xs font-semibold text-[#787B73] uppercase tracking-wider mb-2 ml-1">
+              Sexo Biológico
+            </label>
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                type="button"
+                onClick={() => updateField("gender", "feminino")}
+                className={`rounded-xl shadow-sm p-4 flex flex-col items-center justify-center gap-2 transition-all duration-200 border ${
+                  form.gender === "feminino"
+                    ? "bg-[#4B6338] text-white border-[#4B6338] shadow-lg"
+                    : "bg-white text-[#2D3028] border-transparent hover:border-gray-200"
+                }`}
+              >
+                <span className="material-symbols-outlined text-2xl">female</span>
+                <span className="font-medium text-sm">Feminino</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => updateField("gender", "masculino")}
+                className={`rounded-xl shadow-sm p-4 flex flex-col items-center justify-center gap-2 transition-all duration-200 border ${
+                  form.gender === "masculino"
+                    ? "bg-[#4B6338] text-white border-[#4B6338] shadow-lg"
+                    : "bg-white text-[#2D3028] border-transparent hover:border-gray-200"
+                }`}
+              >
+                <span className="material-symbols-outlined text-2xl">male</span>
+                <span className="font-medium text-sm">Masculino</span>
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={() => updateField("gender", "outro")}
+              className={`mt-2 ml-1 text-xs transition-colors ${
+                form.gender === "outro"
+                  ? "text-[#4B6338] font-bold underline"
+                  : "text-[#787B73] hover:text-[#4B6338]"
+              }`}
+            >
+              Prefiro não informar
+            </button>
+            {errors.gender && (
+              <span className="block text-xs font-medium text-red-500 mt-1 ml-1">{errors.gender}</span>
+            )}
+          </div>
+
+          {/* Peso e Altura */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-[#787B73] uppercase tracking-wider mb-2 ml-1">
+                Peso
+              </label>
+              <div className={`bg-white rounded-xl shadow-sm p-1 flex items-center border ${errors.weight ? "border-red-300" : "border-transparent"} focus-within:border-[#4B6338]/30 transition-all relative`}>
+                <input
+                  type="number"
+                  placeholder="0"
+                  value={form.weight}
+                  onChange={(e) => updateField("weight", e.target.value)}
+                  className="w-full bg-transparent border-none focus:ring-0 focus:outline-none text-[#2D3028] font-bold text-xl h-14 pl-4 pr-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+                <span className="absolute right-4 text-sm font-medium text-[#787B73]">kg</span>
+              </div>
+              {errors.weight && (
+                <span className="text-xs font-medium text-red-500 mt-1 ml-1">{errors.weight}</span>
+              )}
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-[#787B73] uppercase tracking-wider mb-2 ml-1">
+                Altura
+              </label>
+              <div className={`bg-white rounded-xl shadow-sm p-1 flex items-center border ${errors.height ? "border-red-300" : "border-transparent"} focus-within:border-[#4B6338]/30 transition-all relative`}>
+                <input
+                  type="number"
+                  placeholder="0"
+                  value={form.height}
+                  onChange={(e) => updateField("height", e.target.value)}
+                  className="w-full bg-transparent border-none focus:ring-0 focus:outline-none text-[#2D3028] font-bold text-xl h-14 pl-4 pr-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+                <span className="absolute right-4 text-sm font-medium text-[#787B73]">cm</span>
+              </div>
+              {errors.height && (
+                <span className="text-xs font-medium text-red-500 mt-1 ml-1">{errors.height}</span>
+              )}
+            </div>
+          </div>
+
+          {/* Idade */}
+          <div>
+            <label className="block text-xs font-semibold text-[#787B73] uppercase tracking-wider mb-2 ml-1">
+              Idade
+            </label>
+            <div className={`bg-white rounded-xl shadow-sm px-4 py-3 flex items-center justify-between border ${errors.age ? "border-red-300" : "border-transparent"}`}>
+              <button
+                type="button"
+                onClick={decrementAge}
+                className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-[#4B6338] transition-colors"
+              >
+                <span className="material-symbols-outlined text-lg">remove</span>
+              </button>
+              <div className="text-center">
+                <span className="text-xl font-bold text-[#2D3028]">{form.age || "25"}</span>
+                <span className="text-xs text-[#787B73] ml-1">anos</span>
+              </div>
+              <button
+                type="button"
+                onClick={incrementAge}
+                className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-[#4B6338] transition-colors"
+              >
+                <span className="material-symbols-outlined text-lg">add</span>
+              </button>
+            </div>
+            {errors.age && (
+              <span className="text-xs font-medium text-red-500 mt-1 ml-1">{errors.age}</span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Fixed bottom CTA */}
+      <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-[#F9F9F6] via-[#F9F9F6] to-transparent pt-12 pb-8 px-6 z-30">
+        <button
           onClick={handleSubmit}
           disabled={isSubmitting}
+          className="w-full bg-[#4B6338] hover:bg-[#4B6338]/90 disabled:opacity-50 text-white font-medium text-lg py-4 rounded-2xl shadow-xl shadow-[#4B6338]/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2 group"
         >
-          {isSubmitting ? "Salvando..." : "Continuar"}
-        </Button>
+          <span>{isSubmitting ? "Salvando..." : "Começar Jornada"}</span>
+          {!isSubmitting && (
+            <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">
+              arrow_forward
+            </span>
+          )}
+        </button>
       </div>
-    </ScreenContainer>
+    </div>
   );
 }
