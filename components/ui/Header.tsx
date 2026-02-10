@@ -18,6 +18,7 @@ interface HeaderProps {
   onPrevious?: () => void;
   onNext?: () => void;
   action?: React.ReactNode;
+  theme?: "dark" | "light";
 }
 
 export function Header({
@@ -28,8 +29,10 @@ export function Header({
   onPrevious,
   onNext,
   action,
+  theme = "dark",
 }: HeaderProps) {
   const router = useRouter();
+  const isLight = theme === "light";
 
   // Função padrão para voltar
   const handleBack = () => {
@@ -52,7 +55,9 @@ export function Header({
   }) => (
     <button
       onClick={onClick}
-      className={`flex size-10 items-center justify-center rounded-full hover:bg-white/10 transition-colors ${className}`}
+      className={`flex size-10 items-center justify-center rounded-full transition-colors ${
+        isLight ? "hover:bg-gray-200/50" : "hover:bg-white/10"
+      } ${className}`}
     >
       {children}
     </button>
@@ -63,26 +68,32 @@ export function Header({
   // ========================================
   if (variant === "date-nav") {
     return (
-      <header className="sticky top-0 z-20 flex items-center justify-between p-4 bg-background-dark/80 backdrop-blur-md">
+      <header className={`sticky top-0 z-20 flex items-center justify-between p-4 backdrop-blur-md ${
+        isLight ? "bg-[#F5F3EF]/80" : "bg-background-dark/80"
+      }`}>
         <IconButton onClick={onPrevious}>
-          <span className="material-symbols-outlined text-white">
+          <span className={`material-symbols-outlined ${isLight ? "text-gray-600" : "text-white"}`}>
             chevron_left
           </span>
         </IconButton>
 
         <div className="flex flex-col items-center">
-          <h2 className="text-lg font-bold leading-tight tracking-tight text-white">
+          <h2 className={`text-lg font-bold leading-tight tracking-tight ${
+            isLight ? "text-gray-800" : "text-white"
+          }`}>
             {title || "Hoje"}
           </h2>
           {subtitle && (
-            <span className="text-xs font-medium text-text-secondary">
+            <span className={`text-xs font-medium ${
+              isLight ? "text-gray-500" : "text-text-secondary"
+            }`}>
               {subtitle}
             </span>
           )}
         </div>
 
         <IconButton onClick={onNext}>
-          <span className="material-symbols-outlined text-white">
+          <span className={`material-symbols-outlined ${isLight ? "text-gray-600" : "text-white"}`}>
             chevron_right
           </span>
         </IconButton>
