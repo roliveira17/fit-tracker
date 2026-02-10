@@ -33,16 +33,16 @@ export function SonoSection({ domain, sleep, recommendation }: SonoSectionProps)
 
         <div className="flex-1 space-y-2">
           <div className="flex justify-between">
-            <span className="text-xs text-text-secondary">Media/noite</span>
-            <span className="text-sm font-medium text-white">{avgFormatted}</span>
+            <span className="text-xs text-gray-500">Media/noite</span>
+            <span className="text-sm font-medium text-gray-800">{avgFormatted}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-xs text-text-secondary">Noites</span>
-            <span className="text-sm font-medium text-text-secondary">{sleep.total_nights}</span>
+            <span className="text-xs text-gray-500">Noites</span>
+            <span className="text-sm font-medium text-gray-500">{sleep.total_nights}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-xs text-text-secondary">Consistencia</span>
-            <span className="text-sm font-medium text-text-secondary">
+            <span className="text-xs text-gray-500">Consistencia</span>
+            <span className="text-sm font-medium text-gray-500">
               {sleep.consistency !== null ? `${Math.round(sleep.consistency)}%` : "—"}
             </span>
           </div>
@@ -52,7 +52,7 @@ export function SonoSection({ domain, sleep, recommendation }: SonoSectionProps)
       {/* Duration trend */}
       {durationData.length >= 3 && (
         <div>
-          <h4 className="text-xs text-text-secondary mb-1">Duracao por noite</h4>
+          <h4 className="text-xs text-gray-500 mb-1">Duracao por noite</h4>
           <Sparkline data={durationData} color="#a78bfa" height={36} />
         </div>
       )}
@@ -60,7 +60,7 @@ export function SonoSection({ domain, sleep, recommendation }: SonoSectionProps)
       {/* Sleep stages */}
       {(deep || rem || light) && (
         <div>
-          <h4 className="text-xs text-text-secondary mb-2">Estagios (media)</h4>
+          <h4 className="text-xs text-gray-500 mb-2">Estagios (media)</h4>
           <div className="flex gap-3">
             {deep && <StagePill label="Profundo" pct={deep.avg_pct} color="#6366f1" />}
             {rem && <StagePill label="REM" pct={rem.avg_pct} color="#c084fc" />}
@@ -74,11 +74,11 @@ export function SonoSection({ domain, sleep, recommendation }: SonoSectionProps)
         <div className="flex gap-3">
           <div className="flex-1 rounded-lg bg-green-500/5 border border-green-500/20 p-2.5">
             <p className="text-[10px] text-green-400">Melhor noite</p>
-            <p className="text-sm font-medium text-white">{formatDuration(sleep.best_night.total_min)}</p>
+            <p className="text-sm font-medium text-gray-800">{formatDuration(sleep.best_night.total_min)}</p>
           </div>
           <div className="flex-1 rounded-lg bg-red-500/5 border border-red-500/20 p-2.5">
             <p className="text-[10px] text-red-400">Pior noite</p>
-            <p className="text-sm font-medium text-white">{formatDuration(sleep.worst_night.total_min)}</p>
+            <p className="text-sm font-medium text-gray-800">{formatDuration(sleep.worst_night.total_min)}</p>
           </div>
         </div>
       )}
@@ -122,8 +122,8 @@ function DurationRing({ avgHours }: { avgHours: number }) {
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-lg font-bold text-white">{avgHours.toFixed(1)}</span>
-        <span className="text-[10px] text-text-secondary">h/noite</span>
+        <span className="text-lg font-bold text-gray-800">{avgHours.toFixed(1)}</span>
+        <span className="text-[10px] text-gray-500">h/noite</span>
       </div>
     </div>
   );
@@ -131,10 +131,10 @@ function DurationRing({ avgHours }: { avgHours: number }) {
 
 function StagePill({ label, pct, color }: { label: string; pct: number; color: string }) {
   return (
-    <div className="flex items-center gap-1.5 rounded-lg bg-surface-elevated px-2.5 py-1.5">
+    <div className="flex items-center gap-1.5 rounded-lg bg-gray-100 px-2.5 py-1.5">
       <div className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
-      <span className="text-xs text-text-secondary">{label}</span>
-      <span className="text-xs font-medium text-white">{Math.round(pct)}%</span>
+      <span className="text-xs text-gray-500">{label}</span>
+      <span className="text-xs font-medium text-gray-800">{Math.round(pct)}%</span>
     </div>
   );
 }
@@ -144,12 +144,12 @@ function InsightBanner({ recommendation }: { recommendation: Recommendation }) {
     positive: "border-green-500/30 bg-green-500/5",
     warning: "border-yellow-500/30 bg-yellow-500/5",
     info: "border-blue-500/30 bg-blue-500/5",
-    neutral: "border-border-subtle bg-surface-elevated/50",
+    neutral: "border-gray-100 bg-gray-100",
   };
   return (
     <div className={`rounded-lg border p-3 ${colors[recommendation.type]}`}>
-      <p className="text-xs text-text-secondary">{recommendation.observation}</p>
-      <p className="text-xs font-medium text-white mt-1">{recommendation.action}</p>
+      <p className="text-xs text-gray-500">{recommendation.observation}</p>
+      <p className="text-xs font-medium text-gray-800 mt-1">{recommendation.action}</p>
     </div>
   );
 }

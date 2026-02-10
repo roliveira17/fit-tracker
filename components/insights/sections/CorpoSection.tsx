@@ -32,11 +32,11 @@ export function CorpoSection({ domain, weightData, bodyFatData, recommendation }
     <DomainSection domain={domain}>
       {/* Current stats */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-lg bg-surface-elevated p-3">
-          <p className="text-xs text-text-secondary">Peso atual</p>
-          <p className="text-2xl font-bold text-white">
+        <div className="rounded-lg bg-gray-100 p-3">
+          <p className="text-xs text-gray-500">Peso atual</p>
+          <p className="text-2xl font-bold text-gray-800">
             {currentWeight !== null ? `${currentWeight.toFixed(1)}` : "—"}
-            <span className="text-sm font-normal text-text-secondary ml-1">kg</span>
+            <span className="text-sm font-normal text-gray-500 ml-1">kg</span>
           </p>
           {weightDiff !== null && (
             <p className={`text-xs mt-1 ${weightDiff <= 0 ? "text-green-400" : "text-yellow-400"}`}>
@@ -46,19 +46,19 @@ export function CorpoSection({ domain, weightData, bodyFatData, recommendation }
         </div>
 
         {currentBF !== null ? (
-          <div className="rounded-lg bg-surface-elevated p-3">
-            <p className="text-xs text-text-secondary">Gordura corporal</p>
-            <p className="text-2xl font-bold text-white">
+          <div className="rounded-lg bg-gray-100 p-3">
+            <p className="text-xs text-gray-500">Gordura corporal</p>
+            <p className="text-2xl font-bold text-gray-800">
               {currentBF.toFixed(1)}
-              <span className="text-sm font-normal text-text-secondary ml-1">%</span>
+              <span className="text-sm font-normal text-gray-500 ml-1">%</span>
             </p>
           </div>
         ) : (
-          <div className="rounded-lg bg-surface-elevated p-3">
-            <p className="text-xs text-text-secondary">Ritmo</p>
-            <p className="text-lg font-bold text-white">
+          <div className="rounded-lg bg-gray-100 p-3">
+            <p className="text-xs text-gray-500">Ritmo</p>
+            <p className="text-lg font-bold text-gray-800">
               {weeklyRate !== null ? `${weeklyRate > 0 ? "+" : ""}${weeklyRate.toFixed(2)}` : "—"}
-              <span className="text-xs font-normal text-text-secondary ml-1">kg/sem</span>
+              <span className="text-xs font-normal text-gray-500 ml-1">kg/sem</span>
             </p>
           </div>
         )}
@@ -67,7 +67,7 @@ export function CorpoSection({ domain, weightData, bodyFatData, recommendation }
       {/* Weight sparkline */}
       {validWeights.length >= 3 && (
         <div>
-          <h4 className="text-xs text-text-secondary mb-1">Evolucao do peso</h4>
+          <h4 className="text-xs text-gray-500 mb-1">Evolucao do peso</h4>
           <Sparkline data={weightSparkline} color="#eab308" height={40} />
         </div>
       )}
@@ -75,7 +75,7 @@ export function CorpoSection({ domain, weightData, bodyFatData, recommendation }
       {/* BF sparkline */}
       {validBF.length >= 3 && (
         <div>
-          <h4 className="text-xs text-text-secondary mb-1">Evolucao gordura corporal</h4>
+          <h4 className="text-xs text-gray-500 mb-1">Evolucao gordura corporal</h4>
           <Sparkline data={bfSparkline} color="#f97316" height={36} />
         </div>
       )}
@@ -91,12 +91,12 @@ function InsightBanner({ recommendation }: { recommendation: Recommendation }) {
     positive: "border-green-500/30 bg-green-500/5",
     warning: "border-yellow-500/30 bg-yellow-500/5",
     info: "border-blue-500/30 bg-blue-500/5",
-    neutral: "border-border-subtle bg-surface-elevated/50",
+    neutral: "border-gray-100 bg-gray-100",
   };
   return (
     <div className={`rounded-lg border p-3 ${colors[recommendation.type]}`}>
-      <p className="text-xs text-text-secondary">{recommendation.observation}</p>
-      <p className="text-xs font-medium text-white mt-1">{recommendation.action}</p>
+      <p className="text-xs text-gray-500">{recommendation.observation}</p>
+      <p className="text-xs font-medium text-gray-800 mt-1">{recommendation.action}</p>
     </div>
   );
 }

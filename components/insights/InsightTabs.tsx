@@ -45,10 +45,10 @@ export function InsightTabs({ tabs, activeTab, onChange }: InsightTabsProps) {
             disabled={isDisabled}
             className={`flex-shrink-0 flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-medium transition-colors ${
               isActive
-                ? "bg-primary text-white"
+                ? "bg-calma-primary text-white"
                 : isDisabled
-                  ? "bg-surface-dark/30 text-text-secondary/40"
-                  : "bg-surface-card border border-border-subtle text-text-secondary"
+                  ? "bg-gray-200 text-gray-500/40"
+                  : "bg-white border border-gray-100 text-gray-500"
             }`}
           >
             <span className="material-symbols-outlined text-[16px]">

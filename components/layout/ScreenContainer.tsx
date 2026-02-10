@@ -16,7 +16,7 @@ interface ScreenContainerProps {
  * Garante:
  * - Altura mínima de tela cheia
  * - Padding consistente nas laterais
- * - Fundo com cor do tema (dark-first)
+ * - Fundo light unificado (#F5F3EF)
  * - Conteúdo centralizado com largura máxima
  * - Navegação inferior (exceto onboarding)
  */
@@ -29,7 +29,7 @@ export function ScreenContainer({ children, className, hideNav }: ScreenContaine
   return (
     <div
       className={cn(
-        "min-h-screen w-full bg-background text-foreground",
+        "min-h-screen w-full bg-[#F5F3EF] text-gray-800",
         "flex flex-col",
         className
       )}

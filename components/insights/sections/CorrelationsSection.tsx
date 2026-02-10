@@ -15,7 +15,7 @@ export function CorrelationsSection({ correlations }: CorrelationsSectionProps) 
         <span className="material-symbols-rounded text-lg text-primary">
           insights
         </span>
-        <h3 className="text-sm font-medium text-white">Correlacoes Inteligentes</h3>
+        <h3 className="text-sm font-medium text-gray-800">Correlacoes Inteligentes</h3>
       </div>
 
       <div className="space-y-2">
@@ -56,11 +56,11 @@ function CorrelationCard({ correlation }: { correlation: Correlation }) {
         </span>
         <div className="flex-1">
           <div className="flex items-center gap-1.5 mb-1">
-            <span className="text-[10px] uppercase tracking-wider text-text-secondary">
+            <span className="text-[10px] uppercase tracking-wider text-gray-500">
               {correlation.domains.join(" × ")}
             </span>
           </div>
-          <p className="text-sm text-white leading-relaxed">
+          <p className="text-sm text-gray-800 leading-relaxed">
             {correlation.text}
           </p>
         </div>

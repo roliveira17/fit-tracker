@@ -45,10 +45,10 @@ export function MacroBar({ protein, carbs, fat }: MacroBarProps) {
               className="w-2 h-2 rounded-full"
               style={{ backgroundColor: seg.color }}
             />
-            <span className="text-xs text-text-secondary">
+            <span className="text-xs text-gray-500">
               {seg.label} {seg.value}g
             </span>
-            <span className="text-xs text-text-secondary opacity-60">
+            <span className="text-xs text-gray-500 opacity-60">
               {Math.round(seg.pct)}%
             </span>
           </div>

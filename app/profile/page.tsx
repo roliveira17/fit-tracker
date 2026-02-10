@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
-import { BottomNav } from "@/components/ui/BottomNav";
+
 import {
   getUserProfile,
   saveUserProfile,
@@ -600,8 +600,6 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* Bottom Navigation */}
-      <BottomNav variant="with-fab" theme="light" onFabClick={() => router.push("/chat")} />
 
       <Toast
         message={toast.message}

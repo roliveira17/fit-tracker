@@ -33,10 +33,10 @@ export function CorpoTab({ weightData, bodyFatData }: CorpoTabProps) {
 
       {!hasWeight && !hasBodyFat && (
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <span className="material-symbols-outlined text-[32px] text-text-secondary mb-2">
+          <span className="material-symbols-outlined text-[32px] text-gray-500 mb-2">
             scale
           </span>
-          <p className="text-sm text-text-secondary">
+          <p className="text-sm text-gray-500">
             Registre seu peso no Chat para ver a evolução aqui.
           </p>
         </div>

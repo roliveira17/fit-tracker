@@ -23,9 +23,9 @@ const typeStyles = {
     iconColor: "text-blue-500",
   },
   neutral: {
-    border: "border-border-subtle",
-    bg: "bg-surface-dark/50",
-    iconColor: "text-text-secondary",
+    border: "border-gray-100",
+    bg: "bg-gray-200",
+    iconColor: "text-gray-500",
   },
 };
 
@@ -41,9 +41,9 @@ export function RecommendationCard({ rec }: RecommendationCardProps) {
           {rec.icon}
         </span>
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-white">{rec.title}</p>
-          <p className="text-xs text-text-secondary mt-0.5">{rec.observation}</p>
-          <p className="text-xs text-white/80 mt-2 font-medium leading-relaxed">
+          <p className="text-sm font-semibold text-gray-800">{rec.title}</p>
+          <p className="text-xs text-gray-500 mt-0.5">{rec.observation}</p>
+          <p className="text-xs text-gray-700 mt-2 font-medium leading-relaxed">
             {rec.action}
           </p>
         </div>

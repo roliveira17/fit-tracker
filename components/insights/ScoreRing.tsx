@@ -84,7 +84,7 @@ export function ScoreRing({ total, grade, domains }: ScoreRingProps) {
           >
             {total}
           </span>
-          <span className="text-xs text-text-secondary mt-0.5">de 100</span>
+          <span className="text-xs text-gray-500 mt-0.5">de 100</span>
         </div>
       </div>
 
@@ -93,7 +93,7 @@ export function ScoreRing({ total, grade, domains }: ScoreRingProps) {
         {activeDomains.map((d) => (
           <div
             key={d.domain}
-            className="flex items-center gap-1.5 rounded-full px-2.5 py-1 bg-surface-card border border-border-subtle"
+            className="flex items-center gap-1.5 rounded-full px-2.5 py-1 bg-white border border-gray-100"
           >
             <span
               className="material-symbols-rounded text-sm"
@@ -101,8 +101,8 @@ export function ScoreRing({ total, grade, domains }: ScoreRingProps) {
             >
               {d.icon}
             </span>
-            <span className="text-xs text-text-secondary">{d.label}</span>
-            <span className="text-xs font-semibold text-white">
+            <span className="text-xs text-gray-500">{d.label}</span>
+            <span className="text-xs font-semibold text-gray-800">
               {d.score}/{d.maxScore}
             </span>
           </div>
@@ -110,13 +110,13 @@ export function ScoreRing({ total, grade, domains }: ScoreRingProps) {
         {inactiveDomains.map((d) => (
           <div
             key={d.domain}
-            className="flex items-center gap-1.5 rounded-full px-2.5 py-1 bg-surface-card border border-border-subtle opacity-40"
+            className="flex items-center gap-1.5 rounded-full px-2.5 py-1 bg-white border border-gray-100 opacity-40"
           >
-            <span className="material-symbols-rounded text-sm text-text-secondary">
+            <span className="material-symbols-rounded text-sm text-gray-500">
               {d.icon}
             </span>
-            <span className="text-xs text-text-secondary">{d.label}</span>
-            <span className="text-xs text-text-secondary">—</span>
+            <span className="text-xs text-gray-500">{d.label}</span>
+            <span className="text-xs text-gray-500">—</span>
           </div>
         ))}
       </div>

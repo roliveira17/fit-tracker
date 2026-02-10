@@ -85,7 +85,7 @@ export function ResumoTab({
       {/* Mais recomendações se houver */}
       {recommendations.length > 3 && (
         <div className="flex flex-col gap-2">
-          <p className="text-xs text-text-secondary font-medium uppercase tracking-wider mt-2">
+          <p className="text-xs text-gray-500 font-medium uppercase tracking-wider mt-2">
             Mais observações
           </p>
           {recommendations.slice(3, 6).map((rec, i) => (

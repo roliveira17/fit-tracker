@@ -29,28 +29,28 @@ export function GlicemiaSection({ domain, glucose, recommendation }: GlicemiaSec
 
         <div className="flex-1 space-y-2">
           <div className="flex justify-between">
-            <span className="text-xs text-text-secondary">Media geral</span>
-            <span className="text-sm font-medium text-white">{avgGlucose} mg/dL</span>
+            <span className="text-xs text-gray-500">Media geral</span>
+            <span className="text-sm font-medium text-gray-800">{avgGlucose} mg/dL</span>
           </div>
           {glucose.avg_fasting !== null && (
             <div className="flex justify-between">
-              <span className="text-xs text-text-secondary">Jejum</span>
-              <span className="text-sm font-medium text-text-secondary">
+              <span className="text-xs text-gray-500">Jejum</span>
+              <span className="text-sm font-medium text-gray-500">
                 {Math.round(glucose.avg_fasting)} mg/dL
               </span>
             </div>
           )}
           {glucose.avg_post_meal !== null && (
             <div className="flex justify-between">
-              <span className="text-xs text-text-secondary">Pos-refeicao</span>
-              <span className="text-sm font-medium text-text-secondary">
+              <span className="text-xs text-gray-500">Pos-refeicao</span>
+              <span className="text-sm font-medium text-gray-500">
                 {Math.round(glucose.avg_post_meal)} mg/dL
               </span>
             </div>
           )}
           <div className="flex justify-between">
-            <span className="text-xs text-text-secondary">Dias medidos</span>
-            <span className="text-sm font-medium text-text-secondary">{glucose.by_day.length}</span>
+            <span className="text-xs text-gray-500">Dias medidos</span>
+            <span className="text-sm font-medium text-gray-500">{glucose.by_day.length}</span>
           </div>
         </div>
       </div>
@@ -58,7 +58,7 @@ export function GlicemiaSection({ domain, glucose, recommendation }: GlicemiaSec
       {/* Glucose trend */}
       {glucoseData.length >= 3 && (
         <div>
-          <h4 className="text-xs text-text-secondary mb-1">Tendencia diaria</h4>
+          <h4 className="text-xs text-gray-500 mb-1">Tendencia diaria</h4>
           <Sparkline data={glucoseData} color="#22c55e" height={36} />
         </div>
       )}
@@ -68,13 +68,13 @@ export function GlicemiaSection({ domain, glucose, recommendation }: GlicemiaSec
         <div className="flex gap-3">
           <div className="flex-1 rounded-lg bg-green-500/5 border border-green-500/20 p-2.5">
             <p className="text-[10px] text-green-400">Minimo</p>
-            <p className="text-sm font-medium text-white">
+            <p className="text-sm font-medium text-gray-800">
               {Math.round(Math.min(...glucose.by_day.map((d) => d.min)))} mg/dL
             </p>
           </div>
           <div className="flex-1 rounded-lg bg-red-500/5 border border-red-500/20 p-2.5">
             <p className="text-[10px] text-red-400">Maximo</p>
-            <p className="text-sm font-medium text-white">
+            <p className="text-sm font-medium text-gray-800">
               {Math.round(Math.max(...glucose.by_day.map((d) => d.max)))} mg/dL
             </p>
           </div>
@@ -118,8 +118,8 @@ function TIRRing({ tirPct }: { tirPct: number }) {
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-lg font-bold text-white">{Math.round(tirPct)}%</span>
-        <span className="text-[10px] text-text-secondary">no alvo</span>
+        <span className="text-lg font-bold text-gray-800">{Math.round(tirPct)}%</span>
+        <span className="text-[10px] text-gray-500">no alvo</span>
       </div>
     </div>
   );
@@ -130,12 +130,12 @@ function InsightBanner({ recommendation }: { recommendation: Recommendation }) {
     positive: "border-green-500/30 bg-green-500/5",
     warning: "border-yellow-500/30 bg-yellow-500/5",
     info: "border-blue-500/30 bg-blue-500/5",
-    neutral: "border-border-subtle bg-surface-elevated/50",
+    neutral: "border-gray-100 bg-gray-100",
   };
   return (
     <div className={`rounded-lg border p-3 ${colors[recommendation.type]}`}>
-      <p className="text-xs text-text-secondary">{recommendation.observation}</p>
-      <p className="text-xs font-medium text-white mt-1">{recommendation.action}</p>
+      <p className="text-xs text-gray-500">{recommendation.observation}</p>
+      <p className="text-xs font-medium text-gray-800 mt-1">{recommendation.action}</p>
     </div>
   );
 }

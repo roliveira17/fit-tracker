@@ -59,11 +59,11 @@ export function CalorieRing({ consumed, target, label = "Calorias" }: CalorieRin
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-lg font-bold text-white">{displayText}</span>
-          <span className="text-[10px] text-text-secondary">{subText}</span>
+          <span className="text-lg font-bold text-gray-800">{displayText}</span>
+          <span className="text-[10px] text-gray-500">{subText}</span>
         </div>
       </div>
-      <span className="text-xs text-text-secondary mt-1">{label}</span>
+      <span className="text-xs text-gray-500 mt-1">{label}</span>
     </div>
   );
 }

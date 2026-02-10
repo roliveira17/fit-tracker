@@ -29,7 +29,7 @@ export function StatCard({
 }: StatCardProps) {
   // Cores do valor principal
   const colorClasses = {
-    default: "text-white",
+    default: "text-gray-800",
     green: "text-green-500",
     red: "text-red-500",
     orange: "text-primary",
@@ -40,7 +40,7 @@ export function StatCard({
   const trendColorClasses = {
     up: "text-red-500",
     down: "text-green-500",
-    stable: "text-text-secondary",
+    stable: "text-gray-500",
   };
 
   // Ícone de tendência (Material Symbols)
@@ -52,15 +52,15 @@ export function StatCard({
         : "remove";
 
   return (
-    <div className="rounded-xl border border-border-subtle bg-surface-card p-4">
+    <div className="rounded-xl border border-gray-100 bg-white p-4">
       {/* Header com ícone e label */}
       <div className="flex items-center gap-2 mb-2">
         {icon && (
-          <span className="material-symbols-outlined text-[18px] text-text-secondary">
+          <span className="material-symbols-outlined text-[18px] text-gray-500">
             {icon}
           </span>
         )}
-        <h3 className="text-sm font-medium text-text-secondary">{label}</h3>
+        <h3 className="text-sm font-medium text-gray-500">{label}</h3>
       </div>
 
       {/* Valor principal */}
@@ -68,7 +68,7 @@ export function StatCard({
         <span className={`text-3xl font-bold ${colorClasses[color]}`}>
           {typeof value === "number" ? value.toFixed(1) : value}
         </span>
-        <span className="text-sm text-text-secondary">{unit}</span>
+        <span className="text-sm text-gray-500">{unit}</span>
       </div>
 
       {/* Indicador de tendência */}
@@ -87,7 +87,7 @@ export function StatCard({
 
       {/* Subtítulo alternativo */}
       {subtitle && !trend && (
-        <p className="text-xs text-text-secondary mt-2">{subtitle}</p>
+        <p className="text-xs text-gray-500 mt-2">{subtitle}</p>
       )}
     </div>
   );

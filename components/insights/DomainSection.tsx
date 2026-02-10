@@ -14,7 +14,7 @@ export function DomainSection({ domain, children, defaultExpanded = true }: Doma
 
   if (!domain.hasData) {
     return (
-      <div className="rounded-xl border border-border-subtle bg-surface-card p-4 opacity-60">
+      <div className="rounded-xl border border-gray-100 bg-white p-4 opacity-60">
         <div className="flex items-center gap-3">
           <span
             className="material-symbols-rounded text-xl"
@@ -22,10 +22,10 @@ export function DomainSection({ domain, children, defaultExpanded = true }: Doma
           >
             {domain.icon}
           </span>
-          <span className="text-sm font-medium text-white">{domain.label}</span>
-          <span className="text-xs text-text-secondary ml-auto">Sem dados</span>
+          <span className="text-sm font-medium text-gray-800">{domain.label}</span>
+          <span className="text-xs text-gray-500 ml-auto">Sem dados</span>
         </div>
-        <p className="text-xs text-text-secondary mt-2">
+        <p className="text-xs text-gray-500 mt-2">
           Importe dados do Apple Health ou registre pelo Chat.
         </p>
       </div>
@@ -35,7 +35,7 @@ export function DomainSection({ domain, children, defaultExpanded = true }: Doma
   const scorePct = domain.maxScore > 0 ? Math.round((domain.score / domain.maxScore) * 100) : 0;
 
   return (
-    <div className="rounded-xl border border-border-subtle bg-surface-card overflow-hidden">
+    <div className="rounded-xl border border-gray-100 bg-white overflow-hidden">
       {/* Header — always visible, toggles expand */}
       <button
         onClick={() => setExpanded(!expanded)}
@@ -47,13 +47,13 @@ export function DomainSection({ domain, children, defaultExpanded = true }: Doma
         >
           {domain.icon}
         </span>
-        <span className="text-sm font-medium text-white flex-1">{domain.label}</span>
+        <span className="text-sm font-medium text-gray-800 flex-1">{domain.label}</span>
 
         {/* Score badge */}
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1">
-            <span className="text-sm font-bold text-white">{domain.score}</span>
-            <span className="text-xs text-text-secondary">/{domain.maxScore}</span>
+            <span className="text-sm font-bold text-gray-800">{domain.score}</span>
+            <span className="text-xs text-gray-500">/{domain.maxScore}</span>
           </div>
           {/* Mini progress bar */}
           <div className="w-12 h-1.5 rounded-full bg-border-subtle/30 overflow-hidden">
@@ -65,7 +65,7 @@ export function DomainSection({ domain, children, defaultExpanded = true }: Doma
               }}
             />
           </div>
-          <span className={`material-symbols-rounded text-lg text-text-secondary transition-transform duration-200 ${expanded ? "rotate-180" : ""}`}>
+          <span className={`material-symbols-rounded text-lg text-gray-500 transition-transform duration-200 ${expanded ? "rotate-180" : ""}`}>
             expand_more
           </span>
         </div>
@@ -73,7 +73,7 @@ export function DomainSection({ domain, children, defaultExpanded = true }: Doma
 
       {/* Content — collapsible */}
       {expanded && (
-        <div className="px-4 pb-4 space-y-4 border-t border-border-subtle/50 pt-3">
+        <div className="px-4 pb-4 space-y-4 border-t border-gray-100/50 pt-3">
           {children}
         </div>
       )}

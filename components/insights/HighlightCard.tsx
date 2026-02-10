@@ -20,10 +20,10 @@ const SENTIMENT_STYLES = {
     icon: "text-red-400",
   },
   neutral: {
-    border: "border-border-subtle",
-    bg: "bg-surface-card",
-    badge: "bg-white/10 text-text-secondary",
-    icon: "text-text-secondary",
+    border: "border-gray-100",
+    bg: "bg-white",
+    badge: "bg-gray-200 text-gray-500",
+    icon: "text-gray-500",
   },
 };
 
@@ -42,7 +42,7 @@ export function HighlightCard({ highlight }: HighlightCardProps) {
         </span>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-white truncate">
+            <span className="text-sm font-medium text-gray-800 truncate">
               {highlight.metric}
             </span>
             <span className={`text-xs font-medium rounded-full px-2 py-0.5 ${style.badge}`}>
@@ -52,7 +52,7 @@ export function HighlightCard({ highlight }: HighlightCardProps) {
               {" "}{Math.abs(highlight.deltaPct)}%
             </span>
           </div>
-          <p className="text-xs text-text-secondary mt-0.5 line-clamp-2">
+          <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">
             {highlight.text}
           </p>
         </div>
@@ -66,7 +66,7 @@ export function HighlightCardList({ highlights }: { highlights: DeltaHighlight[]
 
   return (
     <div className="space-y-2">
-      <h3 className="text-sm font-medium text-text-secondary px-1">
+      <h3 className="text-sm font-medium text-gray-500 px-1">
         Destaques da Semana
       </h3>
       <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">

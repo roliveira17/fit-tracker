@@ -34,8 +34,8 @@ export function TreinoTab({ workout }: TreinoTabProps) {
               onClick={() => setSelectedExercise(ex.exercise_name)}
               className={`flex-shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
                 selectedExercise === ex.exercise_name
-                  ? "bg-primary text-white"
-                  : "bg-surface-card border border-border-subtle text-text-secondary"
+                  ? "bg-calma-primary text-white"
+                  : "bg-white border border-gray-100 text-gray-500"
               }`}
             >
               {ex.exercise_name}

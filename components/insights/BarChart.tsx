@@ -36,11 +36,11 @@ export function BarChart({
   // Se não há dados
   if (data.length === 0) {
     return (
-      <div className="rounded-xl border border-border-subtle bg-surface-card p-4">
-        <h3 className="text-sm font-medium text-text-secondary mb-4">
+      <div className="rounded-xl border border-gray-100 bg-white p-4">
+        <h3 className="text-sm font-medium text-gray-500 mb-4">
           {label}
         </h3>
-        <p className="text-sm text-text-secondary text-center py-8">
+        <p className="text-sm text-gray-500 text-center py-8">
           Sem dados para exibir
         </p>
       </div>
@@ -83,14 +83,14 @@ export function BarChart({
   };
 
   return (
-    <div className="rounded-xl border border-border-subtle bg-surface-card p-4">
+    <div className="rounded-xl border border-gray-100 bg-white p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm font-medium text-text-secondary">{label}</h3>
+        <h3 className="text-sm font-medium text-gray-500">{label}</h3>
 
         {/* Meta info */}
         {target && (
-          <span className="text-xs text-text-secondary">
+          <span className="text-xs text-gray-500">
             {daysOnTarget}/{data.length} dias{" "}
             {invertColors ? "dentro" : "atingiram"} meta
           </span>
@@ -100,15 +100,15 @@ export function BarChart({
       {/* Estatísticas */}
       <div className="flex items-baseline gap-4 mb-4">
         <div>
-          <span className="text-2xl font-bold text-white">
+          <span className="text-2xl font-bold text-gray-800">
             {Math.round(avgValue)}
           </span>
-          <span className="text-sm text-text-secondary ml-1">
+          <span className="text-sm text-gray-500 ml-1">
             {unit}/dia
           </span>
         </div>
         {target && (
-          <div className="text-sm text-text-secondary">
+          <div className="text-sm text-gray-500">
             Meta: {target}
             {unit}
           </div>
@@ -128,7 +128,7 @@ export function BarChart({
               stroke="currentColor"
               strokeWidth={1}
               strokeDasharray="4 2"
-              className="text-text-secondary"
+              className="text-gray-500"
             />
           )}
 
@@ -156,7 +156,7 @@ export function BarChart({
       {/* Labels dos dias */}
       <div className="flex justify-between mt-2">
         {data.map((d, i) => (
-          <span key={i} className="text-xs text-text-secondary">
+          <span key={i} className="text-xs text-gray-500">
             {formatShortDate(d.date)}
           </span>
         ))}

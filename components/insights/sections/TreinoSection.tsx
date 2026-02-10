@@ -49,7 +49,7 @@ export function TreinoSection({
     <DomainSection domain={domain}>
       {/* Frequency dots */}
       <div>
-        <h4 className="text-xs text-text-secondary mb-2">Ultimos 7 dias</h4>
+        <h4 className="text-xs text-gray-500 mb-2">Ultimos 7 dias</h4>
         <FrequencyDots days={last7.dots} labels={last7.labels} />
       </div>
 
@@ -67,7 +67,7 @@ export function TreinoSection({
       {/* Volume trend */}
       {volumeData.length >= 3 && (
         <div>
-          <h4 className="text-xs text-text-secondary mb-1">Volume por sessao</h4>
+          <h4 className="text-xs text-gray-500 mb-1">Volume por sessao</h4>
           <Sparkline data={volumeData} color="#60a5fa" height={36} />
         </div>
       )}
@@ -75,7 +75,7 @@ export function TreinoSection({
       {/* PRs */}
       {prs.length > 0 && (
         <div>
-          <h4 className="text-xs text-text-secondary mb-2">Records no periodo</h4>
+          <h4 className="text-xs text-gray-500 mb-2">Records no periodo</h4>
           <div className="flex flex-wrap gap-2">
             {prs.slice(0, 3).map((pr) => (
               <div
@@ -85,7 +85,7 @@ export function TreinoSection({
                 <span className="material-symbols-rounded text-sm text-blue-400">
                   emoji_events
                 </span>
-                <span className="text-xs text-white">{pr.name}</span>
+                <span className="text-xs text-gray-800">{pr.name}</span>
                 <span className="text-xs text-blue-400 font-medium">
                   {pr.from} → {pr.to}kg
                 </span>
@@ -104,10 +104,10 @@ export function TreinoSection({
 function StatMini({ label, value, sub }: { label: string; value: string; sub: string }) {
   return (
     <div className="text-center">
-      <p className="text-xs text-text-secondary">{label}</p>
-      <p className="text-lg font-bold text-white">
+      <p className="text-xs text-gray-500">{label}</p>
+      <p className="text-lg font-bold text-gray-800">
         {value}
-        <span className="text-xs font-normal text-text-secondary ml-0.5">{sub}</span>
+        <span className="text-xs font-normal text-gray-500 ml-0.5">{sub}</span>
       </p>
     </div>
   );
@@ -118,12 +118,12 @@ function InsightBanner({ recommendation }: { recommendation: Recommendation }) {
     positive: "border-green-500/30 bg-green-500/5",
     warning: "border-yellow-500/30 bg-yellow-500/5",
     info: "border-blue-500/30 bg-blue-500/5",
-    neutral: "border-border-subtle bg-surface-elevated/50",
+    neutral: "border-gray-100 bg-gray-100",
   };
   return (
     <div className={`rounded-lg border p-3 ${colors[recommendation.type]}`}>
-      <p className="text-xs text-text-secondary">{recommendation.observation}</p>
-      <p className="text-xs font-medium text-white mt-1">{recommendation.action}</p>
+      <p className="text-xs text-gray-500">{recommendation.observation}</p>
+      <p className="text-xs font-medium text-gray-800 mt-1">{recommendation.action}</p>
     </div>
   );
 }

@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { FAB } from "@/components/ui/FAB";
-import { BottomNav } from "@/components/ui/BottomNav";
 import { DateNavigator } from "@/components/home/DateNavigator";
 import { SummaryCard } from "@/components/home/SummaryCard";
 import { EmptyState } from "@/components/home/EmptyState";
@@ -284,7 +283,6 @@ export default function HomePage() {
         </div>
       </div>
       <FAB theme="light" onClick={() => router.push("/chat")} />
-      <BottomNav theme="light" />
     </ScreenContainer>
   );
 }

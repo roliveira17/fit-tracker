@@ -155,18 +155,18 @@ export function DietaTab({
 
       {/* Top alimentos */}
       {topFoods.length > 0 && (
-        <div className="rounded-xl border border-border-subtle bg-surface-card p-4">
-          <h3 className="text-sm font-medium text-text-secondary mb-3">Top Alimentos</h3>
+        <div className="rounded-xl border border-gray-100 bg-white p-4">
+          <h3 className="text-sm font-medium text-gray-500 mb-3">Top Alimentos</h3>
           <div className="flex flex-col gap-2">
             {topFoods.map((food, i) => (
               <div key={food.food_name} className="flex items-center justify-between">
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="text-xs font-bold text-primary w-5 shrink-0">#{i + 1}</span>
-                  <span className="text-sm text-white truncate">{food.food_name}</span>
+                  <span className="text-sm text-gray-800 truncate">{food.food_name}</span>
                 </div>
                 <div className="flex items-center gap-3 shrink-0 ml-2">
-                  <span className="text-xs text-text-secondary">{food.times_eaten}x</span>
-                  <span className="text-xs text-white/60">{food.avg_calories} kcal</span>
+                  <span className="text-xs text-gray-500">{food.times_eaten}x</span>
+                  <span className="text-xs text-gray-500">{food.avg_calories} kcal</span>
                 </div>
               </div>
             ))}

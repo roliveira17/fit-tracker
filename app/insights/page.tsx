@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
-import { BottomNav } from "@/components/ui/BottomNav";
+
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { ScoreRing } from "@/components/insights/ScoreRing";
 import { HighlightCardList } from "@/components/insights/HighlightCard";
@@ -285,7 +285,7 @@ export default function InsightsPage() {
     return (
       <ScreenContainer>
         <div className="flex flex-1 items-center justify-center">
-          <p className="text-text-secondary">Carregando...</p>
+          <p className="text-gray-500">Carregando...</p>
         </div>
       </ScreenContainer>
     );
@@ -296,7 +296,7 @@ export default function InsightsPage() {
       <div className="flex flex-1 flex-col px-4 pb-24">
         {/* Header */}
         <header className="pt-6 pb-2">
-          <h1 className="font-serif-display text-3xl text-primary">
+          <h1 className="font-serif-display text-3xl text-calma-primary">
             Insights
           </h1>
         </header>
@@ -312,21 +312,21 @@ export default function InsightsPage() {
 
         {!hasAnyData ? (
           <div className="flex flex-1 flex-col items-center justify-center text-center px-4">
-            <div className="rounded-full bg-surface-dark p-4 mb-4">
-              <span className="material-symbols-outlined text-[32px] text-text-secondary">
+            <div className="rounded-full bg-gray-200 p-4 mb-4">
+              <span className="material-symbols-outlined text-[32px] text-gray-500">
                 insights
               </span>
             </div>
-            <h2 className="text-lg font-semibold text-white mb-2">
+            <h2 className="text-lg font-semibold text-gray-800 mb-2">
               Sem dados ainda
             </h2>
-            <p className="text-sm text-text-secondary mb-4">
+            <p className="text-sm text-gray-500 mb-4">
               Registre refeicoes, peso ou treinos no Chat para ver seus
               insights aqui.
             </p>
             <button
               onClick={() => router.push("/chat")}
-              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white shadow-lg shadow-primary/30 active:scale-95 transition-transform"
+              className="rounded-lg bg-calma-primary px-4 py-2 text-sm font-medium text-white shadow-lg shadow-calma-primary/30 active:scale-95 transition-transform"
             >
               Ir para o Chat
             </button>
@@ -334,8 +334,8 @@ export default function InsightsPage() {
         ) : (
           <div className="flex flex-col gap-5 pt-2">
             {/* Score Card Hero */}
-            <div className="rounded-xl border border-border-subtle bg-surface-card p-5">
-              <h2 className="text-sm font-medium text-text-secondary text-center mb-4">
+            <div className="rounded-2xl bg-white p-5 shadow-soft">
+              <h2 className="text-sm font-medium text-gray-500 text-center mb-4">
                 Seu Score
               </h2>
               <ScoreRing
@@ -351,7 +351,7 @@ export default function InsightsPage() {
             )}
 
             {deltas.length === 0 && score.activeDomains > 0 && (
-              <p className="text-xs text-text-secondary text-center py-2">
+              <p className="text-xs text-gray-500 text-center py-2">
                 Na proxima semana, voce vera comparacoes aqui.
               </p>
             )}
@@ -402,7 +402,6 @@ export default function InsightsPage() {
         )}
       </div>
 
-      <BottomNav variant="with-fab" onFabClick={() => router.push("/chat")} />
     </ScreenContainer>
   );
 }

@@ -17,7 +17,7 @@ export function FrequencyDots({ days, labels = DEFAULT_LABELS }: FrequencyDotsPr
             className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
               active
                 ? "bg-blue-500/20 border-2 border-blue-500"
-                : "border-2 border-border-subtle"
+                : "border-2 border-gray-100"
             }`}
           >
             {active && (
@@ -26,7 +26,7 @@ export function FrequencyDots({ days, labels = DEFAULT_LABELS }: FrequencyDotsPr
               </span>
             )}
           </div>
-          <span className="text-[10px] text-text-secondary">
+          <span className="text-[10px] text-gray-500">
             {labels[i]}
           </span>
         </div>

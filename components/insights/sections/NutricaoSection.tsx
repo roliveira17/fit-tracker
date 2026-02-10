@@ -37,35 +37,35 @@ export function NutricaoSection({
 
         <div className="flex-1 space-y-2">
           <div className="flex justify-between">
-            <span className="text-xs text-text-secondary">Consumo medio</span>
-            <span className="text-sm font-medium text-white">{Math.round(avgCalories)} kcal</span>
+            <span className="text-xs text-gray-500">Consumo medio</span>
+            <span className="text-sm font-medium text-gray-800">{Math.round(avgCalories)} kcal</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-xs text-text-secondary">Meta (TDEE)</span>
-            <span className="text-sm font-medium text-text-secondary">{Math.round(tdee)} kcal</span>
+            <span className="text-xs text-gray-500">Meta (TDEE)</span>
+            <span className="text-sm font-medium text-gray-500">{Math.round(tdee)} kcal</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-xs text-text-secondary">Dias rastreados</span>
-            <span className="text-sm font-medium text-text-secondary">{daysTracked}</span>
+            <span className="text-xs text-gray-500">Dias rastreados</span>
+            <span className="text-sm font-medium text-gray-500">{daysTracked}</span>
           </div>
         </div>
       </div>
 
       {/* Macro split */}
       <div>
-        <h4 className="text-xs text-text-secondary mb-2">Macros (media diaria)</h4>
+        <h4 className="text-xs text-gray-500 mb-2">Macros (media diaria)</h4>
         <MacroBar protein={avgProtein} carbs={avgCarbs} fat={avgFat} />
       </div>
 
       {/* Top foods */}
       {topFoods.length > 0 && (
         <div>
-          <h4 className="text-xs text-text-secondary mb-2">Alimentos mais frequentes</h4>
+          <h4 className="text-xs text-gray-500 mb-2">Alimentos mais frequentes</h4>
           <div className="flex flex-wrap gap-1.5">
             {topFoods.slice(0, 5).map((food) => (
               <span
                 key={food.food_name}
-                className="text-xs rounded-full bg-surface-elevated px-2.5 py-1 text-text-secondary"
+                className="text-xs rounded-full bg-gray-100 px-2.5 py-1 text-gray-500"
               >
                 {food.food_name} ({food.times_eaten}x)
               </span>
@@ -87,13 +87,13 @@ function InsightBanner({ recommendation }: { recommendation: Recommendation }) {
     positive: "border-green-500/30 bg-green-500/5",
     warning: "border-yellow-500/30 bg-yellow-500/5",
     info: "border-blue-500/30 bg-blue-500/5",
-    neutral: "border-border-subtle bg-surface-elevated/50",
+    neutral: "border-gray-100 bg-gray-100",
   };
 
   return (
     <div className={`rounded-lg border p-3 ${colors[recommendation.type]}`}>
-      <p className="text-xs text-text-secondary">{recommendation.observation}</p>
-      <p className="text-xs font-medium text-white mt-1">{recommendation.action}</p>
+      <p className="text-xs text-gray-500">{recommendation.observation}</p>
+      <p className="text-xs font-medium text-gray-800 mt-1">{recommendation.action}</p>
     </div>
   );
 }

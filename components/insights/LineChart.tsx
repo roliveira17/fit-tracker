@@ -40,11 +40,11 @@ export function LineChart({
   // Se não há dados suficientes
   if (validPoints.length === 0) {
     return (
-      <div className="rounded-xl border border-border-subtle bg-surface-card p-4">
-        <h3 className="text-sm font-medium text-text-secondary mb-4">
+      <div className="rounded-xl border border-gray-100 bg-white p-4">
+        <h3 className="text-sm font-medium text-gray-500 mb-4">
           {label}
         </h3>
-        <p className="text-sm text-text-secondary text-center py-8">
+        <p className="text-sm text-gray-500 text-center py-8">
           Sem dados para exibir
         </p>
       </div>
@@ -111,13 +111,13 @@ export function LineChart({
       ? "text-green-500"
       : variation > 0
         ? "text-red-500"
-        : "text-text-secondary";
+        : "text-gray-500";
 
   return (
-    <div className="rounded-xl border border-border-subtle bg-surface-card p-4">
+    <div className="rounded-xl border border-gray-100 bg-white p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm font-medium text-text-secondary">{label}</h3>
+        <h3 className="text-sm font-medium text-gray-500">{label}</h3>
 
         {/* Variação */}
         {showTrend && validPoints.length >= 2 && (
@@ -138,10 +138,10 @@ export function LineChart({
 
       {/* Valor atual */}
       <div className="flex items-baseline gap-1 mb-4">
-        <span className="text-2xl font-bold text-white">
+        <span className="text-2xl font-bold text-gray-800">
           {lastValue.toFixed(1)}
         </span>
-        <span className="text-sm text-text-secondary">{unit}</span>
+        <span className="text-sm text-gray-500">{unit}</span>
       </div>
 
       {/* Gráfico SVG */}
@@ -222,8 +222,8 @@ export function LineChart({
             key={i}
             className={`text-xs ${
               d.value !== null
-                ? "text-text-secondary"
-                : "text-text-secondary/30"
+                ? "text-gray-500"
+                : "text-gray-500/30"
             }`}
           >
             {formatShortDate(d.date)}

@@ -25,8 +25,8 @@ export function GlicemiaTab({ glucose }: GlicemiaTabProps) {
 
       {/* Time in Range gauge */}
       {glucose.time_in_range !== null && (
-        <div className="rounded-xl border border-border-subtle bg-surface-card p-4">
-          <h3 className="text-sm font-medium text-text-secondary mb-3">Time in Range</h3>
+        <div className="rounded-xl border border-gray-100 bg-white p-4">
+          <h3 className="text-sm font-medium text-gray-500 mb-3">Time in Range</h3>
           <div className="flex items-center gap-4">
             <div className="relative w-24 h-14">
               <svg viewBox="0 0 100 60" className="w-full h-full">
@@ -55,20 +55,20 @@ export function GlicemiaTab({ glucose }: GlicemiaTabProps) {
                 />
               </svg>
               <div className="absolute inset-0 flex items-end justify-center pb-0">
-                <span className="text-lg font-bold text-white">
+                <span className="text-lg font-bold text-gray-800">
                   {Math.round(glucose.time_in_range)}%
                 </span>
               </div>
             </div>
             <div>
-              <p className="text-sm text-white font-medium">
+              <p className="text-sm text-gray-800 font-medium">
                 {glucose.time_in_range >= 70
                   ? "Excelente controle"
                   : glucose.time_in_range >= 50
                     ? "Controle moderado"
                     : "Atenção necessária"}
               </p>
-              <p className="text-xs text-text-secondary">Faixa alvo: 70-140 mg/dL</p>
+              <p className="text-xs text-gray-500">Faixa alvo: 70-140 mg/dL</p>
             </div>
           </div>
         </div>
