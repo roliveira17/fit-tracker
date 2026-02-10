@@ -16,6 +16,7 @@ interface DonutChartProps {
   label: string;
   centerText?: string;
   centerSubtext?: string;
+  unit?: string;
 }
 
 export function DonutChart({
@@ -23,6 +24,7 @@ export function DonutChart({
   label,
   centerText,
   centerSubtext,
+  unit = "g",
 }: DonutChartProps) {
   const total = segments.reduce((sum, s) => sum + s.value, 0);
 
@@ -124,7 +126,7 @@ export function DonutChart({
               </div>
               <div className="flex items-baseline gap-1 flex-shrink-0">
                 <span className="text-sm font-medium text-white">
-                  {Math.round(arc.value)}g
+                  {Math.round(arc.value)}{unit}
                 </span>
                 <span className="text-xs text-text-secondary">
                   {Math.round(arc.pct * 100)}%
