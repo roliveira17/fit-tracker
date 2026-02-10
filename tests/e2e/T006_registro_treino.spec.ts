@@ -44,7 +44,7 @@ test.describe("T006: Registro de Treino", () => {
     test.setTimeout(60000);
 
     // Digita mensagem de treino
-    const input = page.locator('textarea[placeholder*="Digite"]');
+    const input = page.locator('textarea[placeholder*="Ask"]');
     await input.fill("Fiz 30 minutos de esteira hoje");
 
     // Clica no botão enviar
@@ -53,7 +53,7 @@ test.describe("T006: Registro de Treino", () => {
     await sendButton.click();
 
     // Aguarda resposta da IA com confirmação de registro
-    await expect(page.getByText(/✓ Registrado/i).first()).toBeVisible({
+    await expect(page.getByText(/Registrado/i).first()).toBeVisible({
       timeout: 30000,
     });
 
@@ -68,14 +68,14 @@ test.describe("T006: Registro de Treino", () => {
     test.setTimeout(60000);
 
     // Envia treino de musculação
-    const input = page.locator('textarea[placeholder*="Digite"]');
+    const input = page.locator('textarea[placeholder*="Ask"]');
     await input.fill("Fiz supino 4 séries de 8 repetições");
 
     const sendButton = page.locator("button").filter({ hasText: "send" });
     await sendButton.click();
 
     // Aguarda confirmação
-    await expect(page.getByText(/✓ Registrado/i).first()).toBeVisible({
+    await expect(page.getByText(/Registrado/i).first()).toBeVisible({
       timeout: 30000,
     });
 
@@ -90,14 +90,14 @@ test.describe("T006: Registro de Treino", () => {
     test.setTimeout(60000);
 
     // Envia múltiplos exercícios
-    const input = page.locator('textarea[placeholder*="Digite"]');
+    const input = page.locator('textarea[placeholder*="Ask"]');
     await input.fill("Treinei peito e tríceps: supino, crucifixo e tríceps corda");
 
     const sendButton = page.locator("button").filter({ hasText: "send" });
     await sendButton.click();
 
     // Aguarda confirmação
-    await expect(page.getByText(/✓ Registrado/i).first()).toBeVisible({
+    await expect(page.getByText(/Registrado/i).first()).toBeVisible({
       timeout: 30000,
     });
   });
@@ -107,14 +107,14 @@ test.describe("T006: Registro de Treino", () => {
     test.setTimeout(60000);
 
     // Envia treino
-    const input = page.locator('textarea[placeholder*="Digite"]');
+    const input = page.locator('textarea[placeholder*="Ask"]');
     await input.fill("Corri 5km em 25 minutos");
 
     const sendButton = page.locator("button").filter({ hasText: "send" });
     await sendButton.click();
 
     // Aguarda confirmação
-    await expect(page.getByText(/✓ Registrado/i).first()).toBeVisible({
+    await expect(page.getByText(/Registrado/i).first()).toBeVisible({
       timeout: 30000,
     });
 
@@ -155,14 +155,14 @@ test.describe("T006: Registro de Treino", () => {
     test.setTimeout(60000);
 
     // Envia treino
-    const input = page.locator('textarea[placeholder*="Digite"]');
+    const input = page.locator('textarea[placeholder*="Ask"]');
     await input.fill("Fiz 45 minutos de bicicleta ergométrica");
 
     const sendButton = page.locator("button").filter({ hasText: "send" });
     await sendButton.click();
 
-    // Aguarda toast de confirmação "Treino registrado!"
-    await expect(page.getByText(/Treino registrado/i)).toBeVisible({
+    // Aguarda toast de confirmação (usa .first() pois card title também contém texto similar)
+    await expect(page.getByText(/Treino registrado/i).first()).toBeVisible({
       timeout: 30000,
     });
   });

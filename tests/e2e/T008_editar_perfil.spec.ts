@@ -38,6 +38,9 @@ test.describe("T008: Editar Perfil", () => {
   });
 
   test("deve exibir dados do perfil corretamente", async ({ page }) => {
+    // Expande seção de Dados Pessoais
+    await page.getByText("Dados Pessoais").click();
+
     // Verifica que dados são exibidos
     await expect(page.getByText("Teste Usuario")).toBeVisible();
     await expect(page.getByText("masculino", { exact: false })).toBeVisible();
@@ -50,6 +53,9 @@ test.describe("T008: Editar Perfil", () => {
   });
 
   test("deve editar nome e salvar", async ({ page }) => {
+    // Expande seção de Dados Pessoais
+    await page.getByText("Dados Pessoais").click();
+
     // Clica em Editar
     await page.getByText("Editar").click();
 
@@ -71,6 +77,9 @@ test.describe("T008: Editar Perfil", () => {
   });
 
   test("deve recalcular BMR ao alterar peso", async ({ page }) => {
+    // Expande seção de Dados Pessoais
+    await page.getByText("Dados Pessoais").click();
+
     // Captura BMR inicial
     const bmrInitial = await page.evaluate(() => {
       const profile = JSON.parse(
@@ -105,6 +114,9 @@ test.describe("T008: Editar Perfil", () => {
   });
 
   test("deve mostrar erro para idade menor que 13 anos", async ({ page }) => {
+    // Expande seção de Dados Pessoais
+    await page.getByText("Dados Pessoais").click();
+
     // Clica em Editar
     await page.getByText("Editar").click();
 
@@ -121,6 +133,9 @@ test.describe("T008: Editar Perfil", () => {
   });
 
   test("deve mostrar erro para altura fora do range", async ({ page }) => {
+    // Expande seção de Dados Pessoais
+    await page.getByText("Dados Pessoais").click();
+
     // Clica em Editar
     await page.getByText("Editar").click();
 
@@ -139,6 +154,9 @@ test.describe("T008: Editar Perfil", () => {
   });
 
   test("deve mostrar erro para peso fora do range", async ({ page }) => {
+    // Expande seção de Dados Pessoais
+    await page.getByText("Dados Pessoais").click();
+
     // Clica em Editar
     await page.getByText("Editar").click();
 
@@ -154,6 +172,9 @@ test.describe("T008: Editar Perfil", () => {
   });
 
   test("deve cancelar edição e restaurar valores", async ({ page }) => {
+    // Expande seção de Dados Pessoais
+    await page.getByText("Dados Pessoais").click();
+
     // Clica em Editar
     await page.getByText("Editar").click();
 
@@ -173,6 +194,9 @@ test.describe("T008: Editar Perfil", () => {
   });
 
   test("deve persistir alterações no localStorage", async ({ page }) => {
+    // Expande seção de Dados Pessoais
+    await page.getByText("Dados Pessoais").click();
+
     // Clica em Editar
     await page.getByText("Editar").click();
 
@@ -195,6 +219,9 @@ test.describe("T008: Editar Perfil", () => {
 
     // Recarrega página
     await page.reload();
+
+    // Expande seção de Dados Pessoais novamente após reload
+    await page.getByText("Dados Pessoais").click();
 
     // Verifica que nome persistiu
     await expect(page.getByText("Persistido User")).toBeVisible();

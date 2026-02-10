@@ -28,6 +28,9 @@ test.describe("T014: Notificações", () => {
     });
     await page.goto("/profile");
 
+    // Expande seção de Notificações
+    await page.getByText("Notificações").click();
+
     // Aguarda a seção de Lembretes carregar (o componente começa com skeleton)
     await page.getByText("Lembretes").first().scrollIntoViewIfNeeded();
     // Aguarda texto descritivo (indica que o componente terminou de carregar)

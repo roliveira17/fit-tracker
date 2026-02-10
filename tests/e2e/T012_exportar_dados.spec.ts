@@ -53,6 +53,9 @@ test.describe("T012: Exportar Dados", () => {
   });
 
   test("deve ter JSON selecionado por padrão", async ({ page }) => {
+    // Expande seção de Exportar Dados
+    await page.getByText("Exportar Dados").click();
+
     // Botão JSON deve estar selecionado (com estilo ativo)
     const jsonButton = page.getByText("JSON").first();
     await expect(jsonButton).toBeVisible();
@@ -64,6 +67,9 @@ test.describe("T012: Exportar Dados", () => {
   });
 
   test("deve alternar para formato CSV", async ({ page }) => {
+    // Expande seção de Exportar Dados
+    await page.getByText("Exportar Dados").click();
+
     // Clica no botão CSV
     const csvButton = page.getByText("CSV").first();
     await csvButton.click();
@@ -75,6 +81,9 @@ test.describe("T012: Exportar Dados", () => {
   });
 
   test("deve exibir seletor de período", async ({ page }) => {
+    // Expande seção de Exportar Dados
+    await page.getByText("Exportar Dados").click();
+
     // Verifica que dropdown de período existe
     const periodSelect = page.locator("select").first();
     await expect(periodSelect).toBeVisible();
@@ -84,6 +93,9 @@ test.describe("T012: Exportar Dados", () => {
   });
 
   test("deve alterar período de exportação", async ({ page }) => {
+    // Expande seção de Exportar Dados
+    await page.getByText("Exportar Dados").click();
+
     const periodSelect = page.locator("select").first();
 
     // Seleciona "Último mês"
@@ -96,16 +108,22 @@ test.describe("T012: Exportar Dados", () => {
   });
 
   test("deve exibir botão de exportar", async ({ page }) => {
-    const exportButton = page.getByRole("button", { name: /exportar/i });
+    // Expande seção de Exportar Dados
+    await page.getByText("Exportar Dados").click();
+
+    const exportButton = page.locator("section button").filter({ hasText: "Exportar" }).first();
     await expect(exportButton).toBeVisible();
     await expect(exportButton).toBeEnabled();
   });
 
   test("deve iniciar exportação ao clicar no botão", async ({ page }) => {
+    // Expande seção de Exportar Dados
+    await page.getByText("Exportar Dados").click();
+
     // Intercepta download
     const downloadPromise = page.waitForEvent("download", { timeout: 10000 }).catch(() => null);
 
-    const exportButton = page.getByRole("button", { name: /exportar/i });
+    const exportButton = page.locator("section button").filter({ hasText: "Exportar" }).first();
     await exportButton.click();
 
     // Deve mostrar estado de loading ou iniciar download

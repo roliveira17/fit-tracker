@@ -79,17 +79,10 @@ test.describe("T002: Navegação Principal", () => {
   });
 
   test("FAB central deve navegar para Chat", async ({ page }) => {
-    // Na Home, o FAB é um componente separado com texto "Fit AI"
-    // ou ícone "auto_awesome" ou "add" dependendo da página
-    const fabFitAI = page.locator("button").filter({ hasText: "Fit AI" });
-    const fabAdd = page.locator("button").filter({ hasText: "add" });
-
-    // Tenta clicar no FAB disponível (Fit AI na Home, add em outras telas)
-    if (await fabFitAI.isVisible()) {
-      await fabFitAI.click({ force: true });
-    } else if (await fabAdd.first().isVisible()) {
-      await fabAdd.first().click({ force: true });
-    }
+    // O FAB na Home é um botão flutuante com label "Fit AI" e ícone "auto_awesome"
+    const fab = page.locator("button").filter({ hasText: "Fit AI" });
+    await expect(fab).toBeVisible();
+    await fab.click();
 
     // Verifica navegação para chat
     await expect(page).toHaveURL(/chat/);
