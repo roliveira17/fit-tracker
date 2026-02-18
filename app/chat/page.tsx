@@ -48,6 +48,7 @@ import {
 import { generateMessageId } from "@/lib/ai";
 import { Toast } from "@/components/feedback/Toast";
 import { useToast } from "@/hooks/useToast";
+import { EditMealSheet, type EditableFoodItem } from "@/components/chat/EditMealSheet";
 
 /**
  * Página de Chat - Core do produto
@@ -76,6 +77,12 @@ export default function ChatPage() {
   // Estado do scanner de barcode
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
   const [scannedProduct, setScannedProduct] = useState<NormalizedProduct | null>(null);
+
+  // Estado do EditMealSheet (foto → editar → salvar)
+  const [editMealData, setEditMealData] = useState<{
+    foods: EditableFoodItem[];
+    totals: { calories: number; protein: number; carbs: number; fat: number };
+  } | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -403,22 +410,7 @@ export default function ChatPage() {
           )
           .join("\n");
 
-        responseContent = `📸 **Análise da refeição:**\n\n${analysis.description}\n\n**Alimentos identificados:**\n${itemsList}\n\n**Totais estimados:**\n🔥 ${analysis.totals.calories} kcal\n🥩 ${analysis.totals.protein}g proteína\n🍚 ${analysis.totals.carbs}g carboidratos\n🧈 ${analysis.totals.fat}g gordura\n\n_Confiança: ${analysis.confidence}_\n\n✓ Registrado! Quer corrigir algo?`;
-
-        // Salva a refeição no Supabase se logado
-        if (user) {
-          const mealItems = analysis.items.map((item: { name: string; portion: string; calories: number; protein: number; carbs: number; fat: number }) => ({
-            food_name: item.name,
-            quantity_g: 100, // Estimativa padrão para fotos
-            calories: item.calories,
-            protein_g: item.protein,
-            carbs_g: item.carbs,
-            fat_g: item.fat,
-          }));
-          await logMeal("snack", mealItems, `Foto: ${analysis.description}`);
-        }
-
-        showToast("Refeição registrada!", "success");
+        responseContent = `📸 **Análise da refeição:**\n\n${analysis.description}\n\n**Alimentos identificados:**\n${itemsList}\n\n**Totais estimados:**\n🔥 ${analysis.totals.calories} kcal\n🥩 ${analysis.totals.protein}g proteína\n🍚 ${analysis.totals.carbs}g carboidratos\n🧈 ${analysis.totals.fat}g gordura\n\n_Confiança: ${analysis.confidence}_\n\nClique em **Adicionar ao Diário** para registrar.`;
       }
 
       // Adiciona resposta da AI (com parsedData para card de foto)
@@ -450,6 +442,59 @@ export default function ChatPage() {
       setIsAnalyzingImage(false);
     }
   }, [selectedImage, isAnalyzingImage, profile, showToast]);
+
+  /**
+   * Abre EditMealSheet com dados da análise de foto
+   */
+  const handleEditMeal = useCallback((data: {
+    foods: EditableFoodItem[];
+    totals: { calories: number; protein: number; carbs: number; fat: number };
+  }) => {
+    setEditMealData(data);
+  }, []);
+
+  /**
+   * Salva refeição editada (do EditMealSheet)
+   */
+  const handleSaveMeal = useCallback(async (editedFoods: EditableFoodItem[]) => {
+    const totalCalories = editedFoods.reduce((s, f) => s + f.calories, 0);
+    const totalProtein = editedFoods.reduce((s, f) => s + f.protein, 0);
+    const totalCarbs = editedFoods.reduce((s, f) => s + f.carbs, 0);
+    const totalFat = editedFoods.reduce((s, f) => s + f.fat, 0);
+
+    if (user) {
+      const mealItems = editedFoods.map((item) => ({
+        food_name: item.name,
+        quantity_g: parseFloat(item.quantity) || 100,
+        calories: item.calories,
+        protein_g: item.protein,
+        carbs_g: item.carbs,
+        fat_g: item.fat,
+      }));
+      await logMeal("snack", mealItems, "Foto: análise");
+    }
+
+    saveMeal({
+      type: "snack",
+      items: editedFoods.map((f) => ({
+        name: f.name,
+        quantity: parseFloat(f.quantity) || 100,
+        unit: "g",
+        calories: f.calories,
+        protein: f.protein,
+        carbs: f.carbs,
+        fat: f.fat,
+      })),
+      totalCalories,
+      totalProtein,
+      totalCarbs,
+      totalFat,
+      rawText: "Foto: análise",
+    });
+
+    setEditMealData(null);
+    showToast("Refeição registrada!", "success");
+  }, [user, showToast]);
 
   /**
    * Envia mensagem para a AI (chamado pelo ChatInput)
@@ -647,7 +692,7 @@ export default function ChatPage() {
 
   if (isLoading) {
     return (
-      <ScreenContainer className="bg-gradient-to-b from-[#FFFBF4] via-[#F6EAD9] to-[#EBDCC5] text-gray-800">
+      <ScreenContainer>
         <div className="flex flex-1 items-center justify-center">
           <p className="text-gray-500">Carregando...</p>
         </div>
@@ -658,48 +703,51 @@ export default function ChatPage() {
   const hasMessages = messages.length > 0;
 
   return (
-    <ScreenContainer className="bg-gradient-to-b from-[#FFFBF4] via-[#F6EAD9] to-[#EBDCC5] text-gray-800">
+    <ScreenContainer>
       <div className="flex flex-1 flex-col">
-        {/* Header — condicional: base (Ask ativo + X) vs conversa (Track ativo + back + dots) */}
+        {/* Header */}
         <header className="relative z-10 -mx-6 flex items-center justify-between px-6 pt-4 pb-4 shrink-0">
           {hasMessages ? (
             <button
               type="button"
               onClick={() => router.back()}
-              className="w-10 h-10 flex items-center justify-center rounded-full bg-white/40 backdrop-blur-sm text-[#3E2723] hover:bg-white/60 transition-all shadow-sm"
+              className="w-10 h-10 flex items-center justify-center rounded-full bg-white text-gray-600 hover:bg-gray-100 transition-all shadow-soft"
             >
               <span className="material-symbols-outlined text-[20px]">arrow_back</span>
             </button>
           ) : (
             <div className="w-10" />
           )}
-          <div className="bg-[#EBE1CF] p-1 rounded-full flex items-center shadow-inner">
+          <div className="bg-gray-200/60 p-1 rounded-full flex items-center">
             <button
               type="button"
               className={`px-5 py-2 rounded-full text-sm font-medium transition ${
                 hasMessages
-                  ? "bg-[#3E2723] text-white shadow-md"
-                  : "text-gray-600 hover:text-gray-900"
+                  ? "bg-calma-primary text-white shadow-sm"
+                  : "text-gray-500 hover:text-gray-800"
               }`}
             >
               Track
             </button>
             <button
               type="button"
-              className={`px-5 py-2 rounded-full text-sm font-medium transition ${
+              className={`relative px-6 py-2 rounded-full text-sm font-medium transition ${
                 !hasMessages
-                  ? "bg-[#3E2723] text-white shadow-md"
-                  : "text-gray-600 hover:text-gray-900"
+                  ? "bg-calma-primary text-white shadow-sm"
+                  : "bg-white text-gray-800 shadow-sm"
               }`}
             >
               Ask
+              {hasMessages && (
+                <span className="absolute right-2.5 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-green-500" />
+              )}
             </button>
           </div>
           {hasMessages ? (
             <button
               type="button"
               onClick={handleClearChat}
-              className="w-10 h-10 flex items-center justify-center rounded-full bg-white/40 backdrop-blur-sm text-[#3E2723] hover:bg-white/60 transition-all shadow-sm"
+              className="w-10 h-10 flex items-center justify-center rounded-full bg-white text-gray-600 hover:bg-gray-100 transition-all shadow-soft"
             >
               <span className="material-symbols-outlined text-[20px]">more_horiz</span>
             </button>
@@ -707,7 +755,7 @@ export default function ChatPage() {
             <button
               type="button"
               onClick={() => router.back()}
-              className="w-10 h-10 rounded-full bg-white/60 flex items-center justify-center text-gray-800 hover:bg-white transition backdrop-blur-md shadow-sm"
+              className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-gray-600 hover:bg-gray-100 transition shadow-soft"
             >
               <span className="material-symbols-outlined text-xl">close</span>
             </button>
@@ -722,28 +770,26 @@ export default function ChatPage() {
               <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={() => handleSendMessage("Como esta meu equilibrio nutricional esta semana?")}
-                  className="bg-[#F3E7D5] p-5 rounded-3xl text-left shadow-[0_4px_20px_-2px_rgba(62,39,35,0.05)] hover:shadow-lg transition-all duration-300 active:scale-95 border border-white/40 h-60 flex flex-col justify-between group relative overflow-hidden"
+                  className="bg-white p-5 rounded-3xl text-left shadow-soft hover:shadow-lg transition-all duration-300 active:scale-95 border border-gray-100 h-60 flex flex-col justify-between group relative overflow-hidden"
                 >
-                  <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <p className="text-[#4A3B32] font-bold text-[1.3rem] leading-tight z-10">
-                    Como esta meu equilibrio nutricional esta semana?
+                  <p className="text-gray-800 font-serif-display text-[1.4rem] leading-tight z-10">
+                    Como está meu equilíbrio nutricional esta semana?
                   </p>
-                  <div className="w-10 h-10 rounded-full bg-white/40 flex items-center justify-center self-end backdrop-blur-sm z-10">
-                    <span className="material-symbols-outlined text-[#3E2723] text-base opacity-60">
+                  <div className="w-10 h-10 rounded-full bg-calma-primary/10 flex items-center justify-center self-end z-10">
+                    <span className="material-symbols-outlined text-calma-primary text-base">
                       arrow_forward
                     </span>
                   </div>
                 </button>
                 <button
                   onClick={() => handleSendMessage("Sugira um treino rapido para hoje")}
-                  className="bg-[#F3E7D5] p-5 rounded-3xl text-left shadow-[0_4px_20px_-2px_rgba(62,39,35,0.05)] hover:shadow-lg transition-all duration-300 active:scale-95 border border-white/40 h-60 flex flex-col justify-between group relative overflow-hidden"
+                  className="bg-white p-5 rounded-3xl text-left shadow-soft hover:shadow-lg transition-all duration-300 active:scale-95 border border-gray-100 h-60 flex flex-col justify-between group relative overflow-hidden"
                 >
-                  <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <p className="text-[#4A3B32] font-bold text-[1.3rem] leading-tight z-10">
-                    Sugira um treino rapido para hoje
+                  <p className="text-gray-800 font-serif-display text-[1.4rem] leading-tight z-10">
+                    Sugira um treino rápido para hoje
                   </p>
-                  <div className="w-10 h-10 rounded-full bg-white/40 flex items-center justify-center self-end backdrop-blur-sm z-10">
-                    <span className="material-symbols-outlined text-[#3E2723] text-base opacity-60">
+                  <div className="w-10 h-10 rounded-full bg-calma-primary/10 flex items-center justify-center self-end z-10">
+                    <span className="material-symbols-outlined text-calma-primary text-base">
                       arrow_forward
                     </span>
                   </div>
@@ -762,6 +808,7 @@ export default function ChatPage() {
                   content={msg.content}
                   timestamp={msg.timestamp}
                   parsedData={msg.parsedData}
+                  onEditMeal={handleEditMeal}
                 />
               ))}
 
@@ -799,7 +846,7 @@ export default function ChatPage() {
           {/* Input de texto/áudio */}
           {!selectedImage && (
             <ChatInput
-              placeholder="Ask literally anything..."
+              placeholder="Ask literally anything"
               onSend={handleSendMessage}
               onStartRecording={handleStartRecording}
               onStopRecording={handleStopRecording}
@@ -837,6 +884,14 @@ export default function ChatPage() {
           onClose={() => setScannedProduct(null)}
         />
       )}
+
+      {/* EditMealSheet — editar alimentos da foto */}
+      <EditMealSheet
+        isOpen={editMealData !== null}
+        onClose={() => setEditMealData(null)}
+        foods={editMealData?.foods || []}
+        onSave={handleSaveMeal}
+      />
 
       {/* Toast de feedback */}
       <Toast

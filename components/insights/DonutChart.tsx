@@ -16,6 +16,7 @@ interface DonutChartProps {
   label: string;
   centerText?: string;
   centerSubtext?: string;
+  unit?: string;
 }
 
 export function DonutChart({
@@ -23,16 +24,17 @@ export function DonutChart({
   label,
   centerText,
   centerSubtext,
+  unit = "g",
 }: DonutChartProps) {
   const total = segments.reduce((sum, s) => sum + s.value, 0);
 
   if (total === 0) {
     return (
-      <div className="rounded-xl border border-border-subtle bg-surface-card p-4">
-        <h3 className="text-sm font-medium text-text-secondary mb-4">
+      <div className="rounded-xl border border-gray-100 bg-white p-4">
+        <h3 className="text-sm font-medium text-gray-500 mb-4">
           {label}
         </h3>
-        <p className="text-sm text-text-secondary text-center py-8">
+        <p className="text-sm text-gray-500 text-center py-8">
           Sem dados para exibir
         </p>
       </div>
@@ -61,8 +63,8 @@ export function DonutChart({
     });
 
   return (
-    <div className="rounded-xl border border-border-subtle bg-surface-card p-4">
-      <h3 className="text-sm font-medium text-text-secondary mb-4">{label}</h3>
+    <div className="rounded-xl border border-gray-100 bg-white p-4">
+      <h3 className="text-sm font-medium text-gray-500 mb-4">{label}</h3>
 
       <div className="flex items-center gap-6">
         {/* Donut SVG */}
@@ -101,9 +103,9 @@ export function DonutChart({
           {/* Center text */}
           {centerText && (
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-lg font-bold text-white">{centerText}</span>
+              <span className="text-lg font-bold text-gray-800">{centerText}</span>
               {centerSubtext && (
-                <span className="text-xs text-text-secondary">{centerSubtext}</span>
+                <span className="text-xs text-gray-500">{centerSubtext}</span>
               )}
             </div>
           )}
@@ -118,15 +120,15 @@ export function DonutChart({
                   className="w-3 h-3 rounded-full flex-shrink-0"
                   style={{ backgroundColor: arc.color }}
                 />
-                <span className="text-sm text-text-secondary truncate">
+                <span className="text-sm text-gray-500 truncate">
                   {arc.label}
                 </span>
               </div>
               <div className="flex items-baseline gap-1 flex-shrink-0">
-                <span className="text-sm font-medium text-white">
-                  {Math.round(arc.value)}g
+                <span className="text-sm font-medium text-gray-800">
+                  {Math.round(arc.value)}{unit}
                 </span>
-                <span className="text-xs text-text-secondary">
+                <span className="text-xs text-gray-500">
                   {Math.round(arc.pct * 100)}%
                 </span>
               </div>

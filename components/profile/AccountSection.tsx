@@ -1,142 +1,106 @@
 "use client";
 
 /**
- * Seção de Conta no Profile
+ * Seção Hero do Profile — Design Stitch (Light/Calma)
  *
- * Mostra informações do usuário autenticado ou botão para login.
- * Permite fazer logout.
+ * Mostra avatar grande, nome, email e badge.
+ * Estados: loading, não-autenticado (CTA login), autenticado (hero).
  */
 
 import { useAuth } from "@/components/providers/SupabaseAuthProvider";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { useState } from "react";
 
 export function AccountSection() {
-  const { user, isLoading, signOut } = useAuth();
+  const { user, isLoading } = useAuth();
   const router = useRouter();
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const handleLogin = () => {
-    router.push("/login");
-  };
-
-  const handleLogout = async () => {
-    setIsLoggingOut(true);
-    await signOut();
-    setIsLoggingOut(false);
-  };
-
-  // Loading
   if (isLoading) {
     return (
-      <section className="rounded-xl border border-border-subtle bg-surface-card p-4">
-        <div className="animate-pulse flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-surface-dark" />
-          <div className="flex-1">
-            <div className="h-4 bg-surface-dark rounded w-32 mb-2" />
-            <div className="h-3 bg-surface-dark rounded w-48" />
-          </div>
+      <div className="flex items-center gap-5 animate-pulse">
+        <div className="w-20 h-20 rounded-full bg-gray-200" />
+        <div className="flex-1">
+          <div className="h-5 bg-gray-200 rounded w-32 mb-2" />
+          <div className="h-3 bg-gray-200 rounded w-48 mb-2" />
+          <div className="h-4 bg-gray-200 rounded w-20" />
         </div>
-      </section>
+      </div>
     );
   }
 
-  // Não autenticado
   if (!user) {
     return (
-      <section className="rounded-xl border border-border-subtle bg-surface-card p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-surface-dark flex items-center justify-center">
-              <span className="material-symbols-outlined text-[24px] text-text-secondary">
-                person
-              </span>
-            </div>
-            <div>
-              <p className="text-sm text-white">Conta não vinculada</p>
-              <p className="text-xs text-text-secondary">
-                Entre para sincronizar seus dados
-              </p>
-            </div>
+      <div className="flex items-center gap-5">
+        <div className="relative">
+          <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center border-2 border-white shadow-md">
+            <span className="material-symbols-outlined text-[32px] text-gray-400">
+              person
+            </span>
           </div>
-
+        </div>
+        <div className="flex-1">
+          <h2 className="font-serif-display text-xl text-gray-800 leading-tight">
+            Visitante
+          </h2>
+          <p className="text-sm text-gray-500 mt-1">
+            Entre para sincronizar seus dados
+          </p>
           <button
-            onClick={handleLogin}
-            className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary-hover transition-colors"
+            onClick={() => router.push("/login")}
+            className="mt-2 px-4 py-1.5 rounded-full bg-calma-primary text-white text-xs font-semibold hover:bg-calma-primary/90 transition-colors"
           >
             Entrar
           </button>
         </div>
-      </section>
+      </div>
     );
   }
 
-  // Autenticado
+  const displayName = user.user_metadata?.full_name || "Usuário";
+  const email = user.email || "";
+  const avatarUrl = user.user_metadata?.avatar_url;
+  const initial =
+    displayName.charAt(0).toUpperCase() ||
+    email.charAt(0).toUpperCase() ||
+    "U";
+
   return (
-    <section className="rounded-xl border border-border-subtle bg-surface-card p-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          {/* Avatar */}
-          {user.user_metadata?.avatar_url && user.user_metadata.avatar_url.startsWith("http") ? (
+    <div className="flex items-center gap-5">
+      <div className="relative">
+        <div className="w-20 h-20 rounded-full border-2 border-white shadow-md overflow-hidden bg-gray-100">
+          {avatarUrl && avatarUrl.startsWith("http") ? (
             <Image
-              src={user.user_metadata.avatar_url}
-              alt={user.user_metadata?.full_name || "Avatar"}
-              width={48}
-              height={48}
-              className="rounded-full"
-              unoptimized={!user.user_metadata.avatar_url.includes("googleusercontent.com")}
+              src={avatarUrl}
+              alt={displayName}
+              width={80}
+              height={80}
+              className="w-full h-full object-cover"
+              unoptimized={!avatarUrl.includes("googleusercontent.com")}
             />
           ) : (
-            <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
-              <span className="text-lg font-semibold text-white">
-                {user.user_metadata?.full_name?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || "U"}
+            <div className="w-full h-full flex items-center justify-center bg-calma-primary">
+              <span className="text-2xl font-semibold text-white">
+                {initial}
               </span>
             </div>
           )}
-
-          {/* Info */}
-          <div>
-            <p className="text-sm text-white font-medium">
-              {user.user_metadata?.full_name || "Usuário"}
-            </p>
-            <p className="text-xs text-text-secondary">
-              {user.email || ""}
-            </p>
-          </div>
         </div>
-
-        {/* Logout */}
-        <button
-          onClick={handleLogout}
-          disabled={isLoggingOut}
-          className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-text-secondary hover:text-error hover:bg-error/10 transition-colors disabled:opacity-50"
-        >
-          {isLoggingOut ? (
-            <span className="material-symbols-outlined animate-spin text-[18px]">
-              progress_activity
-            </span>
-          ) : (
-            <span className="material-symbols-outlined text-[18px]">
-              logout
-            </span>
-          )}
-          <span>Sair</span>
+        <button className="absolute bottom-0 right-0 w-7 h-7 bg-calma-primary text-white rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+          <span className="material-symbols-outlined text-[12px]">edit</span>
         </button>
       </div>
 
-      {/* Info sobre sincronização */}
-      <div className="mt-4 pt-4 border-t border-border-subtle">
-        <div className="flex items-start gap-2">
-          <span className="material-symbols-outlined text-[16px] text-text-secondary mt-0.5">
-            info
+      <div>
+        <h2 className="font-serif-display text-xl text-gray-800 leading-tight">
+          {displayName}
+        </h2>
+        <p className="text-sm text-gray-500 mt-1">{email}</p>
+        <div className="flex items-center mt-2 gap-2">
+          <span className="bg-calma-accent/20 text-calma-primary text-xs px-2 py-0.5 rounded-full font-semibold">
+            Fit Track
           </span>
-          <p className="text-xs text-text-secondary">
-            Seus dados ainda estão salvos apenas neste dispositivo. Em breve,
-            sincronização automática na nuvem.
-          </p>
         </div>
       </div>
-    </section>
+    </div>
   );
 }

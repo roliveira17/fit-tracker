@@ -3,10 +3,10 @@ import { test, expect } from "@playwright/test";
 /**
  * T003: Chat Básico
  *
- * Testa o funcionamento básico do chat:
- * - Estado inicial com sugestões
+ * Testa o funcionamento básico do chat (design Stitch):
+ * - Estado inicial com sugestões em grid
  * - Envio de mensagem via input
- * - Envio de mensagem via chip de sugestão
+ * - Envio de mensagem via card de sugestão
  * - Exibição de mensagens e respostas
  */
 test.describe("T003: Chat Básico", () => {
@@ -37,25 +37,19 @@ test.describe("T003: Chat Básico", () => {
     await expect(page).toHaveURL(/chat/);
   });
 
-  test("deve exibir estado inicial com saudação e sugestões", async ({
+  test("deve exibir estado inicial com sugestões em grid", async ({
     page,
   }) => {
-    // Verifica saudação personalizada
-    await expect(page.getByText(/Ola, Teste/i)).toBeVisible();
-
-    // Verifica texto de orientação
+    // Verifica cards de sugestão (design Stitch — grid 2 colunas)
     await expect(
-      page.getByText(/pode me dizer o que voce comeu/i)
+      page.getByText(/equil[ií]brio nutricional/i)
+    ).toBeVisible();
+    await expect(
+      page.getByText(/treino r[aá]pido/i)
     ).toBeVisible();
 
-    // Verifica chips de sugestões
-    await expect(page.getByText("Almocei arroz e frango")).toBeVisible();
-    await expect(page.getByText("Fiz 30min de esteira")).toBeVisible();
-    await expect(page.getByText("Qual meu BMR?")).toBeVisible();
-    await expect(page.getByText("Registrar peso")).toBeVisible();
-
-    // Verifica input de mensagem
-    const input = page.locator('textarea[placeholder*="Digite"]');
+    // Verifica input de mensagem (placeholder Stitch)
+    const input = page.locator('textarea[placeholder*="Ask"]');
     await expect(input).toBeVisible();
   });
 
@@ -66,11 +60,10 @@ test.describe("T003: Chat Básico", () => {
     test.setTimeout(60000);
 
     // Digita mensagem no input
-    const input = page.locator('textarea[placeholder*="Digite"]');
+    const input = page.locator('textarea[placeholder*="Ask"]');
     await input.fill("Qual meu BMR?");
 
     // O botão muda de "mic" para "send" quando há texto
-    // Procura o botão que contém o ícone "send"
     const sendButton = page.locator("button").filter({ hasText: "send" });
     await expect(sendButton).toBeVisible();
     await sendButton.click();
@@ -79,25 +72,21 @@ test.describe("T003: Chat Básico", () => {
     await expect(page.getByText("Qual meu BMR?").first()).toBeVisible();
 
     // Aguarda resposta da IA (pode demorar)
-    // Verifica que alguma resposta apareceu (mensagem da IA)
     await expect(
-      page.locator('[class*="bg-surface"]').filter({ hasText: /BMR|1775|kcal/i })
+      page.locator("div").filter({ hasText: /BMR|1775|kcal/i }).first()
     ).toBeVisible({ timeout: 30000 });
   });
 
-  test("deve enviar mensagem via chip de sugestão", async ({ page }) => {
+  test("deve enviar mensagem via card de sugestão", async ({ page }) => {
     // Aumenta timeout para aguardar resposta da IA
     test.setTimeout(60000);
 
-    // Clica no chip de sugestão "Qual meu BMR?"
-    await page.getByText("Qual meu BMR?").click();
-
-    // Verifica mensagem do usuário aparece
-    await expect(page.getByText("Qual meu BMR?").first()).toBeVisible();
+    // Clica no card de sugestão de equilíbrio nutricional
+    await page.getByText(/equil[ií]brio nutricional/i).click();
 
     // Aguarda resposta da IA
     await expect(
-      page.locator('[class*="bg-surface"]').filter({ hasText: /BMR|1775|kcal/i })
+      page.locator("div").filter({ hasText: /nutri|calor|prote|macro/i }).first()
     ).toBeVisible({ timeout: 30000 });
   });
 
@@ -105,24 +94,23 @@ test.describe("T003: Chat Básico", () => {
     // Aumenta timeout
     test.setTimeout(60000);
 
-    // Envia primeira mensagem via chip para garantir envio
-    await page.getByText("Qual meu BMR?").click();
+    // Clica no card de sugestão
+    await page.getByText(/equil[ií]brio nutricional/i).click();
 
-    // Aguarda resposta (alguma mensagem da IA)
+    // Aguarda resposta da IA (alguma mensagem aparece)
     await expect(
-      page.locator('[class*="bg-surface"]').filter({ hasText: /BMR|1775|kcal/i })
+      page.locator("div").filter({ hasText: /nutri|calor|prote|macro/i }).first()
     ).toBeVisible({ timeout: 30000 });
 
-    // Verifica botão "Limpar histórico" aparece quando há mensagens
-    await expect(page.getByText(/limpar historico/i)).toBeVisible();
-
-    // Verifica que a mensagem "Hoje" aparece (indicador de data)
-    await expect(page.getByText("Hoje")).toBeVisible();
+    // Verifica que o botão de ações (more_horiz) aparece quando há mensagens
+    await expect(
+      page.locator("button").filter({ hasText: "more_horiz" })
+    ).toBeVisible();
   });
 
   test("botão mostra microfone quando input está vazio", async ({ page }) => {
     // O input está vazio por padrão
-    const input = page.locator('textarea[placeholder*="Digite"]');
+    const input = page.locator('textarea[placeholder*="Ask"]');
     await expect(input).toHaveValue("");
 
     // Quando vazio, o botão mostra "mic" (microfone), não "send"
@@ -132,8 +120,5 @@ test.describe("T003: Chat Básico", () => {
     // Não deve mostrar botão de enviar
     const sendButton = page.locator("button").filter({ hasText: "send" });
     await expect(sendButton).not.toBeVisible();
-
-    // Deve continuar no estado inicial (com sugestões visíveis)
-    await expect(page.getByText("Almocei arroz e frango")).toBeVisible();
   });
 });

@@ -92,7 +92,7 @@ export function WeightCard({
     <>
       {/* Header: title + checkmark */}
       <div className="flex justify-between items-start mb-2">
-        <h2 className="text-[1.75rem] font-bold text-[#3E2723] leading-tight">
+        <h2 className="font-serif-display text-[1.75rem] text-gray-800 leading-tight">
           {title}
         </h2>
         <div className="bg-[#F2F8F2] text-[#2E7D32] rounded-full p-1.5 flex items-center justify-center">
@@ -116,7 +116,7 @@ export function WeightCard({
               Peso atual
             </p>
             <div className="flex items-baseline gap-1">
-              <span className="text-4xl font-bold tracking-tight text-[#3E2723]">
+              <span className="text-4xl font-bold tracking-tight text-gray-800">
                 {weight}
               </span>
               <span className="text-xl font-medium text-[#816965]">kg</span>
@@ -152,7 +152,7 @@ export function WeightCard({
               Gordura (BF)
             </p>
             <div className="flex items-baseline gap-1">
-              <span className="text-4xl font-bold tracking-tight text-[#3E2723]">
+              <span className="text-4xl font-bold tracking-tight text-gray-800">
                 {bodyFat}
               </span>
               <span className="text-xl font-medium text-[#816965]">%</span>

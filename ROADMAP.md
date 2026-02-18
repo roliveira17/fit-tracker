@@ -1,7 +1,7 @@
 # Fit Track v3 — Roadmap e Progresso
 
 > Arquivo unico de acompanhamento do projeto.
-> Ultima atualizacao: 2026-02-08
+> Ultima atualizacao: 2026-02-09
 
 ---
 
@@ -15,7 +15,7 @@
 | Chat Cards Retrofit (Stitch) | 100% (8/8) | Todos cards retrofitados + 2 pipelines novos |
 | Food API | 70% (12/17) | Fases 1-2 completas, Fase 3 pendente |
 | QA / Testes E2E | 100% (15/15) | Todos implementados, 35 pass + 3 skip |
-| Design System | 100% | 3 fases completas (setup, componentes, telas) |
+| Design System | 80% | Retrofit Stitch (light) em andamento |
 | Deploy | Ativo | https://fit-tracker-murex.vercel.app |
 
 ---
@@ -110,42 +110,31 @@ Arquivo `components/ui/button.tsx` e compatibilidade com shadcn/ui antigo. Pode 
 
 ---
 
-## Sessao 2026-02-08 (3a) — Onde Paramos
+## Sessao 2026-02-18 — Onde Paramos
 
 ### Concluido nesta sessao:
+- ✅ **Fix Insights** — Pagina nao abria: auth race condition, try/catch, guards, padding
+- ✅ **Chat cores alinhadas** — Removido gradient cream, todos componentes usando tokens calma-*
+- ✅ PR #2 mergeada na master
+
+### Concluido na sessao 2026-02-09:
+- ✅ Retrofit Home, Profile, Onboarding para design Stitch (light/Calma)
+- ✅ Design system unificado: ScreenContainer default light (#F5F3EF)
+- ✅ BottomNav unificado (1 componente, tema light, Material Symbols, 5 tabs)
+- ✅ Engines Insights criadas: score, deltas, correlacoes, recomendacoes
+- ✅ Novos componentes SVG: ScoreRing, CalorieRing, Sparkline, FrequencyDots, MacroBar
+- ✅ 12 testes E2E atualizados para novo layout
+
+### Concluido na sessao 2026-02-08:
 - ✅ Retrofit visual de TODOS os chat cards para design Stitch (8 cards)
-- ✅ Pipeline Weekly Analysis (classificacao + builder deterministico + card)
-- ✅ Pipeline Glucose Analysis (classificacao + builder + card com ring SVG + barras)
-- ✅ PhotoAnalysisCard: botao "Adicionar ao Diario" + EditMealSheet (bottom sheet)
-- ✅ Removido auto-save de foto — usuario agora edita antes de salvar
-- ✅ BottomSheet componente reutilizavel criado
-- ✅ Label IA: "Assistente" → "Fit AI"
-- ✅ Toggle Ask: estilo muda em modo conversa (branco + dot verde)
+- ✅ Pipeline Weekly Analysis + Glucose Analysis
+- ✅ Migration Apple Health + Testes E2E T010-T015
 
-### Cards retrofitados (Stitch design):
-| Card | Mudancas |
-|------|----------|
-| MealCard | Serif title, macro % abreviado (p/c/g), dot por macro dominante |
-| WorkoutCard | Serif title, banner margins, chip styling, accent fix |
-| WeightCard | Serif title, dados reais Supabase no sparkline |
-| PhotoAnalysisCard | Serif title, macro %, botao sempre visivel, EditMealSheet |
-| SleepCard | Serif title/metric/insight, timestamp no badge |
-| WeeklyAnalysisCard | Serif title/quote, border color |
-| GlucoseAnalysisCard | NOVO — ring SVG, stats grid, barras diarias |
-| ChatInput | Rounded, font size, icon sizes, mic color |
-| TypingIndicator | Tokens light (era dark) |
-
-### Sessoes anteriores (2026-02-08):
-- Migration `20260208_001_fix_import_rpc.sql` executada no Supabase
-- Testes E2E T010-T015 implementados e passando (35 passed, 3 skipped)
-- Fix: 5 bugs no pipeline Apple Health Import → Supabase
-
-### Proximos passos (prioridade):
-1. **TESTAR CARDS** — Validar todos os cards no app real (enviar mensagens que trigam cada tipo)
+### Pendente:
+1. **BOTTOM NAV REDESIGN** — Redesenhar inspirado no app Lex (icones limpos, minimalista)
 2. **TESTAR IMPORT** — Re-testar Apple Health import com login
 3. **APPLE HEALTH SLEEP** — Verificar dados de sono apos import
-4. **RETROFIT DEMAIS TELAS** — Home, Insights, Profile (proximo lote Stitch)
-5. **FOOD API FASE 3** — Otimizacoes (loading states, retry, analytics)
+4. **FOOD API FASE 3** — Otimizacoes (loading states, retry, analytics)
 
 ---
 
@@ -199,6 +188,7 @@ Arquivo `components/ui/button.tsx` e compatibilidade com shadcn/ui antigo. Pode 
 | Setup (Tailwind, fonts, dark mode) | 2026-01-19 | 4/4 |
 | Base Components (12 sets) | 2026-01-19 | 12/12 |
 | Screens (10 telas) | 2026-01-19 | 10/10 |
+| Retrofit Stitch (light unificado) | 2026-02-09 | Em andamento — Home/Profile ok, Insights/Chat pendente |
 
 ### Food API
 

@@ -44,7 +44,7 @@ test.describe("T005: Registro de Peso", () => {
     test.setTimeout(60000);
 
     // Digita mensagem de peso
-    const input = page.locator('textarea[placeholder*="Digite"]');
+    const input = page.locator('textarea[placeholder*="Ask"]');
     await input.fill("Meu peso é 75kg");
 
     // Clica no botão enviar
@@ -53,7 +53,7 @@ test.describe("T005: Registro de Peso", () => {
     await sendButton.click();
 
     // Aguarda resposta da IA com confirmação de registro
-    await expect(page.getByText(/✓ Registrado/i).first()).toBeVisible({
+    await expect(page.getByText(/Registrado/i).first()).toBeVisible({
       timeout: 30000,
     });
 
@@ -66,14 +66,14 @@ test.describe("T005: Registro de Peso", () => {
     test.setTimeout(60000);
 
     // Envia peso com vírgula
-    const input = page.locator('textarea[placeholder*="Digite"]');
+    const input = page.locator('textarea[placeholder*="Ask"]');
     await input.fill("Peso 75,5kg");
 
     const sendButton = page.locator("button").filter({ hasText: "send" });
     await sendButton.click();
 
     // Aguarda confirmação
-    await expect(page.getByText(/✓ Registrado/i).first()).toBeVisible({
+    await expect(page.getByText(/Registrado/i).first()).toBeVisible({
       timeout: 30000,
     });
 
@@ -98,14 +98,14 @@ test.describe("T005: Registro de Peso", () => {
     test.setTimeout(60000);
 
     // Envia peso contextual
-    const input = page.locator('textarea[placeholder*="Digite"]');
+    const input = page.locator('textarea[placeholder*="Ask"]');
     await input.fill("Estou com 80");
 
     const sendButton = page.locator("button").filter({ hasText: "send" });
     await sendButton.click();
 
     // Aguarda confirmação
-    await expect(page.getByText(/✓ Registrado/i).first()).toBeVisible({
+    await expect(page.getByText(/Registrado/i).first()).toBeVisible({
       timeout: 30000,
     });
 
@@ -127,14 +127,14 @@ test.describe("T005: Registro de Peso", () => {
     test.setTimeout(60000);
 
     // Envia peso
-    const input = page.locator('textarea[placeholder*="Digite"]');
+    const input = page.locator('textarea[placeholder*="Ask"]');
     await input.fill("Meu peso atual é 77.5kg");
 
     const sendButton = page.locator("button").filter({ hasText: "send" });
     await sendButton.click();
 
     // Aguarda confirmação
-    await expect(page.getByText(/✓ Registrado/i).first()).toBeVisible({
+    await expect(page.getByText(/Registrado/i).first()).toBeVisible({
       timeout: 30000,
     });
 
@@ -174,14 +174,14 @@ test.describe("T005: Registro de Peso", () => {
     test.setTimeout(60000);
 
     // Envia peso
-    const input = page.locator('textarea[placeholder*="Digite"]');
+    const input = page.locator('textarea[placeholder*="Ask"]');
     await input.fill("Peso de hoje: 78kg");
 
     const sendButton = page.locator("button").filter({ hasText: "send" });
     await sendButton.click();
 
-    // Aguarda toast de confirmação "Peso registrado!"
-    await expect(page.getByText(/Peso registrado/i)).toBeVisible({
+    // Aguarda toast de confirmação "Peso registrado!" (usa .first() pois card title também contém texto similar)
+    await expect(page.getByText(/Peso registrado/i).first()).toBeVisible({
       timeout: 30000,
     });
   });

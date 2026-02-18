@@ -25,11 +25,16 @@ export function PhotoAnalysisCard({
   imageUrl,
   onAddToDiary,
 }: PhotoAnalysisCardProps) {
+  const totalMacros = protein + carbs + fat || 1;
+  const proteinPct = Math.round((protein / totalMacros) * 100);
+  const carbsPct = Math.round((carbs / totalMacros) * 100);
+  const fatPct = 100 - proteinPct - carbsPct;
+
   return (
     <>
       {/* Title */}
       <div className="mb-5">
-        <h2 className="text-[1.75rem] font-bold text-[#d46211] leading-tight">
+        <h2 className="font-serif-display text-[1.75rem] text-[#d46211] leading-tight">
           Análise da
           <br />
           Refeição
@@ -58,7 +63,7 @@ export function PhotoAnalysisCard({
         {/* Macro stats */}
         <div className="flex flex-col justify-center gap-1">
           <div className="flex items-baseline gap-1">
-            <span className="text-3xl font-bold text-[#3E2723]">
+            <span className="text-3xl font-bold text-gray-800">
               {totalCalories}
             </span>
             <span className="text-sm font-medium text-[#816965]">kcal</span>
@@ -83,6 +88,12 @@ export function PhotoAnalysisCard({
               </span>
             )}
           </div>
+          {/* Macro % */}
+          <div className="flex gap-3 text-[11px] font-bold mt-1">
+            <span className="text-[#d46211]">p ({proteinPct}%)</span>
+            <span className="text-[#E0A458]">c ({carbsPct}%)</span>
+            <span className="text-[#C7B299]">g ({fatPct}%)</span>
+          </div>
         </div>
       </div>
 
@@ -94,7 +105,7 @@ export function PhotoAnalysisCard({
         {foods.map((food, i) => (
           <div key={i} className="flex justify-between items-center text-sm">
             <span className="text-[#816965]">{food.name}</span>
-            <span className="font-bold text-[#3E2723]">
+            <span className="font-bold text-gray-800">
               {food.quantity || `${food.calories} kcal`}
             </span>
           </div>
@@ -102,17 +113,15 @@ export function PhotoAnalysisCard({
       </div>
 
       {/* Action button */}
-      {onAddToDiary && (
-        <button
-          onClick={onAddToDiary}
-          className="w-full bg-[#d46211] hover:bg-[#b8550e] active:scale-[0.98] transition-all text-white font-bold py-3.5 rounded-full flex items-center justify-center gap-2 shadow-lg shadow-[#d46211]/25"
-        >
-          <span className="material-symbols-outlined text-[20px]">
-            add_circle
-          </span>
-          Adicionar ao Diário
-        </button>
-      )}
+      <button
+        onClick={onAddToDiary}
+        className="w-full bg-[#d46211] hover:bg-[#b8550e] active:scale-[0.98] transition-all text-white font-bold py-3.5 rounded-full flex items-center justify-center gap-2 shadow-lg shadow-[#d46211]/25"
+      >
+        <span className="material-symbols-outlined text-[20px]">
+          add_circle
+        </span>
+        Adicionar ao Diário
+      </button>
     </>
   );
 }

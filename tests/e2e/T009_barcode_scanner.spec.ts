@@ -28,12 +28,12 @@ test.describe("T009: Barcode Scanner", () => {
   });
 
   test("deve exibir botão de barcode no chat", async ({ page }) => {
-    const barcodeButton = page.locator("text=barcode_scanner");
+    const barcodeButton = page.locator("text=qr_code_scanner");
     await expect(barcodeButton).toBeVisible();
   });
 
   test("deve abrir modal do scanner ao clicar no botão", async ({ page }) => {
-    const barcodeButton = page.locator("text=barcode_scanner");
+    const barcodeButton = page.locator("text=qr_code_scanner");
     await barcodeButton.click();
 
     // Modal do scanner deve aparecer
@@ -42,14 +42,14 @@ test.describe("T009: Barcode Scanner", () => {
   });
 
   test("deve fechar modal ao clicar no botão fechar", async ({ page }) => {
-    const barcodeButton = page.locator("text=barcode_scanner");
+    const barcodeButton = page.locator("text=qr_code_scanner");
     await barcodeButton.click();
 
     const scannerHeader = page.locator("text=Escanear Código de Barras");
     await expect(scannerHeader).toBeVisible();
 
-    // Clica no botão fechar
-    const closeButton = page.locator("text=close").first();
+    // Clica no botão fechar do scanner (último "close" visível, pois scanner fica no topo z-50)
+    const closeButton = page.locator("button").filter({ hasText: "close" }).last();
     await closeButton.click();
 
     // Modal deve desaparecer

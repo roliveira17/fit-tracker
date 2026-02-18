@@ -39,6 +39,8 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       // Se acabou de fazer login, redireciona apropriadamente
       if (event === "SIGNED_IN" && session) {
         const currentPath = window.location.pathname;
+        // Se está no callback, deixa a página de callback fazer o redirect
+        if (currentPath.startsWith("/auth/callback")) return;
         // Se está na página de login, redireciona para home
         if (currentPath === "/login") {
           window.location.href = "/home";

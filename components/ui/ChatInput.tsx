@@ -149,7 +149,7 @@ export function ChatInput({
         {/* Botão parar e enviar */}
         <button
           onClick={onStopRecording}
-          className="w-11 h-11 rounded-full bg-[#3E2723] text-white flex items-center justify-center hover:bg-[#2C1B17] active:scale-95 transition-all duration-200 shadow-sm"
+          className="w-11 h-11 rounded-full bg-calma-primary text-white flex items-center justify-center hover:bg-calma-primary/90 active:scale-95 transition-all duration-200 shadow-sm"
         >
           <span className="material-symbols-outlined text-[20px]">send</span>
         </button>
@@ -163,7 +163,7 @@ export function ChatInput({
       <div className="bg-white rounded-[2rem] p-2 pl-5 shadow-[0_8px_30px_rgb(0,0,0,0.08)] flex items-center gap-1 border border-white/60 backdrop-blur-xl w-full">
         <div className="flex-1 flex items-center justify-center gap-3 py-1">
           <svg
-            className="animate-spin size-5 text-[#3E2723]"
+            className="animate-spin size-5 text-calma-primary"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -216,12 +216,12 @@ export function ChatInput({
       )}
 
       {/* Single white container — Stitch design */}
-      <div className="bg-white rounded-[1.75rem] min-h-14 py-2 px-5 shadow-[0_8px_30px_rgb(0,0,0,0.08)] flex items-end gap-1 border border-white/60 backdrop-blur-xl w-full">
+      <div className="bg-white rounded-[2rem] min-h-14 p-2 pr-2 pl-5 shadow-[0_8px_30px_rgb(0,0,0,0.08)] flex items-end gap-1 border border-white/60 backdrop-blur-xl w-full">
         {/* Textarea (auto-resize) */}
         <div className="flex-1 min-w-0 flex items-center min-h-10">
           <textarea
             ref={textareaRef}
-            className="w-full bg-transparent border-none text-gray-800 placeholder-gray-400 focus:ring-0 focus:outline-none p-0 text-[15px] resize-none overflow-hidden leading-6"
+            className="w-full bg-transparent border-none text-gray-800 placeholder-gray-400 focus:ring-0 focus:outline-none p-0 text-[17px] resize-none overflow-hidden leading-relaxed"
             placeholder={placeholder}
             value={value}
             onChange={(e) => setValue(e.target.value)}
@@ -232,17 +232,17 @@ export function ChatInput({
         </div>
 
         {/* Divider */}
-        <div className="h-5 w-px bg-gray-200 mx-1 shrink-0 mb-2.5" />
+        <div className="h-6 w-px bg-gray-200 mx-1 shrink-0 mb-2.5" />
 
         {/* Botão de barcode */}
         {showBarcodeButton && onBarcodeClick && (
           <button
             onClick={onBarcodeClick}
             disabled={disabled || isProcessing}
-            className="w-9 h-9 mb-0.5 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+            className="w-10 h-10 mb-0.5 flex items-center justify-center rounded-full text-gray-400 hover:text-calma-primary hover:bg-gray-100 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
             title="Escanear código de barras"
           >
-            <span className="material-symbols-outlined text-[20px]">qr_code_scanner</span>
+            <span className="material-symbols-outlined text-[22px]">qr_code_scanner</span>
           </button>
         )}
 
@@ -251,10 +251,10 @@ export function ChatInput({
           <button
             onClick={handleImageButtonClick}
             disabled={disabled || isProcessing}
-            className="w-9 h-9 mb-0.5 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+            className="w-10 h-10 mb-0.5 flex items-center justify-center rounded-full text-gray-400 hover:text-calma-primary hover:bg-gray-100 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
             title="Enviar foto de refeição"
           >
-            <span className="material-symbols-outlined text-[20px]">photo_camera</span>
+            <span className="material-symbols-outlined text-[22px]">photo_camera</span>
           </button>
         )}
 
@@ -263,12 +263,12 @@ export function ChatInput({
           onClick={showSendButton ? handleSend : onStartRecording}
           disabled={disabled || isProcessing}
           className={`
-            w-10 h-10 rounded-full flex items-center justify-center
+            w-11 h-11 ml-1 rounded-full flex items-center justify-center
             active:scale-95 transition-all duration-200 shadow-sm shrink-0
             disabled:opacity-50 disabled:cursor-not-allowed
             ${showSendButton
-              ? "bg-[#3E2723] text-white hover:bg-[#2C1B17]"
-              : "bg-[#F5E6D3] text-[#8B6914] hover:bg-[#EDD9B8]"
+              ? "bg-calma-primary text-white hover:bg-calma-primary/90"
+              : "bg-gray-100 text-calma-primary hover:bg-gray-200"
             }
           `}
         >

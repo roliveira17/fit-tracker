@@ -154,21 +154,22 @@ export default function HomePage() {
 
   if (isLoading) {
     return (
-      <ScreenContainer className="bg-background-dark text-white">
+      <ScreenContainer className="bg-[#F5F3EF] text-gray-800">
         <div className="flex flex-1 items-center justify-center">
-          <p className="text-text-secondary">Carregando...</p>
+          <p className="text-gray-500">Carregando...</p>
         </div>
       </ScreenContainer>
     );
   }
 
   return (
-    <ScreenContainer className="bg-background-dark text-white">
+    <ScreenContainer className="bg-[#F5F3EF] text-gray-800">
       <div className="flex flex-1 flex-col">
         {/* Navegação temporal */}
         <DateNavigator
           selectedDate={selectedDate}
           onDateChange={setSelectedDate}
+          theme="light"
         />
 
         {/* Conteúdo principal */}
@@ -212,18 +213,18 @@ export default function HomePage() {
 
           {/* Lista de refeições do dia */}
           {meals.length > 0 && (
-            <div className="rounded-xl border border-border-subtle bg-surface-card p-4">
-              <h2 className="mb-3 text-sm font-medium text-text-secondary">
+            <div className="rounded-2xl bg-white p-4 shadow-soft">
+              <h2 className="mb-3 text-sm font-medium text-gray-500">
                 Refeições ({meals.length})
               </h2>
               <div className="flex flex-col gap-2">
                 {meals.map((meal) => (
                   <div
                     key={meal.id}
-                    className="flex items-center justify-between border-b border-border-subtle pb-2 last:border-0 last:pb-0"
+                    className="flex items-center justify-between border-b border-gray-100 pb-2 last:border-0 last:pb-0"
                   >
                     <div>
-                      <p className="text-sm font-medium text-white">
+                      <p className="text-sm font-medium text-gray-800">
                         {meal.type === "breakfast"
                           ? "Café da manhã"
                           : meal.type === "lunch"
@@ -234,11 +235,11 @@ export default function HomePage() {
                           ? "Lanche"
                           : "Refeição"}
                       </p>
-                      <p className="text-xs text-text-secondary">
+                      <p className="text-xs text-gray-500">
                         {meal.items.map((i) => i.name).join(", ")}
                       </p>
                     </div>
-                    <p className="text-sm font-medium text-white">
+                    <p className="text-sm font-medium text-gray-800">
                       {meal.totalCalories} kcal
                     </p>
                   </div>
@@ -249,8 +250,8 @@ export default function HomePage() {
 
           {/* Lista de treinos do dia */}
           {workouts.length > 0 && (
-            <div className="rounded-xl border border-border-subtle bg-surface-card p-4">
-              <h2 className="mb-3 text-sm font-medium text-text-secondary">
+            <div className="rounded-2xl bg-white p-4 shadow-soft">
+              <h2 className="mb-3 text-sm font-medium text-gray-500">
                 Treinos ({workouts.length})
               </h2>
               <div className="flex flex-col gap-2">
@@ -260,17 +261,17 @@ export default function HomePage() {
                     className="flex items-center justify-between"
                   >
                     <div>
-                      <p className="text-sm font-medium text-white">
+                      <p className="text-sm font-medium text-gray-800">
                         {workout.exercises.map((e) => e.name).join(", ")}
                       </p>
                       {workout.totalDuration && (
-                        <p className="text-xs text-text-secondary">
+                        <p className="text-xs text-gray-500">
                           {workout.totalDuration} min
                         </p>
                       )}
                     </div>
                     {workout.totalCaloriesBurned && (
-                      <p className="text-sm font-medium text-white">
+                      <p className="text-sm font-medium text-gray-800">
                         -{workout.totalCaloriesBurned} kcal
                       </p>
                     )}
@@ -281,7 +282,7 @@ export default function HomePage() {
           )}
         </div>
       </div>
-      <FAB onClick={() => router.push("/chat")} />\n    </ScreenContainer>
+      <FAB theme="light" onClick={() => router.push("/chat")} />
+    </ScreenContainer>
   );
 }
-

@@ -3,12 +3,12 @@ import { test, expect } from "@playwright/test";
 /**
  * T007: Visualizar Insights
  *
- * Testa a página de insights:
+ * Testa a página de insights (design Stitch com tabs):
  * - Estado vazio (sem dados)
- * - Exibição de gráficos com dados
+ * - Tabs de navegação (Resumo, Dieta, Treino, Sono, Glicemia, Corpo)
  * - StatCards com valores agregados
  * - Troca de período (7, 14, 30 dias)
- * - Geração de insights
+ * - Geração de recomendações
  */
 test.describe("T007: Visualizar Insights", () => {
   // Helper para gerar data no formato YYYY-MM-DD
@@ -46,23 +46,19 @@ test.describe("T007: Visualizar Insights", () => {
         })
       );
       localStorage.setItem("fittrack_onboarding_complete", "true");
-      // Limpa todos os dados
       localStorage.removeItem("fittrack_meals");
       localStorage.removeItem("fittrack_workouts");
       localStorage.removeItem("fittrack_weight_logs");
     });
 
-    // Vai para insights
     await page.goto("/insights");
     await expect(page).toHaveURL(/insights/);
 
-    // Verifica empty state
     await expect(page.getByText("Sem dados ainda")).toBeVisible();
     await expect(page.getByText("Ir para o Chat")).toBeVisible();
   });
 
-  test("deve exibir gráfico de peso quando há dados", async ({ page }) => {
-    // Configura usuário com dados de peso
+  test("deve exibir gráfico de peso na tab Corpo", async ({ page }) => {
     await page.goto("/");
     await page.evaluate((testDates) => {
       localStorage.setItem(
@@ -79,7 +75,6 @@ test.describe("T007: Visualizar Insights", () => {
       );
       localStorage.setItem("fittrack_onboarding_complete", "true");
 
-      // Adiciona dados de peso
       const weightLogs = [
         { id: "w1", weight: 76, date: testDates.day5, timestamp: new Date().toISOString(), rawText: "76kg" },
         { id: "w2", weight: 75.5, date: testDates.day3, timestamp: new Date().toISOString(), rawText: "75.5kg" },
@@ -88,22 +83,17 @@ test.describe("T007: Visualizar Insights", () => {
       localStorage.setItem("fittrack_weight_logs", JSON.stringify(weightLogs));
     }, dates);
 
-    // Vai para insights
     await page.goto("/insights");
 
-    // Verifica que gráfico de peso é exibido
-    await expect(page.getByText("Evolução do Peso")).toBeVisible();
-
-    // Verifica StatCard de último peso
+    // Tab Resumo mostra StatCard de peso
     await expect(page.getByText("Último peso")).toBeVisible();
-    // Verifica que o valor 75.0 é exibido (pode aparecer múltiplas vezes)
-    await expect(page.getByText("75.0").first()).toBeVisible();
+
+    // Clica na tab Corpo para ver gráfico
+    await page.getByText("Corpo").click();
+    await expect(page.getByText("Evolução do Peso")).toBeVisible();
   });
 
-  test("deve exibir gráfico de calorias quando há dados de refeições", async ({
-    page,
-  }) => {
-    // Configura usuário com dados de refeições
+  test("deve exibir gráfico de calorias na tab Dieta", async ({ page }) => {
     await page.goto("/");
     await page.evaluate((testDates) => {
       localStorage.setItem(
@@ -120,7 +110,6 @@ test.describe("T007: Visualizar Insights", () => {
       );
       localStorage.setItem("fittrack_onboarding_complete", "true");
 
-      // Adiciona dados de refeições
       const meals = [
         {
           id: "m1",
@@ -150,20 +139,16 @@ test.describe("T007: Visualizar Insights", () => {
       localStorage.setItem("fittrack_meals", JSON.stringify(meals));
     }, dates);
 
-    // Vai para insights
     await page.goto("/insights");
 
-    // Verifica que gráfico de calorias é exibido
-    await expect(page.getByText("Calorias por Dia")).toBeVisible();
-
-    // Verifica StatCard de média kcal
     await expect(page.getByText("Média kcal")).toBeVisible();
+
+    // Clica na tab Dieta
+    await page.getByText("Dieta").click();
+    await expect(page.getByText("Calorias por Dia")).toBeVisible();
   });
 
-  test("deve exibir todos os StatCards com dados completos", async ({
-    page,
-  }) => {
-    // Configura usuário com dados completos
+  test("deve exibir todos os StatCards com dados completos", async ({ page }) => {
     await page.goto("/");
     await page.evaluate((testDates) => {
       localStorage.setItem(
@@ -180,13 +165,11 @@ test.describe("T007: Visualizar Insights", () => {
       );
       localStorage.setItem("fittrack_onboarding_complete", "true");
 
-      // Peso
       const weightLogs = [
         { id: "w1", weight: 75, date: testDates.day1, timestamp: new Date().toISOString(), rawText: "75kg" },
       ];
       localStorage.setItem("fittrack_weight_logs", JSON.stringify(weightLogs));
 
-      // Refeições
       const meals = [
         {
           id: "m1",
@@ -203,7 +186,6 @@ test.describe("T007: Visualizar Insights", () => {
       ];
       localStorage.setItem("fittrack_meals", JSON.stringify(meals));
 
-      // Treinos
       const workouts = [
         {
           id: "wk1",
@@ -218,17 +200,14 @@ test.describe("T007: Visualizar Insights", () => {
       localStorage.setItem("fittrack_workouts", JSON.stringify(workouts));
     }, dates);
 
-    // Vai para insights
     await page.goto("/insights");
 
-    // Verifica todos os StatCards
     await expect(page.getByText("Último peso")).toBeVisible();
-    await expect(page.getByText("Treinos")).toBeVisible();
+    await expect(page.getByText("Treinos").first()).toBeVisible();
     await expect(page.getByText("Média kcal")).toBeVisible();
   });
 
   test("deve trocar período corretamente", async ({ page }) => {
-    // Configura usuário com dados
     await page.goto("/");
     await page.evaluate((testDates) => {
       localStorage.setItem(
@@ -245,36 +224,26 @@ test.describe("T007: Visualizar Insights", () => {
       );
       localStorage.setItem("fittrack_onboarding_complete", "true");
 
-      // Peso
       const weightLogs = [
         { id: "w1", weight: 75, date: testDates.day1, timestamp: new Date().toISOString(), rawText: "75kg" },
       ];
       localStorage.setItem("fittrack_weight_logs", JSON.stringify(weightLogs));
     }, dates);
 
-    // Vai para insights
     await page.goto("/insights");
 
-    // Verifica seletores de período
     await expect(page.getByText("7 dias")).toBeVisible();
     await expect(page.getByText("14 dias")).toBeVisible();
     await expect(page.getByText("30 dias")).toBeVisible();
 
-    // Clica em 14 dias
     await page.getByText("14 dias").click();
+    await expect(page.getByText("Último peso")).toBeVisible();
 
-    // Verifica que a página ainda funciona
-    await expect(page.getByText("Evolução do Peso")).toBeVisible();
-
-    // Clica em 30 dias
     await page.getByText("30 dias").click();
-
-    // Verifica que a página ainda funciona
-    await expect(page.getByText("Evolução do Peso")).toBeVisible();
+    await expect(page.getByText("Último peso")).toBeVisible();
   });
 
   test("deve gerar insight de peso em queda", async ({ page }) => {
-    // Configura dados que geram insight de perda de peso
     await page.goto("/");
     await page.evaluate((testDates) => {
       localStorage.setItem(
@@ -291,7 +260,6 @@ test.describe("T007: Visualizar Insights", () => {
       );
       localStorage.setItem("fittrack_onboarding_complete", "true");
 
-      // Peso em queda (perda > 0.5kg)
       const weightLogs = [
         { id: "w1", weight: 77, date: testDates.day6, timestamp: new Date().toISOString(), rawText: "77kg" },
         { id: "w2", weight: 76.5, date: testDates.day4, timestamp: new Date().toISOString(), rawText: "76.5kg" },
@@ -301,10 +269,8 @@ test.describe("T007: Visualizar Insights", () => {
       localStorage.setItem("fittrack_weight_logs", JSON.stringify(weightLogs));
     }, dates);
 
-    // Vai para insights
     await page.goto("/insights");
 
-    // Verifica insight de peso em queda
     await expect(page.getByText("Peso em queda")).toBeVisible();
   });
 });

@@ -40,7 +40,7 @@ export function InsightCard({
 
   if (insight.type === "warning") {
     return (
-      <section className="flex items-start gap-4 rounded-xl bg-primary p-5 shadow-lg shadow-primary/20">
+      <section className="flex items-start gap-4 rounded-xl bg-calma-primary p-5 shadow-soft">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20 text-white">
           <span className="material-symbols-outlined">{insight.icon}</span>
         </div>
@@ -55,25 +55,25 @@ export function InsightCard({
   }
 
   const accentClass =
-    insight.type === "positive" ? "bg-success" : "bg-primary";
+    insight.type === "positive" ? "bg-success" : "bg-calma-primary";
   const iconClass =
-    insight.type === "positive" ? "text-success" : "text-primary";
+    insight.type === "positive" ? "text-success" : "text-calma-primary";
 
   return (
-    <div className="group relative overflow-hidden rounded-xl bg-icon-bg/60 p-4">
+    <div className="group relative overflow-hidden rounded-xl bg-gray-50 p-4">
       <div className="flex items-start gap-4">
         <div
-          className={`flex size-10 shrink-0 items-center justify-center rounded-lg ${iconClass} bg-white/5`}
+          className={`flex size-10 shrink-0 items-center justify-center rounded-lg ${iconClass} bg-calma-primary/10`}
         >
           <span className="material-symbols-outlined">{insight.icon}</span>
         </div>
         <div className="flex flex-1 flex-col">
-          <h3 className="text-sm font-bold text-white">{insight.headline}</h3>
-          <p className="mt-1 text-xs leading-relaxed text-text-secondary">
+          <h3 className="text-sm font-bold text-gray-800">{insight.headline}</h3>
+          <p className="mt-1 text-xs leading-relaxed text-gray-500">
             {insight.copy}
           </p>
         </div>
-        <span className="material-symbols-outlined text-[20px] text-text-secondary">
+        <span className="material-symbols-outlined text-[20px] text-gray-400">
           chevron_right
         </span>
       </div>
@@ -182,4 +182,3 @@ function generateInsight(data: {
 
   return null;
 }
-

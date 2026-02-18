@@ -43,7 +43,7 @@ test.describe("T004: Registro de Refeição", () => {
     test.setTimeout(60000);
 
     // Digita mensagem com quantidades específicas (mais provável de ser registrada diretamente)
-    const input = page.locator('textarea[placeholder*="Digite"]');
+    const input = page.locator('textarea[placeholder*="Ask"]');
     await input.fill("Almocei 150g de arroz branco e 200g de frango grelhado");
 
     // Clica no botão enviar
@@ -51,8 +51,8 @@ test.describe("T004: Registro de Refeição", () => {
     await expect(sendButton).toBeVisible();
     await sendButton.click();
 
-    // Aguarda resposta da IA com confirmação de registro (pode ter múltiplos itens)
-    await expect(page.getByText(/✓ Registrado/i).first()).toBeVisible({
+    // Aguarda resposta da IA com card Stitch de confirmação (ex: "Almoço Registrado")
+    await expect(page.getByText(/Registrado/i).first()).toBeVisible({
       timeout: 30000,
     });
 
@@ -65,14 +65,14 @@ test.describe("T004: Registro de Refeição", () => {
     test.setTimeout(60000);
 
     // Envia refeição com quantidades específicas
-    const input = page.locator('textarea[placeholder*="Digite"]');
+    const input = page.locator('textarea[placeholder*="Ask"]');
     await input.fill("Comi 200g de frango grelhado com 100g de batata doce");
 
     const sendButton = page.locator("button").filter({ hasText: "send" });
     await sendButton.click();
 
-    // Aguarda confirmação (pode ter múltiplos itens)
-    await expect(page.getByText(/✓ Registrado/i).first()).toBeVisible({
+    // Aguarda confirmação (card Stitch)
+    await expect(page.getByText(/Registrado/i).first()).toBeVisible({
       timeout: 30000,
     });
 
@@ -107,7 +107,7 @@ test.describe("T004: Registro de Refeição", () => {
     test.setTimeout(60000);
 
     // Digita mensagem com quantidades específicas
-    const input = page.locator('textarea[placeholder*="Digite"]');
+    const input = page.locator('textarea[placeholder*="Ask"]');
     await input.fill("Comi 200g de frango grelhado com salada");
 
     // Clica no botão enviar
@@ -115,8 +115,8 @@ test.describe("T004: Registro de Refeição", () => {
     await expect(sendButton).toBeVisible();
     await sendButton.click();
 
-    // Aguarda confirmação (resposta contém "✓ Registrado")
-    await expect(page.getByText(/✓ Registrado/i)).toBeVisible({
+    // Aguarda confirmação (card Stitch com título "X Registrado")
+    await expect(page.getByText(/Registrado/i).first()).toBeVisible({
       timeout: 30000,
     });
 
@@ -129,14 +129,14 @@ test.describe("T004: Registro de Refeição", () => {
     test.setTimeout(90000);
 
     // Registra refeição com quantidades
-    const input = page.locator('textarea[placeholder*="Digite"]');
+    const input = page.locator('textarea[placeholder*="Ask"]');
     await input.fill("Jantei 250g de salmão grelhado com legumes");
 
     const sendButton = page.locator("button").filter({ hasText: "send" });
     await sendButton.click();
 
-    // Aguarda confirmação
-    await expect(page.getByText(/✓ Registrado/i)).toBeVisible({
+    // Aguarda confirmação (card Stitch)
+    await expect(page.getByText(/Registrado/i).first()).toBeVisible({
       timeout: 30000,
     });
 
@@ -158,14 +158,14 @@ test.describe("T004: Registro de Refeição", () => {
     test.setTimeout(60000);
 
     // Registra refeição com quantidades específicas em gramas
-    const input = page.locator('textarea[placeholder*="Digite"]');
+    const input = page.locator('textarea[placeholder*="Ask"]');
     await input.fill("Café da manhã: 100g de ovos mexidos e 50g de pão integral");
 
     const sendButton = page.locator("button").filter({ hasText: "send" });
     await sendButton.click();
 
     // Aguarda toast de confirmação "Refeição registrada!"
-    await expect(page.getByText(/Refeição registrada/i)).toBeVisible({
+    await expect(page.getByText(/Refeição registrada/i).first()).toBeVisible({
       timeout: 30000,
     });
   });

@@ -12,6 +12,8 @@ import {
   type BodyFatParseResult,
   type GlucoseParseResult,
 } from "./parsers";
+import { buildWeeklyAnalysis, type WeeklyAnalysisResult } from "./weekly-analysis";
+import { buildGlucoseAnalysis, type GlucoseAnalysisResult } from "./glucose-analysis";
 import { generateUserContext } from "./food-lookup";
 import { type UserContext, formatUserContextForPrompt } from "./supabase";
 
@@ -94,6 +96,8 @@ export type MessageType =
   | "simulation"
   | "correction"
   | "subjective"
+  | "weekly_analysis"
+  | "glucose_analysis"
   | "other";
 
 /**
@@ -135,6 +139,8 @@ TIPOS DE MENSAGEM:
 - "simulation": Cenário hipotético com "se" ou "caso" ("se eu comer pizza, como fica?")
 - "correction": Correção de algo dito antes ("não, foram 80g", "errei, foi frango não peixe")
 - "subjective": Estado emocional ou físico ("dormi mal", "estou cansado", "me sinto bem")
+- "weekly_analysis": Pedido de análise, resumo ou balanço semanal ("análise da semana", "como estou essa semana", "resumo nutricional", "meu balanço", "como está meu equilíbrio")
+- "glucose_analysis": Pedido de status, análise ou resumo de glicemia ("status da glicemia", "como está minha glicose", "minha glicemia", "resumo do sensor", "dados do CGM", "níveis de açúcar")
 - "other": Saudações, agradecimentos, ou fora do escopo de fitness
 
 SUBTIPOS (apenas para "declaration"):
@@ -255,6 +261,8 @@ export type ParsedData =
   | { type: "weight"; data: WeightParseResult }
   | { type: "bodyfat"; data: BodyFatParseResult }
   | { type: "glucose"; data: GlucoseParseResult }
+  | { type: "weekly_analysis"; data: WeeklyAnalysisResult }
+  | { type: "glucose_analysis"; data: GlucoseAnalysisResult }
   | null;
 
 /**
@@ -305,6 +313,22 @@ Confirme a correção com "✓ Corrigido:" e mostre o valor atualizado.`;
 INSTRUÇÃO ESPECIAL: Este é um ESTADO SUBJETIVO.
 Registre com "✓ Registrado:" e faça UMA pergunta de follow-up contextual.
 Exemplo: "Quer me dizer o motivo?" ou "Quantas horas dormiu?"`;
+
+    case "weekly_analysis":
+      return `
+INSTRUÇÃO ESPECIAL: O usuário pediu uma ANÁLISE SEMANAL.
+Um card visual com métricas será exibido automaticamente junto com sua resposta.
+Sua resposta deve ser breve (2-3 frases), destacando o ponto mais importante da semana.
+NÃO repita números que já estão no card. Faça uma observação qualitativa.
+Exemplo: "No geral, sua semana foi boa. O ponto de atenção é a proteína, que ficou um pouco abaixo."`;
+
+    case "glucose_analysis":
+      return `
+INSTRUÇÃO ESPECIAL: O usuário pediu uma ANÁLISE DE GLICEMIA.
+Um card visual com métricas de glicemia será exibido automaticamente junto com sua resposta.
+Sua resposta deve ser breve (2-3 frases), fazendo uma observação qualitativa.
+NÃO repita números que já estão no card (média, min, max, tempo no alvo).
+Se não houver dados, sugira importar do sensor CGM ou registrar manualmente.`;
 
     default:
       return "";
@@ -371,8 +395,21 @@ export async function sendMessage(
   // Classifica a mensagem primeiro
   const classification = await classifyMessage(userMessage, chatHistory);
 
-  // Executa parser em paralelo com a geração de resposta
-  const parserPromise = runParser(userMessage, classification, mealHistory);
+  // Se weekly_analysis ou glucose_analysis, agrega dados deterministicamente (sem parser AI)
+  let deterministicData: ParsedData = null;
+  if (classification.type === "weekly_analysis") {
+    const result = buildWeeklyAnalysis(profile, supabaseContext, mealHistory);
+    deterministicData = { type: "weekly_analysis", data: result };
+  } else if (classification.type === "glucose_analysis") {
+    const result = buildGlucoseAnalysis(supabaseContext);
+    deterministicData = { type: "glucose_analysis", data: result };
+  }
+
+  // Executa parser em paralelo com a geração de resposta (skip para analysis types)
+  const skipParser = classification.type === "weekly_analysis" || classification.type === "glucose_analysis";
+  const parserPromise = skipParser
+    ? Promise.resolve(null)
+    : runParser(userMessage, classification, mealHistory);
 
   // Adiciona instruções específicas baseadas no tipo
   const typeInstructions = getTypeSpecificInstructions(classification);
@@ -411,10 +448,36 @@ export async function sendMessage(
 
   const responseText = aiResponse.choices[0]?.message?.content || "Desculpe, não consegui processar sua mensagem.";
 
+  // Enrich weight/bodyfat with Supabase history for chart + delta
+  const finalParsedData = deterministicData || parsedData;
+  if (
+    finalParsedData &&
+    (finalParsedData.type === "weight" || finalParsedData.type === "bodyfat") &&
+    supabaseContext?.recentWeights &&
+    supabaseContext.recentWeights.length > 0
+  ) {
+    const data = finalParsedData.data as unknown as Record<string, unknown>;
+    const mapped = supabaseContext.recentWeights.map((w) => ({
+      date: w.date,
+      weight: w.weight_kg,
+    }));
+    data.recentWeights = mapped;
+
+    // Compute weightChange from previous weight if not already set
+    if (!data.weightChange && finalParsedData.type === "weight" && mapped.length >= 1) {
+      const currentWeight = Number(data.weight || 0);
+      const sorted = [...mapped].sort((a, b) => b.date.localeCompare(a.date));
+      const previous = sorted[0];
+      if (previous && currentWeight > 0) {
+        data.weightChange = Math.round((currentWeight - previous.weight) * 10) / 10;
+      }
+    }
+  }
+
   return {
     response: responseText,
     classification,
-    parsedData,
+    parsedData: finalParsedData,
   };
 }
 

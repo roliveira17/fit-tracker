@@ -200,3 +200,22 @@ npm run dev                # reiniciar
 ```
 
 **Licao:** O script `dev:clean` do package.json ja resolve isso automaticamente no PowerShell.
+
+---
+
+## 12. BottomNav duplicado — ScreenContainer + pagina
+
+**Sintoma:** Aparece um "quadro" extra acima dos botoes de navegacao na Home, Profile e Insights. Dois conjuntos de tabs visiveis na tela.
+
+**Causa raiz:** O `ScreenContainer` (layout) renderiza automaticamente um `<BottomNav />` fixo no fundo. Mas as paginas (Home, Insights, Profile) tambem renderizavam seu proprio `<BottomNav theme="light" />` dentro de `children`. Como ambos sao `position: fixed`, sobrepoem — e o segundo aparece como bloco inline no conteudo scrollavel.
+
+Agravante: existiam **dois componentes BottomNav diferentes**:
+- `components/layout/BottomNav.tsx` — antigo (dark, 5 tabs, Lucide icons)
+- `components/ui/BottomNav.tsx` — novo (light, 4 tabs, Material Symbols)
+
+**Solucao:**
+1. Remover `<BottomNav>` de todas as paginas (Home, Insights, Profile)
+2. Atualizar `layout/BottomNav.tsx` para usar tema light + Material Symbols
+3. ScreenContainer como unica fonte de BottomNav
+
+**Licao:** Quando um wrapper (ScreenContainer) ja renderiza navegacao, as paginas internas NUNCA devem renderizar navegacao propria. Um unico ponto de controle para nav evita duplicacoes.

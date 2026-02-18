@@ -4,7 +4,7 @@
 // SEGMENTED CONTROL - Seletor de período
 // ========================================
 // Usado para alternar entre períodos (7/14/30 dias)
-// Estilo pill com item ativo destacado
+// Estilo pill com item ativo destacado — tema light
 
 interface SegmentOption {
   value: string;
@@ -23,7 +23,7 @@ export function SegmentedControl({
   onChange,
 }: SegmentedControlProps) {
   return (
-    <div className="flex h-10 w-full items-center rounded-lg bg-icon-bg/50 p-1">
+    <div className="flex h-10 w-full items-center rounded-lg bg-gray-200/60 p-1">
       {options.map((option) => {
         const isActive = option.value === value;
 
@@ -36,8 +36,8 @@ export function SegmentedControl({
               text-sm font-medium transition-all
               ${
                 isActive
-                  ? "bg-[#4A3B32] text-primary shadow-sm font-bold"
-                  : "text-text-secondary hover:text-white"
+                  ? "bg-white text-calma-primary shadow-sm font-bold"
+                  : "text-gray-500 hover:text-gray-800"
               }
             `}
           >

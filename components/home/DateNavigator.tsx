@@ -12,6 +12,7 @@ import { Header } from "@/components/ui/Header";
 interface DateNavigatorProps {
   selectedDate: Date;
   onDateChange: (date: Date) => void;
+  theme?: "dark" | "light";
 }
 
 /**
@@ -77,6 +78,7 @@ function isToday(date: Date): boolean {
 export function DateNavigator({
   selectedDate,
   onDateChange,
+  theme = "dark",
 }: DateNavigatorProps) {
   const goToPreviousDay = () => {
     const newDate = new Date(selectedDate);
@@ -98,6 +100,7 @@ export function DateNavigator({
       subtitle={formatSubtitle(selectedDate)}
       onPrevious={goToPreviousDay}
       onNext={isToday(selectedDate) ? undefined : goToNextDay}
+      theme={theme}
     />
   );
 }

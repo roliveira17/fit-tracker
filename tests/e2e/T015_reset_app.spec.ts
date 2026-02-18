@@ -57,6 +57,9 @@ test.describe("T015: Reset App", () => {
   });
 
   test("deve exibir botão de resetar app", async ({ page }) => {
+    // Expande seção Avançado
+    await page.getByText("Avançado").click();
+
     await expect(page.getByText("Resetar app")).toBeVisible();
     await expect(
       page.getByText(/apaga tudo.*volta ao in[ií]cio/i)
@@ -66,6 +69,9 @@ test.describe("T015: Reset App", () => {
   test("deve abrir modal de confirmação ao clicar em resetar", async ({
     page,
   }) => {
+    // Expande seção Avançado
+    await page.getByText("Avançado").click();
+
     await page.getByText("Resetar app").click();
 
     // Modal deve aparecer
@@ -78,6 +84,9 @@ test.describe("T015: Reset App", () => {
   });
 
   test("deve fechar modal ao clicar em cancelar", async ({ page }) => {
+    // Expande seção Avançado
+    await page.getByText("Avançado").click();
+
     await page.getByText("Resetar app").click();
 
     // Aguarda modal
@@ -101,6 +110,9 @@ test.describe("T015: Reset App", () => {
   });
 
   test("deve manter dados após cancelar reset", async ({ page }) => {
+    // Expande seção Avançado
+    await page.getByText("Avançado").click();
+
     await page.getByText("Resetar app").click();
     await expect(page.getByText("Resetar tudo?")).toBeVisible({
       timeout: 3000,
@@ -126,6 +138,9 @@ test.describe("T015: Reset App", () => {
   test("deve limpar todos os dados e redirecionar ao confirmar reset", async ({
     page,
   }) => {
+    // Expande seção Avançado
+    await page.getByText("Avançado").click();
+
     await page.getByText("Resetar app").click();
 
     // Aguarda modal

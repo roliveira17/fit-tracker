@@ -57,10 +57,10 @@ export function EmptyState({ hasMeals, hasWeight, hasWorkout }: EmptyStateProps)
   };
 
   return (
-    <div className="rounded-xl border border-border-subtle bg-surface-card p-4">
+    <div className="rounded-2xl bg-white p-4 shadow-soft">
       <div className="mb-4">
-        <h2 className="text-base font-bold text-white">Vamos comecar</h2>
-        <p className="mt-1 text-xs text-text-secondary">
+        <h2 className="text-base font-bold text-gray-800">Vamos comecar</h2>
+        <p className="mt-1 text-xs text-gray-500">
           Complete os itens abaixo para ter uma visao completa do seu dia
         </p>
       </div>
@@ -73,15 +73,15 @@ export function EmptyState({ hasMeals, hasWeight, hasWorkout }: EmptyStateProps)
             disabled={item.completed}
             className={`flex items-center gap-3 rounded-lg p-3 text-left transition-colors ${
               item.completed
-                ? "cursor-default bg-white/5"
-                : "bg-icon-bg/60 hover:bg-icon-bg"
+                ? "cursor-default bg-gray-50"
+                : "bg-gray-50 hover:bg-gray-100"
             }`}
           >
             <div
               className={`flex h-6 w-6 items-center justify-center rounded-full ${
                 item.completed
                   ? "bg-success/20 text-success"
-                  : "bg-white/5 text-text-secondary"
+                  : "bg-gray-100 text-gray-400"
               }`}
             >
               <span className="material-symbols-outlined text-[16px]">
@@ -92,8 +92,8 @@ export function EmptyState({ hasMeals, hasWeight, hasWorkout }: EmptyStateProps)
             <div
               className={`flex h-8 w-8 items-center justify-center rounded-lg ${
                 item.completed
-                  ? "bg-white/5 text-text-secondary"
-                  : "bg-primary/10 text-primary"
+                  ? "bg-gray-100 text-gray-400"
+                  : "bg-calma-primary/10 text-calma-primary"
               }`}
             >
               <span className="material-symbols-outlined text-[18px]">
@@ -103,14 +103,14 @@ export function EmptyState({ hasMeals, hasWeight, hasWorkout }: EmptyStateProps)
 
             <span
               className={`flex-1 text-sm ${
-                item.completed ? "text-text-secondary line-through" : "text-white"
+                item.completed ? "text-gray-400 line-through" : "text-gray-800"
               }`}
             >
               {item.label}
             </span>
 
             {!item.completed && (
-              <span className="text-xs text-text-secondary">
+              <span className="text-xs text-gray-400">
                 Toque para registrar
               </span>
             )}
@@ -118,9 +118,9 @@ export function EmptyState({ hasMeals, hasWeight, hasWorkout }: EmptyStateProps)
         ))}
       </div>
 
-      <div className="mt-4 border-t border-border-subtle pt-4">
+      <div className="mt-4 border-t border-gray-100 pt-4">
         <div className="flex items-center justify-between">
-          <span className="text-xs text-text-secondary">
+          <span className="text-xs text-gray-500">
             {completedCount} de {items.length} completos
           </span>
           <div className="flex gap-1">
@@ -128,7 +128,7 @@ export function EmptyState({ hasMeals, hasWeight, hasWorkout }: EmptyStateProps)
               <div
                 key={item.id}
                 className={`h-1.5 w-6 rounded-full ${
-                  item.completed ? "bg-success" : "bg-white/10"
+                  item.completed ? "bg-success" : "bg-gray-200"
                 }`}
               />
             ))}

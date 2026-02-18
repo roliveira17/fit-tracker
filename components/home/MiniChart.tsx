@@ -26,16 +26,16 @@ export function MiniChart({ data, latestBodyFat }: MiniChartProps) {
 
   if (validPoints.length === 0) {
     return (
-      <div className="rounded-xl border border-border-subtle bg-surface-card p-4">
+      <div className="rounded-2xl bg-white p-4 shadow-soft">
         <div className="mb-4 flex items-center gap-2">
-          <span className="material-symbols-outlined text-[18px] text-text-secondary">
+          <span className="material-symbols-outlined text-[18px] text-gray-500">
             monitor_weight
           </span>
-          <h2 className="text-sm font-medium text-text-secondary">
+          <h2 className="text-sm font-medium text-gray-500">
             Peso & BF
           </h2>
         </div>
-        <p className="py-4 text-center text-sm text-text-secondary">
+        <p className="py-4 text-center text-sm text-gray-500">
           Registre seu peso no Chat para ver o grafico
         </p>
       </div>
@@ -72,13 +72,13 @@ export function MiniChart({ data, latestBodyFat }: MiniChartProps) {
   const areaPath = `${linePath} L ${points[points.length - 1].x} ${chartHeight} L ${points[0].x} ${chartHeight} Z`;
 
   return (
-    <div className="rounded-xl border border-border-subtle bg-surface-card p-4">
+    <div className="rounded-2xl bg-white p-4 shadow-soft">
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-[18px] text-text-secondary">
+          <span className="material-symbols-outlined text-[18px] text-gray-500">
             monitor_weight
           </span>
-          <h2 className="text-sm font-medium text-text-secondary">
+          <h2 className="text-sm font-medium text-gray-500">
             Peso & BF
           </h2>
         </div>
@@ -90,7 +90,7 @@ export function MiniChart({ data, latestBodyFat }: MiniChartProps) {
                 ? "text-success"
                 : variation > 0
                 ? "text-error"
-                : "text-text-secondary"
+                : "text-gray-500"
             }`}
           >
             {variation < 0
@@ -105,7 +105,7 @@ export function MiniChart({ data, latestBodyFat }: MiniChartProps) {
                 ? "text-success"
                 : variation > 0
                 ? "text-error"
-                : "text-text-secondary"
+                : "text-gray-500"
             }`}
           >
             {variation > 0 ? "+" : ""}
@@ -116,17 +116,17 @@ export function MiniChart({ data, latestBodyFat }: MiniChartProps) {
 
       <div className="mb-4 flex items-baseline gap-4">
         <div>
-          <span className="text-3xl font-bold text-white">
+          <span className="text-3xl font-bold text-gray-800">
             {lastWeight.toFixed(1)}
           </span>
-          <span className="ml-1 text-sm text-text-secondary">kg</span>
+          <span className="ml-1 text-sm text-gray-500">kg</span>
         </div>
         {latestBodyFat && (
           <div>
-            <span className="text-lg font-semibold text-white">
+            <span className="text-lg font-semibold text-gray-800">
               {latestBodyFat.toFixed(1)}
             </span>
-            <span className="ml-1 text-sm text-text-secondary">% BF</span>
+            <span className="ml-1 text-sm text-gray-500">% BF</span>
           </div>
         )}
       </div>
@@ -139,26 +139,26 @@ export function MiniChart({ data, latestBodyFat }: MiniChartProps) {
         >
           <defs>
             <linearGradient id="chartGradient" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stopColor="#eb6028" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#eb6028" stopOpacity="0" />
+              <stop offset="0%" stopColor="#4F633A" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#4F633A" stopOpacity="0" />
             </linearGradient>
           </defs>
           <path d={areaPath} fill="url(#chartGradient)" />
           <path
             d={linePath}
             fill="none"
-            stroke="#eb6028"
+            stroke="#4F633A"
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth="2"
           />
           {points.map((p, i) => (
-            <circle key={i} cx={p.x} cy={p.y} r={3} fill="#eb6028" />
+            <circle key={i} cx={p.x} cy={p.y} r={3} fill="#4F633A" />
           ))}
         </svg>
       </div>
 
-      <div className="mt-2 flex justify-between text-[10px] text-text-secondary">
+      <div className="mt-2 flex justify-between text-[10px] text-gray-500">
         {data.map((d, i) => (
           <span key={i} className={d.weight !== null ? "" : "opacity-50"}>
             {formatShortDate(d.date)}
