@@ -12,6 +12,7 @@
 | Backend Supabase (M1-M10) | 100% (56/56) | Todos milestones completos |
 | Frontend v1 (core) | 100% | Onboarding, Chat, Home, Insights, Profile, Import |
 | Frontend v2 (extras) | 97% (60/62) | Audio, foto, Apple Health, auth, export, notificacoes, import calma |
+| Chat Cards Retrofit (Stitch) | 100% (8/8) | Todos cards retrofitados + 2 pipelines novos |
 | Food API | 70% (12/17) | Fases 1-2 completas, Fase 3 pendente |
 | QA / Testes E2E | 100% (15/15) | Todos implementados, 35 pass + 3 skip |
 | Design System | 80% | Retrofit Stitch (light) em andamento |
@@ -109,34 +110,31 @@ Arquivo `components/ui/button.tsx` e compatibilidade com shadcn/ui antigo. Pode 
 
 ---
 
-## Sessao 2026-02-09 — Onde Paramos
+## Sessao 2026-02-18 — Onde Paramos
 
 ### Concluido nesta sessao:
-- ✅ Retrofit Home page para design Stitch (light/Calma)
-- ✅ Retrofit Profile page para design Stitch
-- ✅ Retrofit Onboarding profile page
-- ✅ Header e FAB com suporte a tema light
+- ✅ **Fix Insights** — Pagina nao abria: auth race condition, try/catch, guards, padding
+- ✅ **Chat cores alinhadas** — Removido gradient cream, todos componentes usando tokens calma-*
+- ✅ PR #2 mergeada na master
+
+### Concluido na sessao 2026-02-09:
+- ✅ Retrofit Home, Profile, Onboarding para design Stitch (light/Calma)
 - ✅ Design system unificado: ScreenContainer default light (#F5F3EF)
 - ✅ BottomNav unificado (1 componente, tema light, Material Symbols, 5 tabs)
-- ✅ Removido BottomNav duplicado de Insights e Profile
-- ✅ 25 componentes Insights migrados dark → light
-- ✅ SegmentedControl migrado para tema light
-- ✅ Engines Insights criadas: score (0-100), deltas (semana-vs-semana), correlacoes (cross-domain)
-- ✅ Novos componentes SVG: ScoreRing, CalorieRing, Sparkline, FrequencyDots, MacroBar, HighlightCard
-- ✅ 6 secoes de dominio: Nutricao, Treino, Sono, Glicemia, Corpo, Correlacoes
+- ✅ Engines Insights criadas: score, deltas, correlacoes, recomendacoes
+- ✅ Novos componentes SVG: ScoreRing, CalorieRing, Sparkline, FrequencyDots, MacroBar
 - ✅ 12 testes E2E atualizados para novo layout
-- ✅ Build passando, push feito, PR #2 atualizada
 
-### Pendente — para proxima sessao:
-1. **INSIGHTS NAO ABRE** — Pagina de Insights nao renderiza corretamente apos retrofit. Precisa debug e fix.
-2. **CORES DO CHAT** — Chat ainda usa tema diferente (gradient cream). Alinhar com design light unificado.
-3. **BOTTOM NAV REDESIGN** — Botoes do menu estao feios. Redesenhar inspirado no app Lex (icones limpos, sem badges, estilo minimalista).
-4. **TESTAR IMPORT** — Re-testar Apple Health import com login
-5. **APPLE HEALTH SLEEP** — Verificar dados de sono apos import
+### Concluido na sessao 2026-02-08:
+- ✅ Retrofit visual de TODOS os chat cards para design Stitch (8 cards)
+- ✅ Pipeline Weekly Analysis + Glucose Analysis
+- ✅ Migration Apple Health + Testes E2E T010-T015
 
-### Sessoes anteriores:
-- 2026-02-08: Migration Apple Health, testes E2E T010-T015
-- 2026-02-07: Fix 5 bugs Apple Health Import pipeline
+### Pendente:
+1. **BOTTOM NAV REDESIGN** — Redesenhar inspirado no app Lex (icones limpos, minimalista)
+2. **TESTAR IMPORT** — Re-testar Apple Health import com login
+3. **APPLE HEALTH SLEEP** — Verificar dados de sono apos import
+4. **FOOD API FASE 3** — Otimizacoes (loading states, retry, analytics)
 
 ---
 
@@ -181,6 +179,7 @@ Arquivo `components/ui/button.tsx` e compatibilidade com shadcn/ui antigo. Pode 
 | Exportacao | 2026-01-21 | 9/9 |
 | Refactoring Import → design "Calma" | 2026-02-04 | Completo |
 | Glucose pipeline fix + chat AI | 2026-02-04 | Completo |
+| Chat Cards Retrofit (Stitch) | 2026-02-08 | 8/8 cards + 2 pipelines |
 
 ### Design System
 

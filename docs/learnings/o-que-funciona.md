@@ -84,3 +84,25 @@ Padroes que deram certo no desenvolvimento do Fit Track v3.
 - Usar 3 agentes Explore com hipoteses diferentes acelera debug de problemas cross-domain
 - Agente 1: frontend flow, Agente 2: database/SQL, Agente 3: auth/session
 - Cada agente retorna analise independente — cruzar resultados revela bugs que nenhum acharia sozinho
+
+## Chat Cards — Retrofit Stitch (2026-02-08)
+
+### Pipeline deterministico para cards de analise
+- Weekly Analysis e Glucose Analysis usam dados agregados do Supabase, sem depender da IA para gerar JSON
+- IA gera apenas texto complementar curto (2-3 frases), numeros ficam no card
+- Classificador identifica intent ("como estou essa semana", "status da glicemia") e roteia para builder deterministico
+- Mais confiavel, barato e consistente que pedir JSON estruturado ao GPT
+
+### BottomSheet como padrao reutilizavel
+- Componente base `components/ui/BottomSheet.tsx` com backdrop, slide-up, scroll interno, ESC close
+- Usado pelo EditMealSheet — pode ser reaproveitado para editar treinos, peso, etc.
+- z-50 acima do BottomNav (z-40), max-h-[85vh] com overflow scroll
+
+### Prop drilling controlado para callbacks de cards
+- chat/page.tsx → MessageBubble → CardRenderer → PhotoAnalysisCard
+- Callback `onEditMeal` passado como prop em 3 niveis — simples e rastreavel
+- Alternativa (Context) seria overengineering para 1 caso de uso
+
+### font-serif-display como marca visual dos cards
+- DM Serif Display nos titulos de todos os cards cria identidade visual consistente
+- Classe Tailwind `font-serif-display` ja estava configurada (next/font) — so precisou aplicar

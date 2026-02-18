@@ -6,9 +6,13 @@ Sessão encerrada. Atualize a memória persistente do projeto:
 4. docs/specs/ — atualizar spec da feature se requisitos mudaram
 5. docs/decisions/ — criar ADR se decisão arquitetural foi tomada
 
-Depois faça commit: "docs: atualizar estado do projeto após sessão YYYY-MM-DD"
+Depois faça commit e push:
+- Commit: "docs: atualizar estado do projeto após sessão YYYY-MM-DD"
+- Se houver commits de código (feat/fix/refactor), crie uma branch e abra PR com `gh pr create`
+- Se forem apenas commits de docs na master, faça push direto para master
 
 Por fim, me dê:
 - Resumo do que foi feito
 - O que ficou pendente
+- Link do PR (se criado)
 - Sugestão de próxima sessão

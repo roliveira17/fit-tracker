@@ -91,7 +91,14 @@
       "Bash(git rm:*)",
       "Bash(grep:*)",
       "Bash(del \"c:\\\\projetos\\\\gymrats\\\\components\\\\insights\\\\InsightText.tsx\")",
-      "Bash(del \"c:\\\\projetos\\\\gymrats\\\\app\\\\auth\\\\callback\\\\route.ts\")"
+      "Bash(del \"c:\\\\projetos\\\\gymrats\\\\app\\\\auth\\\\callback\\\\route.ts\")",
+      "Bash(git checkout:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr merge:*)",
+      "Bash(git pull:*)",
+      "Bash(git -C c:projetosgymrats log --oneline -30)",
+      "Bash(git fetch:*)"
     ],
     "additionalDirectories": [
       "c:\\projetos\\gymrats"
