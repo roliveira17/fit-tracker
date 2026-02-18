@@ -36,7 +36,7 @@ export function ScreenContainer({ children, className, hideNav }: ScreenContaine
     >
       <div className={cn(
         "mx-auto w-full max-w-md flex-1 px-6 py-4",
-        showNav && "pb-24" // Espaço para a nav inferior
+        showNav && "pb-28" // Espaço para floating nav + margem
       )}>
         {children}
       </div>
