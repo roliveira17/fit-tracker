@@ -57,14 +57,14 @@ export function GlucoseAnalysisCard({
   if (readingsCount === 0) {
     return (
       <>
-        <h2 className="font-serif-display text-[1.75rem] text-[#3E2723] leading-tight mb-3">
+        <h2 className="font-serif-display text-[1.75rem] text-gray-800 leading-tight mb-3">
           Glicemia
         </h2>
-        <p className="text-[14px] text-[#3E2723]/60 leading-relaxed mb-4">
+        <p className="text-[14px] text-gray-500 leading-relaxed mb-4">
           {summary}
         </p>
         <div className="bg-[#F8FCF9] rounded-xl p-3 border border-green-500/20">
-          <p className="text-[14px] italic text-[#3E2723]/80 leading-relaxed font-serif-display">
+          <p className="text-[14px] italic text-gray-600 leading-relaxed font-serif-display">
             &ldquo;{recommendation}&rdquo;
           </p>
         </div>
@@ -86,7 +86,7 @@ export function GlucoseAnalysisCard({
     <>
       {/* Title */}
       <div className="flex justify-between items-start mb-1">
-        <h2 className="font-serif-display text-[1.75rem] text-[#3E2723] leading-tight">
+        <h2 className="font-serif-display text-[1.75rem] text-gray-800 leading-tight">
           Glicemia
         </h2>
         <div className={`${statusBg} ${statusColor} rounded-full p-1.5 flex items-center justify-center`}>
@@ -123,13 +123,13 @@ export function GlucoseAnalysisCard({
               />
             </svg>
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-[13px] font-bold text-[#3E2723]">
+              <span className="text-[13px] font-bold text-gray-800">
                 {timeInRange}%
               </span>
             </div>
           </div>
           <div>
-            <p className="text-[11px] font-bold text-[#3E2723] uppercase tracking-wide mb-0.5">
+            <p className="text-[11px] font-bold text-gray-800 uppercase tracking-wide mb-0.5">
               Tempo no Alvo
             </p>
             <p className="text-[13px] text-[#816965] leading-snug">
@@ -158,7 +158,7 @@ export function GlucoseAnalysisCard({
       {/* Daily trend bars */}
       {byDay.length > 1 && (
         <div className="mb-5">
-          <p className="text-[11px] font-bold text-[#3E2723] uppercase tracking-wide mb-2">
+          <p className="text-[11px] font-bold text-gray-800 uppercase tracking-wide mb-2">
             Tendência Diária
           </p>
           <div className="flex items-end gap-1.5" style={{ height: chartH }}>
@@ -185,10 +185,10 @@ export function GlucoseAnalysisCard({
       )}
 
       {/* Divider */}
-      <div className="h-px bg-[#3E2723]/5 w-full mb-4" />
+      <div className="h-px bg-calma-primary/5 w-full mb-4" />
 
       {/* Summary */}
-      <p className="text-[14px] text-[#3E2723]/80 leading-relaxed mb-3">
+      <p className="text-[14px] text-gray-600 leading-relaxed mb-3">
         {summary}
       </p>
 
@@ -196,7 +196,7 @@ export function GlucoseAnalysisCard({
       <div className={`${statusBg} rounded-xl p-3 border ${
         status === "good" ? "border-green-500/20" : status === "warning" ? "border-orange-400/20" : "border-red-400/20"
       }`}>
-        <p className="text-[14px] italic text-[#3E2723]/80 leading-relaxed font-serif-display">
+        <p className="text-[14px] italic text-gray-600 leading-relaxed font-serif-display">
           &ldquo;{recommendation}&rdquo;
         </p>
       </div>
@@ -211,7 +211,7 @@ function StatBox({ label, value, unit }: { label: string; value: string; unit: s
         {label}
       </p>
       <div className="flex items-baseline gap-1">
-        <span className="text-lg font-bold text-[#3E2723]">{value}</span>
+        <span className="text-lg font-bold text-gray-800">{value}</span>
         <span className="text-[11px] text-[#816965]">{unit}</span>
       </div>
     </div>

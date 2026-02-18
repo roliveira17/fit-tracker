@@ -41,7 +41,7 @@ export function MealCard({ items, mealType }: MealCardProps) {
   // Dot color based on dominant macro of each item
   function getDotColor(item: MealItem) {
     if (item.protein >= item.carbs && item.protein >= item.fat)
-      return "bg-[#44563C]";
+      return "bg-calma-primary";
     if (item.carbs >= item.protein && item.carbs >= item.fat)
       return "bg-[#E0A458]";
     return "bg-[#C7B299]";
@@ -59,7 +59,7 @@ export function MealCard({ items, mealType }: MealCardProps) {
             {mealLabel} Registrado
           </h2>
         </div>
-        <div className="bg-[#F3E7D5]/50 text-[#44563C] p-2 rounded-full flex items-center justify-center">
+        <div className="bg-calma-primary/10 text-calma-primary p-2 rounded-full flex items-center justify-center">
           <span className="material-symbols-outlined text-[20px]">
             restaurant
           </span>
@@ -98,14 +98,14 @@ export function MealCard({ items, mealType }: MealCardProps) {
           <span className="text-[13px] font-bold text-gray-500 uppercase tracking-wide">
             Total Calórico
           </span>
-          <span className="font-serif-display text-[1.75rem] text-[#44563C] tabular-nums leading-none">
+          <span className="font-serif-display text-[1.75rem] text-calma-primary tabular-nums leading-none">
             {totalCalories}
           </span>
         </div>
 
         <div className="relative h-3 w-full rounded-full bg-transparent overflow-hidden flex mb-4">
           <div
-            className="h-full bg-[#44563C] rounded-l-full"
+            className="h-full bg-calma-primary rounded-l-full"
             style={{ width: `${proteinPct}%` }}
           />
           <div
@@ -120,8 +120,8 @@ export function MealCard({ items, mealType }: MealCardProps) {
 
         <div className="flex justify-between text-[11px] font-bold tracking-wider text-gray-400 px-1">
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#44563C]" />
-            <span className="text-[#44563C]">p ({proteinPct}%)</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-calma-primary" />
+            <span className="text-calma-primary">p ({proteinPct}%)</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-[#E0A458]" />

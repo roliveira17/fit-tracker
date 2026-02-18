@@ -60,7 +60,7 @@ export function SleepCard({
       </div>
 
       {/* Title */}
-      <h2 className="font-serif-display text-2xl text-[#3E2723] mb-6 leading-tight">
+      <h2 className="font-serif-display text-2xl text-gray-800 mb-6 leading-tight">
         Seu Sono e
         <br />
         Recuperação
@@ -68,7 +68,7 @@ export function SleepCard({
 
       {/* Main metric — large duration */}
       <div className="flex items-baseline gap-1 mb-2">
-        <span className="font-serif-display text-6xl font-medium tracking-tight text-[#3E2723]">
+        <span className="font-serif-display text-6xl font-medium tracking-tight text-gray-800">
           {hours}
           <span className="text-4xl">h</span> {minutes}
           <span className="text-4xl">min</span>
@@ -107,7 +107,7 @@ export function SleepCard({
                   {stage.name}
                 </span>
               </div>
-              <p className="text-xl font-bold text-[#3E2723]">
+              <p className="text-xl font-bold text-gray-800">
                 {stage.duration}
               </p>
               {stage.changePercent !== undefined &&
@@ -136,7 +136,7 @@ export function SleepCard({
               bolt
             </span>
           </div>
-          <p className="text-[#3E2723] text-base italic leading-snug font-serif-display">
+          <p className="text-gray-800 text-base italic leading-snug font-serif-display">
             &ldquo;{insight}&rdquo;
           </p>
         </div>

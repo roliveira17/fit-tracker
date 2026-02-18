@@ -63,7 +63,7 @@ export function PhotoAnalysisCard({
         {/* Macro stats */}
         <div className="flex flex-col justify-center gap-1">
           <div className="flex items-baseline gap-1">
-            <span className="text-3xl font-bold text-[#3E2723]">
+            <span className="text-3xl font-bold text-gray-800">
               {totalCalories}
             </span>
             <span className="text-sm font-medium text-[#816965]">kcal</span>
@@ -105,7 +105,7 @@ export function PhotoAnalysisCard({
         {foods.map((food, i) => (
           <div key={i} className="flex justify-between items-center text-sm">
             <span className="text-[#816965]">{food.name}</span>
-            <span className="font-bold text-[#3E2723]">
+            <span className="font-bold text-gray-800">
               {food.quantity || `${food.calories} kcal`}
             </span>
           </div>

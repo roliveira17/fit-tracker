@@ -60,7 +60,7 @@ export function EditMealSheet({ isOpen, onClose, foods, onSave }: EditMealSheetP
                 type="text"
                 value={item.name}
                 onChange={(e) => updateItem(i, "name", e.target.value)}
-                className="w-full bg-transparent text-[#3E2723] font-medium text-[15px] border-none p-0 focus:ring-0 focus:outline-none"
+                className="w-full bg-transparent text-gray-800 font-medium text-[15px] border-none p-0 focus:ring-0 focus:outline-none"
                 placeholder="Nome do alimento"
               />
               <input
@@ -97,7 +97,7 @@ export function EditMealSheet({ isOpen, onClose, foods, onSave }: EditMealSheetP
       <div className="bg-gray-50 rounded-2xl p-4 mb-6">
         <div className="flex justify-between items-center mb-2">
           <span className="text-sm font-bold text-[#816965] uppercase tracking-wide">Total</span>
-          <span className="font-serif-display text-xl text-[#3E2723]">{totalCalories} kcal</span>
+          <span className="font-serif-display text-xl text-gray-800">{totalCalories} kcal</span>
         </div>
         <div className="flex gap-4 text-xs text-[#816965]">
           <span>{totalProtein}g prot</span>

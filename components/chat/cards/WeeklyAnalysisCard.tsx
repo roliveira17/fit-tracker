@@ -36,13 +36,13 @@ export function WeeklyAnalysisCard({
   return (
     <>
       {/* Title */}
-      <h2 className="font-serif-display text-2xl text-[#3E2723] font-medium mb-4 tracking-tight">
+      <h2 className="font-serif-display text-2xl text-gray-800 font-medium mb-4 tracking-tight">
         Análise da Semana
       </h2>
 
       {/* Summary */}
       {summary && (
-        <p className="text-[14px] text-[#3E2723]/80 leading-relaxed mb-4">
+        <p className="text-[14px] text-gray-600 leading-relaxed mb-4">
           {summary}
         </p>
       )}
@@ -58,10 +58,10 @@ export function WeeklyAnalysisCard({
                 {statusIcons[metric.status]}
               </span>
               <div>
-                <p className="text-[11px] font-bold text-[#3E2723] uppercase tracking-wide mb-0.5">
+                <p className="text-[11px] font-bold text-gray-800 uppercase tracking-wide mb-0.5">
                   {metric.label}
                 </p>
-                <p className="text-base text-[#3E2723]/80 leading-snug">
+                <p className="text-base text-gray-600 leading-snug">
                   {metric.detail || metric.value}
                 </p>
               </div>
@@ -73,12 +73,12 @@ export function WeeklyAnalysisCard({
       {/* Separator + Recommendation */}
       {recommendations && recommendations.length > 0 && (
         <>
-          <div className="h-px bg-[#3E2723]/5 w-full my-4" />
+          <div className="h-px bg-calma-primary/5 w-full my-4" />
           <div className="bg-[#F8FCF9] rounded-xl p-3 border border-green-500/20">
             {recommendations.map((rec, i) => (
               <p
                 key={i}
-                className="text-[15px] italic text-[#3E2723]/90 leading-relaxed font-serif-display"
+                className="text-[15px] italic text-gray-700 leading-relaxed font-serif-display"
               >
                 &ldquo;{rec.text}&rdquo;
               </p>

@@ -32,7 +32,7 @@ interface MessageBubbleProps {
 /**
  * MessageBubble - Chat message bubble (Stitch design)
  *
- * - User: right-aligned, beige bubble (#E5DBCB)
+ * - User: right-aligned, green bubble (calma-primary)
  * - AI: left with spa avatar, white card or structured card
  */
 export function MessageBubble({
@@ -47,10 +47,10 @@ export function MessageBubble({
     return (
       <div className="flex items-end justify-end animate-fade-in-up">
         <div className="flex flex-col gap-1 items-end max-w-[85%]">
-          <div className="p-5 rounded-3xl rounded-tr-sm bg-[#E5DBCB] text-[#3E2723] shadow-sm">
+          <div className="p-5 rounded-3xl rounded-tr-sm bg-calma-primary text-white shadow-sm">
             <p className="text-[17px] font-normal leading-relaxed">{content}</p>
           </div>
-          <span className="text-xs font-medium text-[#3E2723]/40 pr-2">
+          <span className="text-xs font-medium text-gray-400 pr-2">
             Me
           </span>
         </div>
@@ -63,7 +63,7 @@ export function MessageBubble({
     <div className="flex items-start gap-3 animate-fade-in-up">
       {/* Avatar */}
       <div className="shrink-0 mt-1">
-        <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-[0_4px_20px_-2px_rgba(62,39,35,0.05)] border border-white/50">
+        <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-soft border border-white/50">
           <span className="material-symbols-outlined text-green-500 text-[20px]">
             spa
           </span>
@@ -73,12 +73,12 @@ export function MessageBubble({
       {/* Content */}
       <div className="flex-1 min-w-0 flex flex-col gap-1 items-start">
         {parsedData ? (
-          <div className="bg-white p-6 rounded-[1.75rem] rounded-tl-sm shadow-[0_4px_20px_-2px_rgba(62,39,35,0.08)] border border-white/40 overflow-hidden">
+          <div className="bg-white p-6 rounded-[1.75rem] rounded-tl-sm shadow-soft border border-gray-100 overflow-hidden">
             <CardRenderer parsedData={parsedData} textContent={content} onEditMeal={onEditMeal} />
           </div>
         ) : (
-          <div className="bg-white p-6 rounded-[1.75rem] rounded-tl-sm shadow-[0_4px_20px_-2px_rgba(62,39,35,0.08)] border border-white/40">
-            <div className="text-[15px] leading-relaxed text-[#3E2723]/80">
+          <div className="bg-white p-6 rounded-[1.75rem] rounded-tl-sm shadow-soft border border-gray-100">
+            <div className="text-[15px] leading-relaxed text-gray-800">
               {content.split("\n").map((line, i) => (
                 <span key={i}>
                   {formatLine(line)}
@@ -88,7 +88,7 @@ export function MessageBubble({
             </div>
           </div>
         )}
-        <span className="text-xs font-medium text-[#3E2723]/40 pl-2">
+        <span className="text-xs font-medium text-gray-400 pl-2">
           Fit AI
         </span>
       </div>
@@ -318,7 +318,7 @@ function CardRenderer({
 
     default:
       return (
-        <div className="text-[15px] leading-relaxed text-[#3E2723]/80">
+        <div className="text-[15px] leading-relaxed text-gray-800">
           {textContent.split("\n").map((line, i) => (
             <span key={i}>
               {formatLine(line)}
