@@ -1,7 +1,7 @@
 # Fit Track v3 — Roadmap e Progresso
 
 > Arquivo unico de acompanhamento do projeto.
-> Ultima atualizacao: 2026-02-18
+> Ultima atualizacao: 2026-02-18 (sessao 2)
 
 ---
 
@@ -15,7 +15,7 @@
 | Chat Cards Retrofit (Stitch) | 100% (8/8) | Todos cards retrofitados + 2 pipelines novos |
 | Food API | 70% (12/17) | Fases 1-2 completas, Fase 3 pendente |
 | QA / Testes E2E | 100% (15/15) | Todos implementados, 35 pass + 3 skip |
-| Design System | 95% | Retrofit Stitch (light) completo — todas telas + floating pill nav |
+| Design System | 100% | Retrofit Stitch (light) completo — todas telas + floating pill nav + auth pages |
 | Deploy | Ativo | https://fit-tracker-murex.vercel.app |
 
 ---
@@ -110,9 +110,15 @@ Arquivo `components/ui/button.tsx` e compatibilidade com shadcn/ui antigo. Pode 
 
 ---
 
-## Sessao 2026-02-18 — Onde Paramos
+## Sessao 2026-02-18 (sessao 2) — Onde Paramos
 
-### Concluido nesta sessao:
+### Concluido nesta sessao (2):
+- ✅ **Auth cleanup** — Removido NextAuth legado (4 arquivos, 15 pacotes), retrofitado login/callback/onboarding para tema light [PR #4]
+- ✅ **Login Google funcionando** — Supabase restaurado do pause, OAuth flow validado end-to-end
+- ✅ **Import bg fix** — Alinhada cor de fundo da pagina Import com tema unificado (#F5F3EF)
+- ✅ **Fix Insights crash** — Normalizer para RPC `getInsights()`, guards de optional chaining para glucose nos engines, fallbacks em `supabaseToUserProfile()`
+
+### Concluido nesta sessao (1):
 - ✅ **Fix Insights** — Pagina nao abria: auth race condition, try/catch, guards, padding [PR #2]
 - ✅ **Chat cores alinhadas** — Removido gradient cream, todos componentes usando tokens calma-* [PR #2]
 - ✅ **BottomNav floating pill** — Redesign minimalista: floating pill, so icones, glass effect [PR #3]
@@ -131,9 +137,10 @@ Arquivo `components/ui/button.tsx` e compatibilidade com shadcn/ui antigo. Pode 
 - ✅ Migration Apple Health + Testes E2E T010-T015
 
 ### Pendente:
-1. **TESTAR IMPORT** — Re-testar Apple Health import com login
-2. **APPLE HEALTH SLEEP** — Verificar dados de sono apos import
-3. **FOOD API FASE 3** — Otimizacoes (loading states, retry, analytics)
+1. **VERIFICAR MIGRATIONS** — Confirmar que `20260203_001_insights_extended.sql` e `20260204_001_sleep_insights.sql` estao aplicadas no Supabase
+2. **TESTAR IMPORT** — Re-testar Apple Health import com login
+3. **APPLE HEALTH SLEEP** — Verificar dados de sono apos import
+4. **FOOD API FASE 3** — Otimizacoes (loading states, retry, analytics)
 
 ---
 
@@ -187,7 +194,7 @@ Arquivo `components/ui/button.tsx` e compatibilidade com shadcn/ui antigo. Pode 
 | Setup (Tailwind, fonts, dark mode) | 2026-01-19 | 4/4 |
 | Base Components (12 sets) | 2026-01-19 | 12/12 |
 | Screens (10 telas) | 2026-01-19 | 10/10 |
-| Retrofit Stitch (light unificado) | 2026-02-18 | Completo — todas telas + floating pill nav |
+| Retrofit Stitch (light unificado) | 2026-02-18 | Completo — todas telas + auth pages + floating pill nav |
 
 ### Food API
 

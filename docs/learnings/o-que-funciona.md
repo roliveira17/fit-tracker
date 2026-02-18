@@ -118,3 +118,14 @@ Padroes que deram certo no desenvolvimento do Fit Track v3.
 - Substituir hardcoded colors (#3E2723, #E5DBCB, etc) por tokens do design system (calma-primary, gray-*, shadow-soft)
 - Usar Task agent para batch replace em multiplos arquivos (7 cards) — muito mais rapido que editar um por um
 - Remover gradients customizados (bg-gradient cream) e deixar ScreenContainer definir o fundo
+
+### Normalizar dados de RPCs na fronteira
+- Funcao `normalizeInsightsData()` garante que todos os campos da interface existem com defaults seguros
+- Protege contra: migrations nao aplicadas, versoes antigas da RPC, campos null/undefined inesperados
+- Padrao: na funcao que chama `.rpc()`, normalizar o response antes de retornar ao chamador
+- Custo zero em runtime (so type assertion + nullish coalescing), beneficio enorme em robustez
+
+### Limpeza de codigo legado
+- Ao migrar entre stacks (ex: NextAuth → Supabase Auth), remover TODO o codigo antigo, nao so parar de usar
+- Restos de NextAuth (`lib/auth.ts`, `AuthProvider.tsx`, API route, env vars) causam confusao e podem conflitar
+- Usar `npm uninstall` para remover pacotes orfaos e limpar o bundle

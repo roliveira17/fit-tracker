@@ -262,3 +262,30 @@ gh pr merge --merge --delete-branch
 ```
 
 **Licao:** Antes de mergear PR, sempre `git fetch origin master` e verificar se ha divergencia. Se a PR tem vida longa (varios dias), conflicts sao quase garantidos.
+
+---
+
+## 15. Insights crash — RPC retorna dados incompletos (glucose undefined)
+
+**Sintoma:** Pagina `/insights` crasha com "Application error: a client-side exception has occurred" em producao.
+
+**Causa raiz:** A RPC `get_insights` na versao antiga (migration inicial) nao retornava os campos `glucose`, `carbs_by_day`, `fat_by_day`, `body_fat_by_day`, `top_foods`. O codigo TypeScript assumia que `glucose` era sempre um objeto com `by_day: []`, mas recebia `undefined`. O acesso `insightsDouble.glucose.by_day.length` em `insights-deltas.ts:89` causava `TypeError: Cannot read properties of undefined (reading 'by_day')`.
+
+**Solucao:**
+1. Normalizer `normalizeInsightsData()` em `getInsights()` garante todos os campos com defaults seguros
+2. Optional chaining `?.` em `insights-deltas.ts` e `insights-correlations.ts` para acesso ao glucose
+3. Fallbacks em `supabaseToUserProfile()` para `birth_date`, `weight_kg`, `height_cm`
+
+**Licao:** Nunca confiar que uma RPC retorna todos os campos esperados pela interface TypeScript. Migrations podem nao ter sido aplicadas, ou versoes antigas podem estar rodando. Sempre normalizar dados na fronteira (funcao que chama a RPC) com defaults seguros.
+
+---
+
+## 16. Supabase free tier pausa projeto apos inatividade
+
+**Sintoma:** Login com Google falha com `DNS_PROBE_FINISHED_NXDOMAIN` em `bsutppgtcihgzdblxfqc.supabase.co`.
+
+**Causa raiz:** Supabase free tier pausa projetos apos periodo de inatividade. O DNS do projeto para de resolver, causando falha em todas as chamadas.
+
+**Solucao:** Acessar https://supabase.com/dashboard, localizar o projeto e clicar "Restore". DNS propaga em ~2 minutos.
+
+**Licao:** Se o app para de funcionar com erro de DNS no Supabase, primeiro verificar se o projeto esta pausado no dashboard. Free tier pausa automaticamente.
