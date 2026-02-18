@@ -63,9 +63,9 @@ function LoginContent() {
   // Loading inicial
   if (authLoading) {
     return (
-      <main className="min-h-screen bg-surface-dark flex items-center justify-center">
+      <main className="min-h-screen bg-[#F5F3EF] flex items-center justify-center">
         <div className="animate-pulse">
-          <span className="material-symbols-outlined text-[48px] text-primary">
+          <span className="material-symbols-outlined text-[48px] text-calma-primary">
             fitness_center
           </span>
         </div>
@@ -74,28 +74,28 @@ function LoginContent() {
   }
 
   return (
-    <main className="min-h-screen bg-surface-dark flex flex-col items-center justify-center p-6">
+    <main className="min-h-screen bg-[#F5F3EF] flex flex-col items-center justify-center p-6">
       {/* Logo */}
       <div className="mb-8 text-center">
-        <span className="material-symbols-outlined text-[64px] text-primary mb-4">
+        <span className="material-symbols-outlined text-[64px] text-calma-primary mb-4">
           fitness_center
         </span>
-        <h1 className="text-2xl font-bold text-white">Fit Track</h1>
-        <p className="text-text-secondary text-sm mt-2">
+        <h1 className="text-2xl font-bold text-gray-800">Fit Track</h1>
+        <p className="text-gray-500 text-sm mt-2">
           Seu corpo, explicado por dados reais
         </p>
       </div>
 
       {/* Card de login */}
-      <div className="w-full max-w-sm rounded-2xl border border-border-subtle bg-surface-card p-6">
-        <h2 className="text-lg font-semibold text-white text-center mb-6">
+      <div className="w-full max-w-sm rounded-2xl border border-gray-100 bg-white shadow-soft p-6">
+        <h2 className="text-lg font-semibold text-gray-800 text-center mb-6">
           Entrar na sua conta
         </h2>
 
         {/* Erro */}
         {error && (
-          <div className="mb-4 p-3 rounded-lg bg-error/10 border border-error/20">
-            <p className="text-sm text-error text-center">{error}</p>
+          <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200">
+            <p className="text-sm text-red-600 text-center">{error}</p>
           </div>
         )}
 
@@ -105,7 +105,7 @@ function LoginContent() {
           <button
             onClick={handleGoogleLogin}
             disabled={isLoading !== null}
-            className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-white text-gray-800 font-medium hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-white text-gray-800 font-medium border border-gray-200 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading === "google" ? (
               <span className="material-symbols-outlined animate-spin text-[20px]">
@@ -138,7 +138,7 @@ function LoginContent() {
           <button
             onClick={handleAppleLogin}
             disabled={isLoading !== null}
-            className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-black text-white font-medium border border-gray-700 hover:bg-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-black text-white font-medium hover:bg-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading === "apple" ? (
               <span className="material-symbols-outlined animate-spin text-[20px]">
@@ -155,22 +155,22 @@ function LoginContent() {
 
         {/* Divisor */}
         <div className="flex items-center gap-4 my-6">
-          <div className="flex-1 h-px bg-border-subtle" />
-          <span className="text-xs text-text-secondary">ou</span>
-          <div className="flex-1 h-px bg-border-subtle" />
+          <div className="flex-1 h-px bg-gray-100" />
+          <span className="text-xs text-gray-400">ou</span>
+          <div className="flex-1 h-px bg-gray-100" />
         </div>
 
         {/* Continuar sem login */}
         <button
           onClick={handleContinueWithoutLogin}
-          className="w-full py-3 px-4 rounded-xl text-text-secondary hover:text-white hover:bg-surface-dark transition-colors text-sm"
+          className="w-full py-3 px-4 rounded-xl text-gray-400 hover:text-calma-primary transition-colors text-sm"
         >
           Continuar sem conta
         </button>
       </div>
 
       {/* Info */}
-      <p className="mt-6 text-xs text-text-secondary text-center max-w-sm">
+      <p className="mt-6 text-xs text-gray-400 text-center max-w-sm">
         Ao entrar, seus dados são sincronizados na nuvem e ficam disponíveis em qualquer dispositivo.
       </p>
     </main>
@@ -179,9 +179,9 @@ function LoginContent() {
 
 function LoginFallback() {
   return (
-    <main className="min-h-screen bg-surface-dark flex items-center justify-center">
+    <main className="min-h-screen bg-[#F5F3EF] flex items-center justify-center">
       <div className="animate-pulse">
-        <span className="material-symbols-outlined text-[48px] text-primary">
+        <span className="material-symbols-outlined text-[48px] text-calma-primary">
           fitness_center
         </span>
       </div>

@@ -79,7 +79,7 @@ function CallbackContent() {
   }, [searchParams, router]);
 
   return (
-    <main className="min-h-screen bg-surface-dark flex flex-col items-center justify-center p-6">
+    <main className="min-h-screen bg-[#F5F3EF] flex flex-col items-center justify-center p-6">
       <div className="animate-pulse mb-4">
         <svg
           width="48"
@@ -88,16 +88,16 @@ function CallbackContent() {
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
         >
-          <circle cx="12" cy="12" r="10" stroke="#eb6028" strokeWidth="2" />
+          <circle cx="12" cy="12" r="10" stroke="#4F633A" strokeWidth="2" />
           <path
             d="M12 6v6l4 2"
-            stroke="#eb6028"
+            stroke="#4F633A"
             strokeWidth="2"
             strokeLinecap="round"
           />
         </svg>
       </div>
-      <p className="text-text-secondary text-sm">Autenticando...</p>
+      <p className="text-gray-500 text-sm">Autenticando...</p>
     </main>
   );
 }
@@ -106,9 +106,9 @@ export default function AuthCallbackPage() {
   return (
     <Suspense
       fallback={
-        <main className="min-h-screen bg-surface-dark flex items-center justify-center">
+        <main className="min-h-screen bg-[#F5F3EF] flex items-center justify-center">
           <div className="animate-pulse">
-            <p className="text-text-secondary text-sm">Carregando...</p>
+            <p className="text-gray-500 text-sm">Carregando...</p>
           </div>
         </main>
       }

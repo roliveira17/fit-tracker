@@ -74,7 +74,7 @@ export default function WelcomePage() {
           <button
             onClick={handleGoogleLogin}
             disabled={isLoading !== null}
-            className="flex items-center justify-center gap-3 w-full h-14 rounded-xl bg-surface-dark border border-white/10 text-white font-semibold text-base transition-all hover:bg-surface-dark/80 hover:border-white/20 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center justify-center gap-3 w-full h-14 rounded-xl bg-white border border-gray-200 text-gray-800 font-semibold text-base transition-all hover:bg-gray-50 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading === "google" ? (
               <span className="material-symbols-outlined animate-spin text-[20px]">progress_activity</span>
@@ -88,20 +88,20 @@ export default function WelcomePage() {
           <button
             onClick={handleLocalMode}
             disabled={isLoading !== null}
-            className="w-full py-3 text-text-secondary text-sm font-medium hover:text-white transition-colors disabled:opacity-50"
+            className="w-full py-3 text-gray-400 text-sm font-medium hover:text-calma-primary transition-colors disabled:opacity-50"
           >
             Continuar sem login →
           </button>
         </div>
 
         {/* Terms */}
-        <p className="text-center text-text-muted text-xs pb-4">
+        <p className="text-center text-gray-400 text-xs pb-4">
           Ao continuar, você concorda com nossos{" "}
-          <a href="#" className="text-primary hover:underline">
+          <a href="#" className="text-calma-primary hover:underline">
             Termos de Uso
           </a>{" "}
           e{" "}
-          <a href="#" className="text-primary hover:underline">
+          <a href="#" className="text-calma-primary hover:underline">
             Política de Privacidade
           </a>
         </p>
