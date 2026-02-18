@@ -86,7 +86,7 @@ export function computeDeltas(input: DeltaInput): DeltaHighlight[] {
   }
 
   // --- Glicemia ---
-  if (input.insightsDouble && input.insightsDouble.glucose.by_day.length > 0) {
+  if (input.insightsDouble?.glucose?.by_day && input.insightsDouble.glucose.by_day.length > 0) {
     const [prev, curr] = splitByDate(input.insightsDouble.glucose.by_day, cutoff, "date");
 
     if (prev.length >= 3 && curr.length >= 3) {

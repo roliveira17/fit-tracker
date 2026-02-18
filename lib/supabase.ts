@@ -263,7 +263,31 @@ export async function getInsights(periodDays: number = 7): Promise<InsightsData 
     console.error("Error fetching insights:", error);
     return null;
   }
-  return data;
+  if (!data) return null;
+  return normalizeInsightsData(data as Record<string, unknown>);
+}
+
+function normalizeInsightsData(data: Record<string, unknown>): InsightsData {
+  const glucose = data.glucose as Record<string, unknown> | null | undefined;
+  return {
+    period_days: (data.period_days as number) ?? 7,
+    weights: (data.weights as InsightsData["weights"]) ?? [],
+    calories_by_day: (data.calories_by_day as InsightsData["calories_by_day"]) ?? [],
+    protein_by_day: (data.protein_by_day as InsightsData["protein_by_day"]) ?? [],
+    carbs_by_day: (data.carbs_by_day as InsightsData["carbs_by_day"]) ?? [],
+    fat_by_day: (data.fat_by_day as InsightsData["fat_by_day"]) ?? [],
+    avg_sleep_stages: (data.avg_sleep_stages as InsightsData["avg_sleep_stages"]) ?? [],
+    body_fat_by_day: (data.body_fat_by_day as InsightsData["body_fat_by_day"]) ?? [],
+    calories_burned_by_day: (data.calories_burned_by_day as InsightsData["calories_burned_by_day"]) ?? [],
+    meals_by_type: (data.meals_by_type as InsightsData["meals_by_type"]) ?? [],
+    top_foods: (data.top_foods as InsightsData["top_foods"]) ?? [],
+    glucose: {
+      avg_fasting: (glucose?.avg_fasting as number) ?? null,
+      avg_post_meal: (glucose?.avg_post_meal as number) ?? null,
+      time_in_range: (glucose?.time_in_range as number) ?? null,
+      by_day: (glucose?.by_day as InsightsData["glucose"]["by_day"]) ?? [],
+    },
+  };
 }
 
 export async function getSleepInsights(periodDays: number = 7): Promise<SleepInsightsData | null> {

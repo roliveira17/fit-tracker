@@ -83,19 +83,23 @@ function aggregateWeightByDate(
 }
 
 function supabaseToUserProfile(sp: Profile): UserProfile {
-  const age = new Date().getFullYear() - new Date(sp.birth_date).getFullYear();
+  const age = sp.birth_date
+    ? new Date().getFullYear() - new Date(sp.birth_date).getFullYear()
+    : 30;
+  const weight = sp.weight_kg || 70;
+  const height = sp.height_cm || 170;
   const bmr = sp.gender === "masculino"
-    ? Math.round(88.362 + 13.397 * sp.weight_kg + 4.799 * sp.height_cm - 5.677 * age)
-    : Math.round(447.593 + 9.247 * sp.weight_kg + 3.098 * sp.height_cm - 4.330 * age);
+    ? Math.round(88.362 + 13.397 * weight + 4.799 * height - 5.677 * age)
+    : Math.round(447.593 + 9.247 * weight + 3.098 * height - 4.330 * age);
 
   return {
-    name: sp.name,
-    gender: sp.gender,
-    birthDate: sp.birth_date,
-    height: sp.height_cm,
-    weight: sp.weight_kg,
+    name: sp.name || "",
+    gender: sp.gender || "masculino",
+    birthDate: sp.birth_date || "",
+    height: height,
+    weight: weight,
     bmr: Math.round(bmr * (sp.tdee_multiplier || 1.2)),
-    createdAt: sp.created_at,
+    createdAt: sp.created_at || "",
   };
 }
 

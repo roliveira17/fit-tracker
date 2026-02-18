@@ -41,7 +41,7 @@ export function computeCorrelations(input: CorrelationInput): Correlation[] {
 // Sono → Glicemia: dias com >7h sono vs <7h
 function correlateSleepGlucose(input: CorrelationInput, results: Correlation[]) {
   const { sleep, insights } = input;
-  if (!sleep || !insights || sleep.by_day.length < 5 || insights.glucose.by_day.length < 5) return;
+  if (!sleep || !insights || sleep.by_day.length < 5 || !insights.glucose?.by_day || insights.glucose.by_day.length < 5) return;
 
   const sleepMap = new Map(sleep.by_day.map((d) => [d.date, d.total_min]));
   const goodSleepGlucose: number[] = [];
