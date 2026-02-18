@@ -37,7 +37,7 @@ export default function ImportPage() {
 
   if (isLoading) {
     return (
-      <ScreenContainer className="bg-calma-bg text-calma-text">
+      <ScreenContainer className="">
         <div className="flex flex-1 items-center justify-center">
           <div className="flex items-center gap-3">
             <div className="h-5 w-5 animate-spin rounded-full border-2 border-calma-primary border-t-transparent" />
@@ -56,7 +56,7 @@ export default function ImportPage() {
   };
 
   return (
-    <ScreenContainer className="bg-calma-bg text-calma-text">
+    <ScreenContainer className="">
       <div className="flex flex-1 flex-col">
         {/* Hero header with top bar */}
         <div className="-mx-6">
