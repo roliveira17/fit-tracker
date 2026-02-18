@@ -138,9 +138,11 @@ Arquivo `components/ui/button.tsx` e compatibilidade com shadcn/ui antigo. Pode 
 
 ### Pendente:
 1. **VERIFICAR MIGRATIONS** — Confirmar que `20260203_001_insights_extended.sql` e `20260204_001_sleep_insights.sql` estao aplicadas no Supabase
-2. **TESTAR IMPORT** — Re-testar Apple Health import com login
-3. **APPLE HEALTH SLEEP** — Verificar dados de sono apos import
-4. **FOOD API FASE 3** — Otimizacoes (loading states, retry, analytics)
+2. **BUG: Foto → "Registrar no diario" da erro** — Ao enviar foto de comida, a AI analisa e mostra o card com os dados. O card tem botao "Registrar no diario" que, ao clicar, da erro. Investigar callback `onEditMeal` / fluxo de persistencia do PhotoAnalysisCard.
+3. **FEAT: Foto inteligente — AI decide o que fazer** — Hoje, enviar foto so oferece "analisar refeicao". Mas o usuario pode tirar foto de tabela nutricional, rotulo, receita, etc. A AI deveria detectar o tipo de imagem e agir de acordo (ex: foto de tabela nutricional → extrair macros e usar como override dos dados do database). Caso de uso real: produto com dados errados no banco, usuario fotografa rotulo para corrigir.
+4. **TESTAR IMPORT** — Re-testar Apple Health import com login
+5. **APPLE HEALTH SLEEP** — Verificar dados de sono apos import
+6. **FOOD API FASE 3** — Otimizacoes (loading states, retry, analytics)
 
 ---
 
