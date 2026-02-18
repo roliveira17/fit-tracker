@@ -1,7 +1,7 @@
 # Fit Track v3 — Roadmap e Progresso
 
 > Arquivo unico de acompanhamento do projeto.
-> Ultima atualizacao: 2026-02-09
+> Ultima atualizacao: 2026-02-18
 
 ---
 
@@ -15,7 +15,7 @@
 | Chat Cards Retrofit (Stitch) | 100% (8/8) | Todos cards retrofitados + 2 pipelines novos |
 | Food API | 70% (12/17) | Fases 1-2 completas, Fase 3 pendente |
 | QA / Testes E2E | 100% (15/15) | Todos implementados, 35 pass + 3 skip |
-| Design System | 80% | Retrofit Stitch (light) em andamento |
+| Design System | 95% | Retrofit Stitch (light) completo — todas telas + floating pill nav |
 | Deploy | Ativo | https://fit-tracker-murex.vercel.app |
 
 ---
@@ -113,14 +113,14 @@ Arquivo `components/ui/button.tsx` e compatibilidade com shadcn/ui antigo. Pode 
 ## Sessao 2026-02-18 — Onde Paramos
 
 ### Concluido nesta sessao:
-- ✅ **Fix Insights** — Pagina nao abria: auth race condition, try/catch, guards, padding
-- ✅ **Chat cores alinhadas** — Removido gradient cream, todos componentes usando tokens calma-*
-- ✅ PR #2 mergeada na master
+- ✅ **Fix Insights** — Pagina nao abria: auth race condition, try/catch, guards, padding [PR #2]
+- ✅ **Chat cores alinhadas** — Removido gradient cream, todos componentes usando tokens calma-* [PR #2]
+- ✅ **BottomNav floating pill** — Redesign minimalista: floating pill, so icones, glass effect [PR #3]
+- ✅ PR #2 e PR #3 mergeadas na master, deploy na Vercel
 
 ### Concluido na sessao 2026-02-09:
 - ✅ Retrofit Home, Profile, Onboarding para design Stitch (light/Calma)
 - ✅ Design system unificado: ScreenContainer default light (#F5F3EF)
-- ✅ BottomNav unificado (1 componente, tema light, Material Symbols, 5 tabs)
 - ✅ Engines Insights criadas: score, deltas, correlacoes, recomendacoes
 - ✅ Novos componentes SVG: ScoreRing, CalorieRing, Sparkline, FrequencyDots, MacroBar
 - ✅ 12 testes E2E atualizados para novo layout
@@ -131,10 +131,9 @@ Arquivo `components/ui/button.tsx` e compatibilidade com shadcn/ui antigo. Pode 
 - ✅ Migration Apple Health + Testes E2E T010-T015
 
 ### Pendente:
-1. **BOTTOM NAV REDESIGN** — Redesenhar inspirado no app Lex (icones limpos, minimalista)
-2. **TESTAR IMPORT** — Re-testar Apple Health import com login
-3. **APPLE HEALTH SLEEP** — Verificar dados de sono apos import
-4. **FOOD API FASE 3** — Otimizacoes (loading states, retry, analytics)
+1. **TESTAR IMPORT** — Re-testar Apple Health import com login
+2. **APPLE HEALTH SLEEP** — Verificar dados de sono apos import
+3. **FOOD API FASE 3** — Otimizacoes (loading states, retry, analytics)
 
 ---
 
@@ -188,7 +187,7 @@ Arquivo `components/ui/button.tsx` e compatibilidade com shadcn/ui antigo. Pode 
 | Setup (Tailwind, fonts, dark mode) | 2026-01-19 | 4/4 |
 | Base Components (12 sets) | 2026-01-19 | 12/12 |
 | Screens (10 telas) | 2026-01-19 | 10/10 |
-| Retrofit Stitch (light unificado) | 2026-02-09 | Em andamento — Home/Profile ok, Insights/Chat pendente |
+| Retrofit Stitch (light unificado) | 2026-02-18 | Completo — todas telas + floating pill nav |
 
 ### Food API
 

@@ -219,3 +219,46 @@ Agravante: existiam **dois componentes BottomNav diferentes**:
 3. ScreenContainer como unica fonte de BottomNav
 
 **Licao:** Quando um wrapper (ScreenContainer) ja renderiza navegacao, as paginas internas NUNCA devem renderizar navegacao propria. Um unico ponto de controle para nav evita duplicacoes.
+
+---
+
+## 13. Insights page nao abre — auth race condition + non-null assertions
+
+**Sintoma:** Pagina Insights mostra tela branca. Sem erro no console, build passa normalmente.
+
+**Causa raiz (multipla):**
+1. Auth race condition: pagina tentava carregar dados do Supabase antes do `authLoading` resolver
+2. Profile sempre lido de localStorage, mesmo com usuario logado
+3. Sem try/catch nas chamadas ao Supabase — erro silencioso
+4. Non-null assertions (`data!.field`) em secoes de dominio causavam crash se dados null
+5. Double padding: ScreenContainer ja aplicava `pb-24`, pagina adicionava `px-4 pb-24` extra
+
+**Solucao:**
+1. Adicionar `authLoading` do `useAuth()` como guard
+2. `getProfile()` do Supabase quando autenticado, localStorage como fallback
+3. try/catch com console.error em todas as chamadas Supabase
+4. Guards condicionais (`data &&`) antes de renderizar secoes
+5. Remover padding duplicado da pagina
+
+**Licao:** Paginas que dependem de auth precisam SEMPRE esperar `authLoading` antes de tentar carregar dados. Build passando (sem erros TS) nao garante que a pagina funciona — problemas de runtime (null, race condition) nao aparecem no build.
+
+---
+
+## 14. Merge conflict ao mergear PR com master divergente
+
+**Sintoma:** `gh pr merge` falha com "not mergeable: the merge commit cannot be cleanly created".
+
+**Causa raiz:** Outra sessao ja havia mergeado commits na master que conflitavam com arquivos da branch (ROADMAP.md, settings.local.json).
+
+**Solucao:**
+```bash
+git stash                    # stash local changes
+git fetch origin master
+git merge origin/master      # resolve conflicts locally
+# resolver conflitos manualmente
+git add . && git commit
+git push
+gh pr merge --merge --delete-branch
+```
+
+**Licao:** Antes de mergear PR, sempre `git fetch origin master` e verificar se ha divergencia. Se a PR tem vida longa (varios dias), conflicts sao quase garantidos.

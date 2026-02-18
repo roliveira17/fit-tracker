@@ -106,3 +106,15 @@ Padroes que deram certo no desenvolvimento do Fit Track v3.
 ### font-serif-display como marca visual dos cards
 - DM Serif Display nos titulos de todos os cards cria identidade visual consistente
 - Classe Tailwind `font-serif-display` ja estava configurada (next/font) — so precisou aplicar
+
+### Floating pill BottomNav
+- Barra flutuante com `rounded-full` + margem lateral/inferior cria visual premium moderno
+- Glass effect: `bg-white/80 backdrop-blur-xl border-white/50 shadow-lg shadow-black/5`
+- So icones (sem labels) — minimalista, limpo, funciona bem com 5 tabs
+- Active state: `fill-1` (icone preenchido) + pill bg `calma-primary/10` — sutil mas claro
+- Precisa ajustar `pb` no ScreenContainer para acomodar margem inferior (pb-24 → pb-28)
+
+### Cores do Chat — alinhamento com design system
+- Substituir hardcoded colors (#3E2723, #E5DBCB, etc) por tokens do design system (calma-primary, gray-*, shadow-soft)
+- Usar Task agent para batch replace em multiplos arquivos (7 cards) — muito mais rapido que editar um por um
+- Remover gradients customizados (bg-gradient cream) e deixar ScreenContainer definir o fundo
