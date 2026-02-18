@@ -29,6 +29,8 @@ import {
   getTdee,
   getSleepInsights,
   getWorkoutProgression,
+  getProfile,
+  type Profile,
   type InsightsData,
   type SleepInsightsData,
   type WorkoutProgressionData,
@@ -80,9 +82,26 @@ function aggregateWeightByDate(
   });
 }
 
+function supabaseToUserProfile(sp: Profile): UserProfile {
+  const age = new Date().getFullYear() - new Date(sp.birth_date).getFullYear();
+  const bmr = sp.gender === "masculino"
+    ? Math.round(88.362 + 13.397 * sp.weight_kg + 4.799 * sp.height_cm - 5.677 * age)
+    : Math.round(447.593 + 9.247 * sp.weight_kg + 3.098 * sp.height_cm - 4.330 * age);
+
+  return {
+    name: sp.name,
+    gender: sp.gender,
+    birthDate: sp.birth_date,
+    height: sp.height_cm,
+    weight: sp.weight_kg,
+    bmr: Math.round(bmr * (sp.tdee_multiplier || 1.2)),
+    createdAt: sp.created_at,
+  };
+}
+
 export default function InsightsPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [period, setPeriod] = useState<Period>(7);
@@ -110,14 +129,33 @@ export default function InsightsPage() {
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
 
   useEffect(() => {
-    if (!isOnboardingComplete()) {
-      router.push("/onboarding");
-      return;
+    if (authLoading) return;
+
+    if (user) {
+      // Authenticated: fetch profile from Supabase
+      getProfile().then((sp) => {
+        if (sp) {
+          setProfile(supabaseToUserProfile(sp));
+        } else {
+          // Supabase profile missing — try localStorage as fallback
+          const lp = getUserProfile();
+          if (lp) setProfile(lp);
+        }
+        setIsLoading(false);
+      }).catch(() => {
+        setIsLoading(false);
+      });
+    } else {
+      // Offline: use localStorage
+      if (!isOnboardingComplete()) {
+        router.push("/onboarding");
+        return;
+      }
+      const lp = getUserProfile();
+      if (lp) setProfile(lp);
+      setIsLoading(false);
     }
-    const userProfile = getUserProfile();
-    if (userProfile) setProfile(userProfile);
-    setIsLoading(false);
-  }, [router]);
+  }, [user, authLoading, router]);
 
   // Carrega dados quando o periodo muda
   useEffect(() => {
@@ -127,37 +165,40 @@ export default function InsightsPage() {
 
     if (user) {
       const loadSupabaseData = async () => {
-        // Fetch periodo atual + periodo duplo em paralelo
-        const [insightsData, tdee, sleepInsights, workoutProg, insightsX2, sleepX2, workoutX2] =
-          await Promise.all([
-            getInsights(period),
-            getTdee(),
-            getSleepInsights(period),
-            getWorkoutProgression(period),
-            getInsights(period * 2),
-            getSleepInsights(period * 2),
-            getWorkoutProgression(period * 2),
-          ]);
+        try {
+          const [insightsData, tdee, sleepInsights, workoutProg, insightsX2, sleepX2, workoutX2] =
+            await Promise.all([
+              getInsights(period),
+              getTdee(),
+              getSleepInsights(period),
+              getWorkoutProgression(period),
+              getInsights(period * 2),
+              getSleepInsights(period * 2),
+              getWorkoutProgression(period * 2),
+            ]);
 
-        setSupabaseTdee(tdee);
-        setSleepData(sleepInsights);
-        setWorkoutProgression(workoutProg);
-        setInsightsDouble(insightsX2);
-        setSleepDouble(sleepX2);
-        setWorkoutDouble(workoutX2);
+          setSupabaseTdee(tdee);
+          setSleepData(sleepInsights);
+          setWorkoutProgression(workoutProg);
+          setInsightsDouble(insightsX2);
+          setSleepDouble(sleepX2);
+          setWorkoutDouble(workoutX2);
 
-        if (insightsData?.glucose) setGlucoseData(insightsData.glucose);
+          if (insightsData?.glucose) setGlucoseData(insightsData.glucose);
 
-        if (insightsData) {
-          setWeightData(insightsData.weights.map((w) => ({ date: w.date, value: w.weight })));
-          setCaloriesData(insightsData.calories_by_day.map((c) => ({ date: c.date, value: c.calories })));
-          setProteinData(insightsData.protein_by_day.map((p) => ({ date: p.date, value: p.protein })));
-          if (insightsData.carbs_by_day) setCarbsData(insightsData.carbs_by_day.map((c) => ({ date: c.date, value: c.carbs })));
-          if (insightsData.fat_by_day) setFatData(insightsData.fat_by_day.map((f) => ({ date: f.date, value: f.fat })));
-          if (insightsData.body_fat_by_day?.length > 0) {
-            setBodyFatData(insightsData.body_fat_by_day.map((b) => ({ date: b.date, value: b.body_fat })));
+          if (insightsData) {
+            setWeightData(insightsData.weights.map((w) => ({ date: w.date, value: w.weight })));
+            setCaloriesData(insightsData.calories_by_day.map((c) => ({ date: c.date, value: c.calories })));
+            setProteinData(insightsData.protein_by_day.map((p) => ({ date: p.date, value: p.protein })));
+            if (insightsData.carbs_by_day) setCarbsData(insightsData.carbs_by_day.map((c) => ({ date: c.date, value: c.carbs })));
+            if (insightsData.fat_by_day) setFatData(insightsData.fat_by_day.map((f) => ({ date: f.date, value: f.fat })));
+            if (insightsData.body_fat_by_day?.length > 0) {
+              setBodyFatData(insightsData.body_fat_by_day.map((b) => ({ date: b.date, value: b.body_fat })));
+            }
+            if (insightsData.top_foods?.length > 0) setTopFoods(insightsData.top_foods);
           }
-          if (insightsData.top_foods?.length > 0) setTopFoods(insightsData.top_foods);
+        } catch (err) {
+          console.error("[Insights] Erro ao carregar dados do Supabase:", err);
         }
       };
       loadSupabaseData();
@@ -281,7 +322,7 @@ export default function InsightsPage() {
     { value: "30", label: "30 dias" },
   ];
 
-  if (isLoading) {
+  if (isLoading || authLoading) {
     return (
       <ScreenContainer>
         <div className="flex flex-1 items-center justify-center">
@@ -293,7 +334,7 @@ export default function InsightsPage() {
 
   return (
     <ScreenContainer>
-      <div className="flex flex-1 flex-col px-4 pb-24">
+      <div className="flex flex-1 flex-col">
         {/* Header */}
         <header className="pt-6 pb-2">
           <h1 className="font-serif-display text-3xl text-calma-primary">
@@ -356,45 +397,55 @@ export default function InsightsPage() {
               </p>
             )}
 
-            {/* Domain Sections */}
-            <NutricaoSection
-              domain={score.domains.find((d) => d.domain === "nutricao")!}
-              avgCalories={avgCalories}
-              avgProtein={avgProtein}
-              avgCarbs={avgCarbs}
-              avgFat={avgFat}
-              tdee={tdee}
-              daysTracked={daysWithFood.length}
-              topFoods={topFoods}
-              recommendation={getRecForDomain("dieta")}
-            />
+            {/* Domain Sections — safe access sem non-null assertions */}
+            {score.domains.find((d) => d.domain === "nutricao") && (
+              <NutricaoSection
+                domain={score.domains.find((d) => d.domain === "nutricao")!}
+                avgCalories={avgCalories}
+                avgProtein={avgProtein}
+                avgCarbs={avgCarbs}
+                avgFat={avgFat}
+                tdee={tdee}
+                daysTracked={daysWithFood.length}
+                topFoods={topFoods}
+                recommendation={getRecForDomain("dieta")}
+              />
+            )}
 
-            <TreinoSection
-              domain={score.domains.find((d) => d.domain === "treino")!}
-              workout={workoutProgression ?? { total_workouts: 0, total_volume: 0, avg_duration_min: null, volume_by_day: [], top_exercises: [], workout_types: [] }}
-              periodDays={period}
-              recentWorkoutDates={recentWorkoutDates}
-              recommendation={getRecForDomain("treino")}
-            />
+            {score.domains.find((d) => d.domain === "treino") && (
+              <TreinoSection
+                domain={score.domains.find((d) => d.domain === "treino")!}
+                workout={workoutProgression ?? { total_workouts: 0, total_volume: 0, avg_duration_min: null, volume_by_day: [], top_exercises: [], workout_types: [] }}
+                periodDays={period}
+                recentWorkoutDates={recentWorkoutDates}
+                recommendation={getRecForDomain("treino")}
+              />
+            )}
 
-            <SonoSection
-              domain={score.domains.find((d) => d.domain === "sono")!}
-              sleep={sleepData ?? { avg_duration_min: null, total_nights: 0, by_day: [], avg_stages: [], best_night: null, worst_night: null, consistency: null }}
-              recommendation={getRecForDomain("sono")}
-            />
+            {score.domains.find((d) => d.domain === "sono") && (
+              <SonoSection
+                domain={score.domains.find((d) => d.domain === "sono")!}
+                sleep={sleepData ?? { avg_duration_min: null, total_nights: 0, by_day: [], avg_stages: [], best_night: null, worst_night: null, consistency: null }}
+                recommendation={getRecForDomain("sono")}
+              />
+            )}
 
-            <GlicemiaSection
-              domain={score.domains.find((d) => d.domain === "glicemia")!}
-              glucose={glucoseData ?? { avg_fasting: null, avg_post_meal: null, time_in_range: null, by_day: [] }}
-              recommendation={getRecForDomain("glicemia")}
-            />
+            {score.domains.find((d) => d.domain === "glicemia") && (
+              <GlicemiaSection
+                domain={score.domains.find((d) => d.domain === "glicemia")!}
+                glucose={glucoseData ?? { avg_fasting: null, avg_post_meal: null, time_in_range: null, by_day: [] }}
+                recommendation={getRecForDomain("glicemia")}
+              />
+            )}
 
-            <CorpoSection
-              domain={score.domains.find((d) => d.domain === "corpo")!}
-              weightData={weightData}
-              bodyFatData={bodyFatData}
-              recommendation={getRecForDomain("corpo")}
-            />
+            {score.domains.find((d) => d.domain === "corpo") && (
+              <CorpoSection
+                domain={score.domains.find((d) => d.domain === "corpo")!}
+                weightData={weightData}
+                bodyFatData={bodyFatData}
+                recommendation={getRecForDomain("corpo")}
+              />
+            )}
 
             {/* Correlacoes Inteligentes */}
             <CorrelationsSection correlations={correlations} />
