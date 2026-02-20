@@ -247,6 +247,100 @@ function CardRenderer({
       );
     }
 
+    case "nutrition_label": {
+      const foods = (d.items as Array<Record<string, unknown>>)?.map(
+        (item) => ({
+          name: String(item.name || ""),
+          quantity: String(item.portion || ""),
+          calories: Number(item.calories || 0),
+        })
+      );
+      const totals = d.totals as Record<string, number> | undefined;
+      const prot = Number(totals?.protein || 0);
+      const crb = Number(totals?.carbs || 0);
+      const ft = Number(totals?.fat || 0);
+      const cal = Number(totals?.calories || 0);
+
+      const handleAddToDiary = onEditMeal
+        ? () => {
+            const fullFoods = (d.items as Array<Record<string, unknown>>)?.map(
+              (item) => ({
+                name: String(item.name || ""),
+                quantity: String(item.portion || ""),
+                calories: Number(item.calories || 0),
+                protein: Number(item.protein || 0),
+                carbs: Number(item.carbs || 0),
+                fat: Number(item.fat || 0),
+              })
+            );
+            onEditMeal({
+              foods: fullFoods || [],
+              totals: { calories: cal, protein: prot, carbs: crb, fat: ft },
+            });
+          }
+        : undefined;
+
+      return (
+        <PhotoAnalysisCard
+          foods={foods || []}
+          totalCalories={cal}
+          protein={prot}
+          carbs={crb}
+          fat={ft}
+          onAddToDiary={handleAddToDiary}
+          title={"Rótulo\nNutricional"}
+          icon="label"
+        />
+      );
+    }
+
+    case "recipe": {
+      const foods = (d.items as Array<Record<string, unknown>>)?.map(
+        (item) => ({
+          name: String(item.name || ""),
+          quantity: String(item.portion || ""),
+          calories: Number(item.calories || 0),
+        })
+      );
+      const totals = d.totals as Record<string, number> | undefined;
+      const prot = Number(totals?.protein || 0);
+      const crb = Number(totals?.carbs || 0);
+      const ft = Number(totals?.fat || 0);
+      const cal = Number(totals?.calories || 0);
+
+      const handleAddToDiary = onEditMeal
+        ? () => {
+            const fullFoods = (d.items as Array<Record<string, unknown>>)?.map(
+              (item) => ({
+                name: String(item.name || ""),
+                quantity: String(item.portion || ""),
+                calories: Number(item.calories || 0),
+                protein: Number(item.protein || 0),
+                carbs: Number(item.carbs || 0),
+                fat: Number(item.fat || 0),
+              })
+            );
+            onEditMeal({
+              foods: fullFoods || [],
+              totals: { calories: cal, protein: prot, carbs: crb, fat: ft },
+            });
+          }
+        : undefined;
+
+      return (
+        <PhotoAnalysisCard
+          foods={foods || []}
+          totalCalories={cal}
+          protein={prot}
+          carbs={crb}
+          fat={ft}
+          onAddToDiary={handleAddToDiary}
+          title="Receita"
+          icon="menu_book"
+        />
+      );
+    }
+
     case "sleep": {
       const stages = (d.stages as Array<Record<string, unknown>>)?.map(
         (stage) => ({

@@ -51,7 +51,7 @@ export function ImagePreview({
       <div className="relative aspect-[4/3] max-h-[300px]">
         <img
           src={previewUrl}
-          alt="Preview da refeição"
+          alt="Preview da imagem"
           className="w-full h-full object-cover"
         />
 
@@ -90,9 +90,9 @@ export function ImagePreview({
       <div className="flex items-center justify-between p-3 bg-surface-dark">
         <div className="flex items-center gap-2 text-text-secondary text-sm">
           <span className="material-symbols-outlined text-[18px]">
-            restaurant
+            image
           </span>
-          <span>Foto de refeição</span>
+          <span>Foto para análise</span>
         </div>
 
         <div className="flex items-center gap-2">

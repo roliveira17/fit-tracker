@@ -20,6 +20,8 @@ const SYSTEM_PROMPT = `Você é um assistente especializado em análise de image
 Sua tarefa é analisar a imagem e identificar se é:
 1. Um CÓDIGO DE BARRAS de produto alimentício
 2. Uma FOTO DE REFEIÇÃO/ALIMENTO
+3. Um RÓTULO NUTRICIONAL (tabela nutricional, informações nutricionais de embalagem)
+4. Uma RECEITA (foto de receita, página de livro de receitas, screenshot de receita)
 
 ## SE FOR CÓDIGO DE BARRAS:
 - Identifique que é um código de barras
@@ -31,6 +33,18 @@ Sua tarefa é analisar a imagem e identificar se é:
 - Liste cada alimento visível
 - Estime porções em gramas
 - Calcule macros aproximados
+
+## SE FOR RÓTULO NUTRICIONAL:
+- Identifique o nome do produto se visível
+- Extraia os valores nutricionais por porção (calorias, proteína, carboidratos, gordura)
+- Retorne como um item no array items (o produto) com os macros extraídos
+- Use os valores exatos do rótulo, não estimativas
+
+## SE FOR RECEITA:
+- Liste os ingredientes com quantidades estimadas
+- Estime os macros totais da receita completa
+- Cada ingrediente vai como um item no array items
+- Os totais devem refletir a soma estimada de todos ingredientes
 
 ## REGRAS:
 - Seja preciso na leitura de números de barcode
@@ -73,6 +87,56 @@ Sua tarefa é analisar a imagem e identificar se é:
   "notes": "Observações adicionais"
 }
 
+### Se for RÓTULO NUTRICIONAL:
+{
+  "type": "nutrition_label",
+  "isFood": true,
+  "description": "Nome do produto - rótulo nutricional",
+  "items": [
+    {
+      "name": "Nome do produto",
+      "portion": "porção indicada no rótulo (ex: 30g)",
+      "calories": 150,
+      "protein": 10,
+      "carbs": 15,
+      "fat": 5
+    }
+  ],
+  "totals": {
+    "calories": 150,
+    "protein": 10,
+    "carbs": 15,
+    "fat": 5
+  },
+  "confidence": "alta",
+  "notes": "Valores extraídos do rótulo nutricional"
+}
+
+### Se for RECEITA:
+{
+  "type": "recipe",
+  "isFood": true,
+  "description": "Nome da receita",
+  "items": [
+    {
+      "name": "Ingrediente 1",
+      "portion": "quantidade estimada",
+      "calories": 100,
+      "protein": 5,
+      "carbs": 10,
+      "fat": 3
+    }
+  ],
+  "totals": {
+    "calories": 500,
+    "protein": 30,
+    "carbs": 45,
+    "fat": 20
+  },
+  "confidence": "media",
+  "notes": "Macros estimados com base nos ingredientes visíveis"
+}
+
 ### Se NÃO for comida nem barcode:
 {
   "type": "unknown",
@@ -83,7 +147,7 @@ Sua tarefa é analisar a imagem e identificar se é:
 
 // Interface para o resultado da análise de comida
 export interface FoodAnalysisResult {
-  type?: "food" | "barcode" | "unknown";
+  type?: "food" | "barcode" | "nutrition_label" | "recipe" | "unknown";
   isFood: boolean;
   description: string;
   items: Array<{
@@ -113,7 +177,7 @@ export interface FoodAnalysisResult {
 
 // Interface para resposta do GPT
 interface GPTResponse {
-  type: "food" | "barcode" | "unknown";
+  type: "food" | "barcode" | "nutrition_label" | "recipe" | "unknown";
   barcode?: string;
   isFood?: boolean;
   description?: string;
@@ -178,7 +242,7 @@ export async function POST(request: NextRequest) {
           content: [
             {
               type: "text",
-              text: "Analise esta imagem. Se for um código de barras, leia o número. Se for comida, identifique os alimentos. Retorne no formato JSON especificado.",
+              text: "Analise esta imagem. Se for um código de barras, leia o número. Se for comida, identifique os alimentos. Se for um rótulo nutricional, extraia os valores. Se for uma receita, liste os ingredientes e estime os macros. Retorne no formato JSON especificado.",
             },
             {
               type: "image_url",
@@ -293,6 +357,34 @@ export async function POST(request: NextRequest) {
           } as FoodAnalysisResult,
         });
       }
+    }
+
+    // Se for rótulo nutricional
+    if (gptResponse.type === "nutrition_label") {
+      const analysis: FoodAnalysisResult = {
+        type: "nutrition_label",
+        isFood: true,
+        description: gptResponse.description || "Rótulo nutricional",
+        items: gptResponse.items || [],
+        totals: gptResponse.totals || { calories: 0, protein: 0, carbs: 0, fat: 0 },
+        confidence: gptResponse.confidence || "alta",
+        notes: gptResponse.notes,
+      };
+      return NextResponse.json({ success: true, analysis });
+    }
+
+    // Se for receita
+    if (gptResponse.type === "recipe") {
+      const analysis: FoodAnalysisResult = {
+        type: "recipe",
+        isFood: true,
+        description: gptResponse.description || "Receita identificada",
+        items: gptResponse.items || [],
+        totals: gptResponse.totals || { calories: 0, protein: 0, carbs: 0, fat: 0 },
+        confidence: gptResponse.confidence || "média",
+        notes: gptResponse.notes,
+      };
+      return NextResponse.json({ success: true, analysis });
     }
 
     // Se for comida, retorna análise normal

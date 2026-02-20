@@ -117,9 +117,9 @@ test.describe("T010: Chat com Foto", () => {
     // Clica em Analisar
     await page.getByText("Analisar").click();
 
-    // Deve mostrar mensagem do usuario no chat indicando foto enviada
+    // Deve mostrar mensagem do usuario no chat indicando imagem enviada
     await expect(
-      page.getByText(/foto de refei[cç][aã]o|foto.*enviada/i).first()
+      page.getByText(/imagem.*an[aá]lise|foto.*enviada|foto de refei/i).first()
     ).toBeVisible({ timeout: 10000 });
   });
 });

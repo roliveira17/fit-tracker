@@ -34,7 +34,7 @@ export interface ChatMessage {
   content: string;
   timestamp: string;
   parsedData?: {
-    type: "food" | "exercise" | "weight" | "bodyfat" | "glucose" | "photo_analysis" | "sleep" | "weekly_analysis";
+    type: "food" | "exercise" | "weight" | "bodyfat" | "glucose" | "photo_analysis" | "nutrition_label" | "recipe" | "sleep" | "weekly_analysis";
     data: Record<string, unknown>;
   };
 }
