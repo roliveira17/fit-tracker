@@ -266,6 +266,7 @@ function mapSleepSessions(
     let remMinutes = 0;
     let coreMinutes = 0;
     let awakeMinutes = 0;
+    let inBedMinutes = 0;
     let startTime: Date | null = null;
     let endTime: Date | null = null;
     let source = "";
@@ -305,12 +306,19 @@ function mapSleepSessions(
           awakeMinutes += durationMin;
           break;
         case SLEEP_VALUES.IN_BED:
-          // "Na cama" não conta como sono
+          inBedMinutes += durationMin;
           break;
         default:
           console.warn(`[mapSleepSessions] Valor de sono desconhecido: ${entry.value}`);
           break;
       }
+    }
+
+    // Fallback: sem estagios granulares, usa IN_BED como sono leve
+    if (totalMinutes === 0 && inBedMinutes > 0) {
+      coreMinutes = inBedMinutes;
+      totalMinutes = inBedMinutes;
+      console.log(`[mapSleepSessions] Fallback IN_BED para ${nightDate}: ${inBedMinutes}min como core`);
     }
 
     console.log(`[mapSleepSessions] Noite ${nightDate} - Total: ${totalMinutes}min, Deep: ${deepMinutes}, REM: ${remMinutes}, Core: ${coreMinutes}, Awake: ${awakeMinutes}`);

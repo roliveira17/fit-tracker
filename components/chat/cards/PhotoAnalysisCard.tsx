@@ -14,6 +14,8 @@ interface PhotoAnalysisCardProps {
   fat: number;
   imageUrl?: string;
   onAddToDiary?: () => void;
+  title?: string;
+  icon?: string;
 }
 
 export function PhotoAnalysisCard({
@@ -24,6 +26,8 @@ export function PhotoAnalysisCard({
   fat,
   imageUrl,
   onAddToDiary,
+  title = "Análise da\nRefeição",
+  icon = "restaurant",
 }: PhotoAnalysisCardProps) {
   const totalMacros = protein + carbs + fat || 1;
   const proteinPct = Math.round((protein / totalMacros) * 100);
@@ -35,9 +39,12 @@ export function PhotoAnalysisCard({
       {/* Title */}
       <div className="mb-5">
         <h2 className="font-serif-display text-[1.75rem] text-[#d46211] leading-tight">
-          Análise da
-          <br />
-          Refeição
+          {title.split("\n").map((line, i) => (
+            <span key={i}>
+              {i > 0 && <br />}
+              {line}
+            </span>
+          ))}
         </h2>
       </div>
 
@@ -55,7 +62,7 @@ export function PhotoAnalysisCard({
         ) : (
           <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#8B6E5A] to-[#C49B6E] flex items-center justify-center shadow-inner">
             <span className="material-symbols-outlined text-white/80 text-[28px]">
-              restaurant
+              {icon}
             </span>
           </div>
         )}
@@ -115,7 +122,8 @@ export function PhotoAnalysisCard({
       {/* Action button */}
       <button
         onClick={onAddToDiary}
-        className="w-full bg-[#d46211] hover:bg-[#b8550e] active:scale-[0.98] transition-all text-white font-bold py-3.5 rounded-full flex items-center justify-center gap-2 shadow-lg shadow-[#d46211]/25"
+        disabled={!onAddToDiary}
+        className="w-full bg-[#d46211] hover:bg-[#b8550e] active:scale-[0.98] transition-all text-white font-bold py-3.5 rounded-full flex items-center justify-center gap-2 shadow-lg shadow-[#d46211]/25 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <span className="material-symbols-outlined text-[20px]">
           add_circle

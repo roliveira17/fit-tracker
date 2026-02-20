@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 
 export interface EditableFoodItem {
@@ -22,11 +22,12 @@ interface EditMealSheetProps {
 export function EditMealSheet({ isOpen, onClose, foods, onSave }: EditMealSheetProps) {
   const [items, setItems] = useState<EditableFoodItem[]>(foods);
 
-  // Reset items when foods prop changes (sheet reopens)
-  const prevFoodsRef = useState(foods)[0];
-  if (prevFoodsRef !== foods && foods.length > 0) {
-    setItems(foods);
-  }
+  // Sync items when foods prop changes (sheet reopens)
+  useEffect(() => {
+    if (foods.length > 0) {
+      setItems(foods);
+    }
+  }, [foods]);
 
   const updateItem = useCallback((index: number, field: keyof EditableFoodItem, value: string) => {
     setItems((prev) =>

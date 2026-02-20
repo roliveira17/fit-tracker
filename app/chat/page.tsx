@@ -374,7 +374,7 @@ export default function ChatPage() {
       const userMessage: ChatMessage = {
         id: generateMessageId(),
         role: "user",
-        content: "📷 [Foto de refeição enviada]",
+        content: "📷 [Imagem enviada para análise]",
         timestamp: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, userMessage]);
@@ -419,9 +419,11 @@ export default function ChatPage() {
         role: "assistant",
         content: responseContent,
         timestamp: new Date().toISOString(),
-        parsedData: analysis.isFood
+        parsedData: (analysis.isFood || analysis.type === "nutrition_label" || analysis.type === "recipe")
           ? {
-              type: "photo_analysis",
+              type: (analysis.type === "nutrition_label" || analysis.type === "recipe")
+                ? analysis.type
+                : "photo_analysis",
               data: {
                 items: analysis.items,
                 totals: analysis.totals,
@@ -462,38 +464,50 @@ export default function ChatPage() {
     const totalCarbs = editedFoods.reduce((s, f) => s + f.carbs, 0);
     const totalFat = editedFoods.reduce((s, f) => s + f.fat, 0);
 
-    if (user) {
-      const mealItems = editedFoods.map((item) => ({
-        food_name: item.name,
-        quantity_g: parseFloat(item.quantity) || 100,
-        calories: item.calories,
-        protein_g: item.protein,
-        carbs_g: item.carbs,
-        fat_g: item.fat,
-      }));
-      await logMeal("snack", mealItems, "Foto: análise");
+    try {
+      if (user) {
+        const mealItems = editedFoods.map((item) => ({
+          food_name: item.name,
+          quantity_g: parseFloat(item.quantity) || 100,
+          calories: item.calories,
+          protein_g: item.protein,
+          carbs_g: item.carbs,
+          fat_g: item.fat,
+        }));
+        const result = await logMeal("snack", mealItems, "Foto: análise");
+        if (!result) {
+          showToast("Erro ao salvar no servidor", "error");
+          return;
+        }
+      }
+
+      saveMeal({
+        type: "snack",
+        items: editedFoods.map((f) => ({
+          name: f.name,
+          quantity: parseFloat(f.quantity) || 100,
+          unit: "g",
+          calories: f.calories,
+          protein: f.protein,
+          carbs: f.carbs,
+          fat: f.fat,
+        })),
+        totalCalories,
+        totalProtein,
+        totalCarbs,
+        totalFat,
+        rawText: "Foto: análise",
+      });
+
+      setEditMealData(null);
+      showToast("Refeição registrada!", "success");
+    } catch (err) {
+      console.error("[PhotoMeal] Erro:", {
+        operacao: "handleSaveMeal",
+        erro: err instanceof Error ? err.message : "desconhecido",
+      });
+      showToast("Erro ao registrar refeição", "error");
     }
-
-    saveMeal({
-      type: "snack",
-      items: editedFoods.map((f) => ({
-        name: f.name,
-        quantity: parseFloat(f.quantity) || 100,
-        unit: "g",
-        calories: f.calories,
-        protein: f.protein,
-        carbs: f.carbs,
-        fat: f.fat,
-      })),
-      totalCalories,
-      totalProtein,
-      totalCarbs,
-      totalFat,
-      rawText: "Foto: análise",
-    });
-
-    setEditMealData(null);
-    showToast("Refeição registrada!", "success");
   }, [user, showToast]);
 
   /**
@@ -838,7 +852,7 @@ export default function ChatPage() {
                 onRemove={handleRemoveImage}
                 onSend={handleSendImage}
                 isLoading={isAnalyzingImage}
-                loadingMessage="Analisando refeicao..."
+                loadingMessage="Analisando imagem..."
               />
             </div>
           )}

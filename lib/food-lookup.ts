@@ -23,6 +23,23 @@ import {
 import { Meal } from "./storage";
 import { searchTBCA, tbcaToFoodItem, type TBCAFood } from "./tbca-database";
 
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 2,
+  baseDelayMs: number = 300
+): Promise<T> {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      if (attempt === maxRetries) throw err;
+      const delay = baseDelayMs * Math.pow(2, attempt);
+      await new Promise((r) => setTimeout(r, delay));
+    }
+  }
+  throw new Error("withRetry: unreachable");
+}
+
 export interface LookupResult {
   found: boolean;
   source: "cache" | "database" | "tbca" | "ai";
@@ -235,7 +252,7 @@ export async function lookupFoodAsync(
 
   // 3. BUSCAR NA TBCA (Supabase - 5.668 alimentos brasileiros)
   try {
-    const tbcaResult = await searchTBCA(foodName, 1);
+    const tbcaResult = await withRetry(() => searchTBCA(foodName, 1));
 
     if (tbcaResult.foods.length > 0) {
       const tbcaFood = tbcaResult.foods[0];
