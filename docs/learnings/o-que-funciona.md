@@ -129,3 +129,20 @@ Padroes que deram certo no desenvolvimento do Fit Track v3.
 - Ao migrar entre stacks (ex: NextAuth → Supabase Auth), remover TODO o codigo antigo, nao so parar de usar
 - Restos de NextAuth (`lib/auth.ts`, `AuthProvider.tsx`, API route, env vars) causam confusao e podem conflitar
 - Usar `npm uninstall` para remover pacotes orfaos e limpar o bundle
+
+### Subagents em paralelo para bug fixing (2026-02-19)
+- Usar 3 subagents em paralelo para fixes independentes (sem conflito de arquivos) reduz tempo drasticamente
+- Organizar por **matriz de conflito de arquivos** — se dois fixes tocam o mesmo arquivo, rodar sequencial
+- Fase 1 (paralelo): bug fixes em arquivos independentes. Fase 2 (paralelo): features que dependem dos fixes
+- Cada subagent recebe contexto completo: arquivo, linhas, codigo atual, codigo esperado, verificacao
+
+### Props configuraveis para reutilizar componentes de card
+- Em vez de criar NutritionLabelCard e RecipeCard separados, adicionar props `title` e `icon` ao PhotoAnalysisCard existente
+- Manter um unico componente com defaults (`title = "Analise da\nRefeicao"`, `icon = "restaurant"`)
+- CardRenderer passa props diferentes por tipo: `title="Rotulo\nNutricional" icon="label"`, `title="Receita" icon="menu_book"`
+- Menos codigo, menos duplicacao, mesma flexibilidade visual
+
+### Verificar migrations via Node.js + service role
+- Sem acesso CLI/psql, usar `createClient(url, SERVICE_ROLE_KEY)` para chamar RPCs e verificar campos no retorno
+- `Object.keys(data)` revela campos presentes vs ausentes
+- Mais rapido que pedir ao usuario rodar SQL no dashboard para verificacao simples

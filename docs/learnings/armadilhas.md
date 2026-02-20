@@ -289,3 +289,53 @@ gh pr merge --merge --delete-branch
 **Solucao:** Acessar https://supabase.com/dashboard, localizar o projeto e clicar "Restore". DNS propaga em ~2 minutos.
 
 **Licao:** Se o app para de funcionar com erro de DNS no Supabase, primeiro verificar se o projeto esta pausado no dashboard. Free tier pausa automaticamente.
+
+---
+
+## 17. useState usado como useRef — setState durante render
+
+**Sintoma:** EditMealSheet crasha ao abrir com "Too many re-renders" ou tela branca. Botao "Registrar no diario" do PhotoAnalysisCard nao funciona.
+
+**Causa raiz:** Codigo usava `useState(foods)[0]` como se fosse `useRef` para rastrear valor anterior de prop, e chamava `setItems(foods)` diretamente no corpo do render (fora de useEffect). Isso viola regras do React e causa loop infinito de re-renders.
+
+```tsx
+// ERRADO — setState durante render
+const prevFoodsRef = useState(foods)[0];
+if (prevFoodsRef !== foods && foods.length > 0) {
+  setItems(foods);  // loop infinito
+}
+```
+
+**Solucao:**
+```tsx
+// CORRETO — useEffect para sincronizar prop → state
+useEffect(() => {
+  if (foods.length > 0) setItems(foods);
+}, [foods]);
+```
+
+**Licao:** Nunca chamar setState durante o render. Para sincronizar state com props, usar useEffect. Se precisar do valor anterior de uma prop, usar useRef (nao useState).
+
+---
+
+## 18. Migration aplicada parcialmente — CREATE OR REPLACE nao garante versao correta
+
+**Sintoma:** `get_insights()` retornava dados mas sem o campo `glucose`. A funcao existia no Supabase, mas era uma versao anterior que nao incluia o bloco glucose.
+
+**Causa raiz:** `CREATE OR REPLACE FUNCTION` foi executado numa versao anterior da migration que nao tinha o bloco glucose. Como a assinatura era a mesma, o PostgreSQL aceitou sem erro. Quando a migration completa (com glucose) foi criada no repositorio, ninguem percebeu que a versao no Supabase estava desatualizada.
+
+**Solucao:** Verificar o conteudo real da funcao no Supabase (via `pg_proc.prosrc`) e reaplicar com a versao completa.
+
+**Licao:** `CREATE OR REPLACE` nao falha se a funcao ja existe — silenciosamente mantem a versao antiga se nao for re-executado. Ao adicionar campos a uma RPC existente, sempre verificar que a versao correta esta no servidor, nao apenas que a funcao existe.
+
+---
+
+## 19. Sleep import descarta dados de usuarios sem Apple Watch
+
+**Sintoma:** Import Apple Health mostra "0 sessoes de sono" mesmo com dados de sono no XML.
+
+**Causa raiz:** O mapper `mapSleepSessions()` so contava minutos para estagios granulares (ASLEEP_DEEP, ASLEEP_REM, ASLEEP_CORE). O estagio `IN_BED` — o unico presente em exports de iPhone sem Apple Watch — era ignorado. Como `totalMinutes` ficava 0, a condicao `totalMinutes > 0` falhava e a sessao era descartada.
+
+**Solucao:** Adicionar fallback: se `totalMinutes === 0` mas `inBedMinutes > 0`, usar IN_BED como sono leve (core).
+
+**Licao:** Apple Health exporta dados diferentes dependendo do hardware. iPhone sem Watch so gera `HKCategoryValueSleepAnalysisInBed`. Sempre testar com exports de diferentes configuracoes de hardware.
