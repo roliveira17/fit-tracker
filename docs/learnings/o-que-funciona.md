@@ -146,3 +146,20 @@ Padroes que deram certo no desenvolvimento do Fit Track v3.
 - Sem acesso CLI/psql, usar `createClient(url, SERVICE_ROLE_KEY)` para chamar RPCs e verificar campos no retorno
 - `Object.keys(data)` revela campos presentes vs ausentes
 - Mais rapido que pedir ao usuario rodar SQL no dashboard para verificacao simples
+
+### Utilitario canonico de datas locais (2026-02-22)
+- `lib/date-utils.ts` com `getLocalDateString()` e `getLocalTimeString()` — evita `toISOString().split("T")[0]` que retorna UTC
+- Importado em 14 arquivos — todos call sites usam a mesma funcao
+- Previne bug de "refeicao as 23h aparece em amanha" para usuarios UTC-3
+
+### PullToRefresh custom sem dependencia externa (2026-02-22)
+- Componente `components/ui/PullToRefresh.tsx` (~80 linhas) com touch events, resistance curve (sqrt dampening) e spinner
+- Detecta pull so quando `scrollTop === 0` — nao interfere com scroll normal
+- `overscroll-behavior: none` evita bounce nativo do iOS
+- Integrado em 3 paginas (Home, Insights, Profile) — wrapper em torno do conteudo scrollavel
+
+### Extrair loadData para useCallback + focus listener (2026-02-22)
+- Refatorar useEffect de carregamento para funcao `loadData` com `useCallback`
+- Adicionar `window.addEventListener("focus", handleFocus)` para recarregar dados ao voltar de outra aba/pagina
+- Debounce com `useRef` (10s) evita chamadas excessivas
+- Padrao aplicado em Home e Insights — garante que dados ficam frescos apos registrar no Chat

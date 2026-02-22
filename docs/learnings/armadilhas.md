@@ -330,7 +330,19 @@ useEffect(() => {
 
 ---
 
-## 19. Sleep import descarta dados de usuarios sem Apple Watch
+## 19. toISOString() retorna UTC — datas erradas em fuso negativo
+
+**Sintoma:** Refeicao registrada as 23h em UTC-3 aparece como "amanha" na Home. Calorias da Home nao batem com o Chat.
+
+**Causa raiz:** `new Date().toISOString().split("T")[0]` converte para UTC antes de extrair a data. As 23h em Sao Paulo (UTC-3), `toISOString()` retorna `2026-02-23T02:00:00Z` — dia seguinte.
+
+**Solucao:** Criar `lib/date-utils.ts` com `getLocalDateString()` que usa `getFullYear()`, `getMonth()`, `getDate()` (timezone local). Substituir em todos os 14 arquivos que geravam datas.
+
+**Licao:** Nunca usar `toISOString()` para gerar datas YYYY-MM-DD que representam "hoje" para o usuario. `toISOString()` eh UTC — em qualquer fuso negativo, as ultimas horas do dia viram "amanha". Usar `getFullYear()/getMonth()/getDate()` que respeitam timezone local.
+
+---
+
+## 20. Sleep import descarta dados de usuarios sem Apple Watch
 
 **Sintoma:** Import Apple Health mostra "0 sessoes de sono" mesmo com dados de sono no XML.
 

@@ -1,7 +1,7 @@
 # Fit Track v3 — Roadmap e Progresso
 
 > Arquivo unico de acompanhamento do projeto.
-> Ultima atualizacao: 2026-02-19
+> Ultima atualizacao: 2026-02-22
 
 ---
 
@@ -14,7 +14,8 @@
 | Frontend v2 (extras) | 98% (61/62) | Audio, foto inteligente, Apple Health, auth, export, notificacoes, import calma |
 | Chat Cards Retrofit (Stitch) | 100% (8/8) | Todos cards retrofitados + 2 pipelines novos |
 | Food API | 76% (13/17) | Fases 1-2 completas, Fase 3 parcial (retry TBCA feito) |
-| QA / Testes E2E | 100% (15/15) | Todos implementados, 35 pass + 3 skip |
+| UX Fixes (2026-02-22) | 100% (5/5) | Timezone, Enter, chat efemero, auto-refresh, pull-to-refresh |
+| QA / Testes E2E | 100% (15/15) | Todos implementados, 79 pass + 3 skip |
 | Design System | 100% | Retrofit Stitch (light) completo — todas telas + floating pill nav + auth pages |
 | Deploy | Ativo | https://fit-tracker-murex.vercel.app |
 
@@ -104,18 +105,23 @@ Arquivo `components/ui/button.tsx` e compatibilidade com shadcn/ui antigo. Pode 
 
 ---
 
-## Sessao 2026-02-19 — Onde Paramos
+## Sessao 2026-02-22 — Onde Paramos
 
 ### Concluido nesta sessao:
-- ✅ **BUG: Foto "Registrar no diario"** — 3 fixes: EditMealSheet setState durante render (crash), handleSaveMeal error handling, PhotoAnalysisCard disabled guard
-- ✅ **BUG: Sleep import IN_BED** — Fallback para contar IN_BED como sono leve quando nao ha estagios granulares (usuarios sem Apple Watch)
-- ✅ **FEAT: Foto inteligente** — AI detecta tipo de imagem (comida, rotulo nutricional, receita) e mostra card apropriado. Expandido SYSTEM_PROMPT, PhotoAnalysisCard com props configuráveis, novos cases no CardRenderer
-- ✅ **Food API: retry TBCA** — `withRetry()` com exponential backoff (300ms, 600ms) para buscas TBCA
-- ✅ **Teste T010 atualizado** — Regex adaptada para novo texto neutro "Imagem enviada para analise"
+- ✅ **FIX: Timezone local** — Novo `lib/date-utils.ts` com `getLocalDateString()` e `getLocalTimeString()`. Substituido `toISOString().split("T")[0]` em 14 arquivos. Refeicao as 23h UTC-3 agora cai em "hoje"
+- ✅ **FIX: Enter = nova linha** — Removido `handleKeyDown` do ChatInput. Enter cria quebra de linha, enviar so pelo botao
+- ✅ **FIX: Chat efemero** — Removido load/save de localStorage. Mensagens limpam ao navegar entre paginas
+- ✅ **FIX: Home auto-refresh** — Listener de `focus` no window com debounce 10s recarrega dados ao voltar do Chat
+- ✅ **FEAT: Pull-to-refresh** — Novo componente `PullToRefresh` com touch events, resistance curve e spinner. Integrado em Home, Insights e Profile
 
-### Testes pre-existentes falhando (nao introduzidos nesta sessao):
-- T002: "deve destacar item ativo na BottomNav" — regex procura `text-primary` mas classe atual e `text-calma-primary`
-- T007 (5 testes): Insights com dados mockados — testes dependem de layout que mudou em sessoes anteriores
+### Testes: 79 pass, 3 skip (Notification API headless), 0 fail
+
+### Sessao anterior (2026-02-19):
+- ✅ BUG: Foto "Registrar no diario" — 3 fixes
+- ✅ BUG: Sleep import IN_BED fallback
+- ✅ FEAT: Foto inteligente (rotulo, receita)
+- ✅ Food API: retry TBCA
+- ✅ Tests T002 e T007 corrigidos
 
 ### Concluido na sessao 2026-02-18 (sessao 2):
 - ✅ **Auth cleanup** — Removido NextAuth legado (4 arquivos, 15 pacotes), retrofitado login/callback/onboarding para tema light [PR #4]
@@ -142,11 +148,12 @@ Arquivo `components/ui/button.tsx` e compatibilidade com shadcn/ui antigo. Pode 
 - ✅ Migration Apple Health + Testes E2E T010-T015
 
 ### Pendente:
-1. ~~**VERIFICAR MIGRATIONS**~~ ✅ Ambas aplicadas: `insights_extended` (reaplicada com bloco glucose) + `sleep_insights`
+1. ~~**VERIFICAR MIGRATIONS**~~ ✅ Ambas aplicadas
 2. **TESTAR IMPORT** — Re-testar Apple Health import com login (sono deve funcionar agora com fallback IN_BED)
-3. **TESTES E2E** — Corrigir T002 (regex `text-primary` → `text-calma-primary`) e T007 (layout de Insights desatualizado)
+3. ~~**TESTES E2E**~~ ✅ T002 e T007 corrigidos (sessao 2026-02-19)
 4. **FOOD API FASE 3** — Pendentes: loading states no chat, analytics UI, E2E barcode, docs
 5. **v2 pendentes** — Preview de dados antes de importar, barra de progresso para arquivos grandes
+6. **Apple Login** — Requer conta Apple Developer ($99/ano). Pulado por agora
 
 ---
 
