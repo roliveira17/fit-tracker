@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 
@@ -16,6 +16,7 @@ import {
 import { Toast } from "@/components/feedback/Toast";
 import { useToast } from "@/hooks/useToast";
 import { useAuth } from "@/components/providers/SupabaseAuthProvider";
+import { PullToRefresh } from "@/components/ui/PullToRefresh";
 import { ExportSection } from "@/components/profile/ExportSection";
 import { NotificationSettings } from "@/components/profile/NotificationSettings";
 import { AccountSection } from "@/components/profile/AccountSection";
@@ -95,12 +96,7 @@ export default function ProfilePage() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    if (!isOnboardingComplete()) {
-      router.push("/onboarding");
-      return;
-    }
-
+  const loadProfile = useCallback(() => {
     const userProfile = getUserProfile();
     if (userProfile) {
       setProfile(userProfile);
@@ -112,9 +108,17 @@ export default function ProfilePage() {
         weight: userProfile.weight,
       });
     }
+  }, []);
 
+  useEffect(() => {
+    if (!isOnboardingComplete()) {
+      router.push("/onboarding");
+      return;
+    }
+
+    loadProfile();
     setIsLoading(false);
-  }, [router]);
+  }, [router, loadProfile]);
 
   const toggleSection = (section: ExpandedSection) => {
     setExpanded((prev) => (prev === section ? null : section));
@@ -225,6 +229,7 @@ export default function ProfilePage() {
 
   return (
     <ScreenContainer>
+      <PullToRefresh onRefresh={loadProfile}>
       <div className="flex flex-1 flex-col px-5 pb-24 bg-[#F5F3EF] min-h-screen">
         {/* Header: Título Serif + Settings */}
         <header className="flex justify-between items-start pt-6 pb-8">
@@ -521,6 +526,7 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+      </PullToRefresh>
 
       {/* Modal: Limpar registros */}
       {showDeleteModal && (

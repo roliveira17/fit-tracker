@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 
@@ -42,6 +42,8 @@ import {
 import { computeCompositeScore, type CompositeScore, type ScoreInput } from "@/lib/insights-score";
 import { computeDeltas, type DeltaHighlight } from "@/lib/insights-deltas";
 import { computeCorrelations, type Correlation } from "@/lib/insights-correlations";
+import { getLocalDateString } from "@/lib/date-utils";
+import { PullToRefresh } from "@/components/ui/PullToRefresh";
 
 type Period = 7 | 14 | 30;
 
@@ -50,7 +52,7 @@ function getDateRange(days: number): string[] {
   for (let i = days - 1; i >= 0; i--) {
     const date = new Date();
     date.setDate(date.getDate() - i);
-    dates.push(date.toISOString().split("T")[0]);
+    dates.push(getLocalDateString(date));
   }
   return dates;
 }
@@ -161,8 +163,8 @@ export default function InsightsPage() {
     }
   }, [user, authLoading, router]);
 
-  // Carrega dados quando o periodo muda
-  useEffect(() => {
+  // Carrega dados do período
+  const loadInsightsData = useCallback(() => {
     if (!profile) return;
 
     const dates = getDateRange(period);
@@ -226,6 +228,10 @@ export default function InsightsPage() {
     const periodWorkouts = allWorkouts.filter((w) => dates.includes(w.date));
     setWorkoutCount(periodWorkouts.length);
   }, [period, profile, user]);
+
+  useEffect(() => {
+    loadInsightsData();
+  }, [loadInsightsData]);
 
   // Gera recomendacoes
   useEffect(() => {
@@ -338,7 +344,7 @@ export default function InsightsPage() {
 
   return (
     <ScreenContainer>
-      <div className="flex flex-1 flex-col">
+      <PullToRefresh onRefresh={loadInsightsData}>
         {/* Header */}
         <header className="pt-6 pb-2">
           <h1 className="font-serif-display text-3xl text-calma-primary">
@@ -455,7 +461,7 @@ export default function InsightsPage() {
             <CorrelationsSection correlations={correlations} />
           </div>
         )}
-      </div>
+      </PullToRefresh>
 
     </ScreenContainer>
   );

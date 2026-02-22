@@ -1,3 +1,5 @@
+import { getLocalDateString } from "@/lib/date-utils";
+
 /**
  * Parser para arquivos CSV do Hevy (app de musculação)
  *
@@ -92,7 +94,7 @@ function parseHevyDate(dateStr: string): Date | null {
 function extractDateFromHevyTime(dateStr: string): string {
   const date = parseHevyDate(dateStr);
   if (date) {
-    return date.toISOString().split("T")[0];
+    return getLocalDateString(date);
   }
 
   // Fallback: tenta extrair manualmente do formato "DD MMM YYYY, HH:mm"

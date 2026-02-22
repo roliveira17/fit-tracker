@@ -1,4 +1,5 @@
 import type { InsightsData, SleepInsightsData, WorkoutProgressionData } from "@/lib/supabase";
+import { getLocalDateString } from "@/lib/date-utils";
 
 // ========================================
 // INSIGHTS DELTAS ENGINE
@@ -174,7 +175,7 @@ function makeDelta(
 function getCutoffDate(periodDays: number): string {
   const date = new Date();
   date.setDate(date.getDate() - periodDays);
-  return date.toISOString().split("T")[0];
+  return getLocalDateString(date);
 }
 
 function splitByDate<T>(data: T[], cutoff: string, dateKey: string): [T[], T[]] {

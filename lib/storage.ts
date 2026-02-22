@@ -3,6 +3,8 @@
  * Centraliza toda a persistência de dados do app
  */
 
+import { getLocalDateString } from "@/lib/date-utils";
+
 // Chaves do localStorage
 const STORAGE_KEYS = {
   USER_PROFILE: "fittrack_user_profile",
@@ -219,7 +221,7 @@ function generateId(prefix: string): string {
  * Retorna a data atual no formato YYYY-MM-DD
  */
 function getCurrentDate(): string {
-  return new Date().toISOString().split("T")[0];
+  return getLocalDateString();
 }
 
 /**
@@ -385,7 +387,7 @@ export function getWeightLogsLastDays(days: number = 7): Array<{ date: string; w
   for (let i = days - 1; i >= 0; i--) {
     const date = new Date();
     date.setDate(date.getDate() - i);
-    const dateKey = date.toISOString().split("T")[0];
+    const dateKey = getLocalDateString(date);
 
     // Encontra o registro mais recente do dia (pode haver múltiplos)
     const dayLogs = logs.filter((l) => l.date === dateKey);
@@ -488,7 +490,7 @@ export function calculateStreak(): { streak: number; lastActiveDate: string | nu
   const today = getCurrentDate();
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayStr = yesterday.toISOString().split("T")[0];
+  const yesterdayStr = getLocalDateString(yesterday);
 
   // Verifica se o streak ainda está ativo (hoje ou ontem tem registro)
   const mostRecentDate = sortedDates[0];
@@ -502,7 +504,7 @@ export function calculateStreak(): { streak: number; lastActiveDate: string | nu
   let currentDate = new Date(mostRecentDate + "T12:00:00");
 
   for (const dateStr of sortedDates) {
-    const expectedDate = currentDate.toISOString().split("T")[0];
+    const expectedDate = getLocalDateString(currentDate);
 
     if (dateStr === expectedDate) {
       streak++;

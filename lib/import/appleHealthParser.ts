@@ -1,3 +1,5 @@
+import { getLocalDateString } from "@/lib/date-utils";
+
 /**
  * Apple Health XML Parser
  *
@@ -466,7 +468,7 @@ export function groupSleepByNight(
       nightDate.setDate(nightDate.getDate() - 1);
     }
 
-    const nightKey = nightDate.toISOString().split("T")[0];
+    const nightKey = getLocalDateString(nightDate);
 
     if (!nightsMap.has(nightKey)) {
       nightsMap.set(nightKey, []);

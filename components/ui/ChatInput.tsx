@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, KeyboardEvent, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
 // ========================================
 // CHAT INPUT - Input do chat com IA
@@ -101,13 +101,6 @@ export function ChatInput({
     if (value.trim() && !disabled) {
       onSend(value.trim());
       setValue("");
-    }
-  };
-
-  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
     }
   };
 
@@ -225,7 +218,6 @@ export function ChatInput({
             placeholder={placeholder}
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            onKeyDown={handleKeyDown}
             disabled={disabled || isProcessing}
             rows={1}
           />

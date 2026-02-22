@@ -22,9 +22,6 @@ import { useAudioRecorder } from "@/hooks/useAudioRecorder";
 import {
   getUserProfile,
   isOnboardingComplete,
-  getChatMessages,
-  saveChatMessages,
-  clearChatMessages,
   getMeals,
   saveMeal,
   saveWeightLog,
@@ -119,28 +116,14 @@ export default function ChatPage() {
       setProfile(userProfile);
     }
 
-    // Carrega mensagens salvas
-    const savedMessages = getChatMessages();
-    if (savedMessages.length > 0) {
-      setMessages(savedMessages);
-    }
-
     setIsLoading(false);
   }, [router]);
-
-  // Salva mensagens sempre que mudam
-  useEffect(() => {
-    if (messages.length > 0) {
-      saveChatMessages(messages);
-    }
-  }, [messages]);
 
   /**
    * Limpa o histórico de mensagens
    */
   const handleClearChat = () => {
     setMessages([]);
-    clearChatMessages();
   };
 
   // Sincroniza estado do recorder com o estado local

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { FAB } from "@/components/ui/FAB";
@@ -25,12 +25,14 @@ import {
 } from "@/lib/storage";
 import { useAuth } from "@/components/providers/SupabaseAuthProvider";
 import { getHomeSummary, getTdee, type HomeSummary } from "@/lib/supabase";
+import { getLocalDateString } from "@/lib/date-utils";
+import { PullToRefresh } from "@/components/ui/PullToRefresh";
 
 /**
  * Formata data para YYYY-MM-DD (formato usado no storage)
  */
 function formatDateKey(date: Date): string {
-  return date.toISOString().split("T")[0];
+  return getLocalDateString(date);
 }
 
 /**
@@ -72,8 +74,9 @@ export default function HomePage() {
     setIsLoading(false);
   }, [router]);
 
-  // Carrega dados quando a data muda
-  useEffect(() => {
+  // Carrega dados do dia selecionado
+  const lastLoadRef = useRef(0);
+  const loadData = useCallback(() => {
     const dateKey = formatDateKey(selectedDate);
 
     // Se usuário logado, busca do Supabase
@@ -90,31 +93,43 @@ export default function HomePage() {
     }
 
     // Sempre carrega localStorage como fallback
-    // Busca refeições do dia
     const dayMeals = getMealsByDate(dateKey);
     setMeals(dayMeals);
 
-    // Busca treinos do dia
     const allWorkouts = getWorkouts();
     const dayWorkouts = allWorkouts.filter((w) => w.date === dateKey);
     setWorkouts(dayWorkouts);
 
-    // Verifica se tem registro de peso (qualquer data)
     const weightLogs = getWeightLogs();
     setHasWeightLog(weightLogs.length > 0);
 
-    // Busca dados de peso dos últimos 7 dias
     const last7Days = getWeightLogsLastDays(7);
     setWeightData(last7Days);
 
-    // Busca último BF
     const bf = getLatestBodyFat();
     setLatestBodyFat(bf?.percentage ?? null);
 
-    // Calcula streak
     const streak = calculateStreak();
     setStreakData(streak);
   }, [selectedDate, user]);
+
+  // Carrega dados quando a data muda
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  // Re-carrega dados ao voltar para a página (focus)
+  useEffect(() => {
+    const handleFocus = () => {
+      const now = Date.now();
+      if (now - lastLoadRef.current > 10_000) {
+        lastLoadRef.current = now;
+        loadData();
+      }
+    };
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
+  }, [loadData]);
 
   // Calcula totais do dia - prefere Supabase se disponível
   const totals = supabaseSummary
@@ -164,7 +179,7 @@ export default function HomePage() {
 
   return (
     <ScreenContainer className="bg-[#F5F3EF] text-gray-800">
-      <div className="flex flex-1 flex-col">
+      <PullToRefresh onRefresh={loadData}>
         {/* Navegação temporal */}
         <DateNavigator
           selectedDate={selectedDate}
@@ -281,7 +296,7 @@ export default function HomePage() {
             </div>
           )}
         </div>
-      </div>
+      </PullToRefresh>
       <FAB theme="light" onClick={() => router.push("/chat")} />
     </ScreenContainer>
   );

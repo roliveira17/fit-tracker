@@ -4,6 +4,7 @@
  */
 
 import JSZip from "jszip";
+import { getLocalDateString } from "@/lib/date-utils";
 import {
   getUserProfile,
   getWeightLogs,
@@ -90,7 +91,7 @@ function filterByDate<T extends { date: string }>(
 ): T[] {
   if (!cutoff) return items;
 
-  const cutoffStr = cutoff.toISOString().split("T")[0];
+  const cutoffStr = getLocalDateString(cutoff);
   return items.filter((item) => item.date >= cutoffStr);
 }
 
@@ -98,7 +99,7 @@ function filterByDate<T extends { date: string }>(
  * Gera nome do arquivo com data
  */
 function generateFilename(format: ExportFormat): string {
-  const date = new Date().toISOString().split("T")[0];
+  const date = getLocalDateString();
   const extension = format === "json" ? "json" : "zip";
   return `fittrack_export_${date}.${extension}`;
 }

@@ -1,3 +1,5 @@
+import { getLocalDateString } from "@/lib/date-utils";
+
 /**
  * Weekly Analysis — Agregacao deterministica de dados do usuario
  *
@@ -62,7 +64,7 @@ function hasSupabaseData(ctx: UserContext): boolean {
 function daysAgo(n: number): string {
   const d = new Date();
   d.setDate(d.getDate() - n);
-  return d.toISOString().split("T")[0];
+  return getLocalDateString(d);
 }
 
 function filterLast7Days<T extends { date: string }>(items: T[]): T[] {

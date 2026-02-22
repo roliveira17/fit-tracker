@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { getLocalDateString, getLocalTimeString } from "@/lib/date-utils";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -246,7 +247,7 @@ export async function updateProfile(updates: Partial<Profile>): Promise<Profile 
 
 export async function getHomeSummary(targetDate?: string): Promise<HomeSummary | null> {
   const { data, error } = await supabase
-    .rpc("get_home_summary", { target_date: targetDate || new Date().toISOString().split("T")[0] });
+    .rpc("get_home_summary", { target_date: targetDate || getLocalDateString() });
 
   if (error) {
     console.error("Error fetching home summary:", error);
@@ -358,7 +359,7 @@ export async function logWeight(weightKg: number, rawText?: string): Promise<Wei
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const date = new Date().toISOString().split("T")[0];
+  const date = getLocalDateString();
 
   // Usar função RPC com SECURITY DEFINER para bypass RLS
   const { data: weightId, error } = await supabase.rpc("insert_weight_log", {
@@ -413,7 +414,7 @@ export async function logMeal(
   const { data: mealId, error: mealError } = await supabase.rpc("insert_meal", {
     p_user_id: user.id,
     p_meal_type: mealType,
-    p_date: new Date().toISOString().split("T")[0],
+    p_date: getLocalDateString(),
     p_total_calories: Math.round(totals.calories),
     p_total_protein_g: totals.protein,
     p_total_carbs_g: totals.carbs,
@@ -449,7 +450,7 @@ export async function logMeal(
     id: mealId,
     user_id: user.id,
     meal_type: mealType,
-    date: new Date().toISOString().split("T")[0],
+    date: getLocalDateString(),
     total_calories: Math.round(totals.calories),
     total_protein_g: totals.protein,
     total_carbs_g: totals.carbs,
@@ -470,7 +471,7 @@ export async function logWorkout(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const date = new Date().toISOString().split("T")[0];
+  const date = getLocalDateString();
 
   // Usar função RPC com SECURITY DEFINER para bypass RLS
   const { data: workoutId, error: workoutError } = await supabase.rpc("insert_workout", {
@@ -585,7 +586,7 @@ export async function logBodyFat(percentage: number, rawText?: string): Promise<
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const date = new Date().toISOString().split("T")[0];
+  const date = getLocalDateString();
 
   // Usar função RPC com SECURITY DEFINER para bypass RLS
   const { data: bodyFatId, error } = await supabase.rpc("insert_body_fat_log", {
@@ -649,8 +650,8 @@ export async function logGlucose(
   if (!user) return null;
 
   const now = new Date();
-  const date = now.toISOString().split("T")[0];
-  const time = now.toTimeString().split(" ")[0];
+  const date = getLocalDateString(now);
+  const time = getLocalTimeString(now);
 
   // Usar função RPC com SECURITY DEFINER para bypass RLS
   const { data: glucoseId, error } = await supabase.rpc("insert_glucose_log", {

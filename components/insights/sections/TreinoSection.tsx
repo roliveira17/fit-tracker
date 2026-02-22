@@ -6,6 +6,7 @@ import type { Recommendation } from "@/lib/insights-recommendations";
 import { DomainSection } from "@/components/insights/DomainSection";
 import { FrequencyDots } from "@/components/insights/FrequencyDots";
 import { Sparkline } from "@/components/insights/Sparkline";
+import { getLocalDateString } from "@/lib/date-utils";
 
 interface TreinoSectionProps {
   domain: DomainScore;
@@ -136,7 +137,7 @@ function getLast7DaysDots(workoutDates: string[]) {
   for (let i = 6; i >= 0; i--) {
     const d = new Date(today);
     d.setDate(d.getDate() - i);
-    dates.push(d.toISOString().split("T")[0]);
+    dates.push(getLocalDateString(d));
   }
 
   const workoutSet = new Set(workoutDates);
