@@ -67,7 +67,7 @@ test.describe("T002: Navegação Principal", () => {
   test("deve destacar item ativo na BottomNav", async ({ page }) => {
     // Na Home, verifica que link Home tem cor primária
     const homeLink = page.locator('a[href="/home"]').first();
-    await expect(homeLink).toHaveClass(/text-primary/);
+    await expect(homeLink).toHaveClass(/text-calma-primary/);
 
     // Navega para Insights
     await page.locator('a[href="/insights"]').first().click({ force: true });
@@ -75,7 +75,7 @@ test.describe("T002: Navegação Principal", () => {
 
     // Verifica que Insights agora está ativo
     const insightsLink = page.locator('a[href="/insights"]').first();
-    await expect(insightsLink).toHaveClass(/text-primary/);
+    await expect(insightsLink).toHaveClass(/text-calma-primary/);
   });
 
   test("FAB central deve navegar para Chat", async ({ page }) => {

@@ -3,12 +3,13 @@ import { test, expect } from "@playwright/test";
 /**
  * T007: Visualizar Insights
  *
- * Testa a página de insights (design Stitch com tabs):
+ * Testa a página de insights (design Stitch — ScoreRing + domain sections):
  * - Estado vazio (sem dados)
- * - Tabs de navegação (Resumo, Dieta, Treino, Sono, Glicemia, Corpo)
- * - StatCards com valores agregados
+ * - Secao Corpo com dados de peso
+ * - Secao Nutricao com dados de refeicoes
+ * - Score composto e secoes com dados completos
  * - Troca de período (7, 14, 30 dias)
- * - Geração de recomendações
+ * - Recomendacao de peso em queda
  */
 test.describe("T007: Visualizar Insights", () => {
   // Helper para gerar data no formato YYYY-MM-DD
@@ -58,7 +59,7 @@ test.describe("T007: Visualizar Insights", () => {
     await expect(page.getByText("Ir para o Chat")).toBeVisible();
   });
 
-  test("deve exibir gráfico de peso na tab Corpo", async ({ page }) => {
+  test("deve exibir secao Corpo com dados de peso", async ({ page }) => {
     await page.goto("/");
     await page.evaluate((testDates) => {
       localStorage.setItem(
@@ -85,15 +86,12 @@ test.describe("T007: Visualizar Insights", () => {
 
     await page.goto("/insights");
 
-    // Tab Resumo mostra StatCard de peso
-    await expect(page.getByText("Último peso")).toBeVisible();
-
-    // Clica na tab Corpo para ver gráfico
-    await page.getByText("Corpo").click();
-    await expect(page.getByText("Evolução do Peso")).toBeVisible();
+    // Secao Corpo mostra peso atual e sparkline (3+ entries)
+    await expect(page.getByText("Peso atual")).toBeVisible();
+    await expect(page.getByText("Evolucao do peso")).toBeVisible();
   });
 
-  test("deve exibir gráfico de calorias na tab Dieta", async ({ page }) => {
+  test("deve exibir secao Nutricao com dados de refeicoes", async ({ page }) => {
     await page.goto("/");
     await page.evaluate((testDates) => {
       localStorage.setItem(
@@ -110,6 +108,7 @@ test.describe("T007: Visualizar Insights", () => {
       );
       localStorage.setItem("fittrack_onboarding_complete", "true");
 
+      // Nutricao precisa de 3+ dias com comida para ativar dominio
       const meals = [
         {
           id: "m1",
@@ -119,9 +118,9 @@ test.describe("T007: Visualizar Insights", () => {
           totalProtein: 30,
           totalCarbs: 60,
           totalFat: 10,
-          date: testDates.day2,
+          date: testDates.day3,
           timestamp: new Date().toISOString(),
-          rawText: "Almoço",
+          rawText: "Almoco",
         },
         {
           id: "m2",
@@ -131,9 +130,21 @@ test.describe("T007: Visualizar Insights", () => {
           totalProtein: 40,
           totalCarbs: 50,
           totalFat: 15,
-          date: testDates.day1,
+          date: testDates.day2,
           timestamp: new Date().toISOString(),
           rawText: "Jantar",
+        },
+        {
+          id: "m3",
+          type: "lunch",
+          items: [{ name: "Salada", quantity: 200, unit: "g", calories: 120, protein: 5, carbs: 10, fat: 3 }],
+          totalCalories: 450,
+          totalProtein: 25,
+          totalCarbs: 55,
+          totalFat: 8,
+          date: testDates.day1,
+          timestamp: new Date().toISOString(),
+          rawText: "Almoco",
         },
       ];
       localStorage.setItem("fittrack_meals", JSON.stringify(meals));
@@ -141,14 +152,12 @@ test.describe("T007: Visualizar Insights", () => {
 
     await page.goto("/insights");
 
-    await expect(page.getByText("Média kcal")).toBeVisible();
-
-    // Clica na tab Dieta
-    await page.getByText("Dieta").click();
-    await expect(page.getByText("Calorias por Dia")).toBeVisible();
+    // Secao Nutricao mostra consumo medio e macros
+    await expect(page.getByText("Consumo medio")).toBeVisible();
+    await expect(page.getByText("Macros (media diaria)")).toBeVisible();
   });
 
-  test("deve exibir todos os StatCards com dados completos", async ({ page }) => {
+  test("deve exibir Score e secoes com dados completos", async ({ page }) => {
     await page.goto("/");
     await page.evaluate((testDates) => {
       localStorage.setItem(
@@ -165,11 +174,14 @@ test.describe("T007: Visualizar Insights", () => {
       );
       localStorage.setItem("fittrack_onboarding_complete", "true");
 
+      // Corpo: 2+ pesos para ativar dominio
       const weightLogs = [
-        { id: "w1", weight: 75, date: testDates.day1, timestamp: new Date().toISOString(), rawText: "75kg" },
+        { id: "w1", weight: 75.5, date: testDates.day3, timestamp: new Date().toISOString(), rawText: "75.5kg" },
+        { id: "w2", weight: 75, date: testDates.day1, timestamp: new Date().toISOString(), rawText: "75kg" },
       ];
       localStorage.setItem("fittrack_weight_logs", JSON.stringify(weightLogs));
 
+      // Nutricao: 3+ dias com comida para ativar dominio
       const meals = [
         {
           id: "m1",
@@ -179,35 +191,49 @@ test.describe("T007: Visualizar Insights", () => {
           totalProtein: 80,
           totalCarbs: 150,
           totalFat: 50,
+          date: testDates.day3,
+          timestamp: new Date().toISOString(),
+          rawText: "Almoco",
+        },
+        {
+          id: "m2",
+          type: "dinner",
+          items: [],
+          totalCalories: 1400,
+          totalProtein: 70,
+          totalCarbs: 140,
+          totalFat: 45,
+          date: testDates.day2,
+          timestamp: new Date().toISOString(),
+          rawText: "Jantar",
+        },
+        {
+          id: "m3",
+          type: "lunch",
+          items: [],
+          totalCalories: 1600,
+          totalProtein: 85,
+          totalCarbs: 160,
+          totalFat: 55,
           date: testDates.day1,
           timestamp: new Date().toISOString(),
-          rawText: "Almoço",
+          rawText: "Almoco",
         },
       ];
       localStorage.setItem("fittrack_meals", JSON.stringify(meals));
-
-      const workouts = [
-        {
-          id: "wk1",
-          exercises: [{ type: "cardio", name: "Esteira", duration: 30 }],
-          totalDuration: 30,
-          totalCaloriesBurned: 250,
-          date: testDates.day1,
-          timestamp: new Date().toISOString(),
-          rawText: "Esteira",
-        },
-      ];
-      localStorage.setItem("fittrack_workouts", JSON.stringify(workouts));
     }, dates);
 
     await page.goto("/insights");
 
-    await expect(page.getByText("Último peso")).toBeVisible();
-    await expect(page.getByText("Treinos").first()).toBeVisible();
-    await expect(page.getByText("Média kcal")).toBeVisible();
+    // ScoreRing visivel
+    await expect(page.getByText("Seu Score")).toBeVisible();
+    // Secao Corpo ativa
+    await expect(page.getByText("Peso atual")).toBeVisible();
+    // Secao Nutricao ativa
+    await expect(page.getByText("Consumo medio")).toBeVisible();
   });
 
-  test("deve trocar período corretamente", async ({ page }) => {
+  test("deve trocar periodo corretamente", async ({ page }) => {
     await page.goto("/");
     await page.evaluate((testDates) => {
       localStorage.setItem(
@@ -224,8 +250,10 @@ test.describe("T007: Visualizar Insights", () => {
       );
       localStorage.setItem("fittrack_onboarding_complete", "true");
 
+      // Corpo: 2+ pesos para ativar dominio
       const weightLogs = [
-        { id: "w1", weight: 75, date: testDates.day1, timestamp: new Date().toISOString(), rawText: "75kg" },
+        { id: "w1", weight: 75.5, date: testDates.day3, timestamp: new Date().toISOString(), rawText: "75.5kg" },
+        { id: "w2", weight: 75, date: testDates.day1, timestamp: new Date().toISOString(), rawText: "75kg" },
       ];
       localStorage.setItem("fittrack_weight_logs", JSON.stringify(weightLogs));
     }, dates);
@@ -236,14 +264,15 @@ test.describe("T007: Visualizar Insights", () => {
     await expect(page.getByText("14 dias")).toBeVisible();
     await expect(page.getByText("30 dias")).toBeVisible();
 
+    // Troca de periodo mantem Score e secoes visiveis
     await page.getByText("14 dias").click();
-    await expect(page.getByText("Último peso")).toBeVisible();
+    await expect(page.getByText("Seu Score")).toBeVisible();
 
     await page.getByText("30 dias").click();
-    await expect(page.getByText("Último peso")).toBeVisible();
+    await expect(page.getByText("Seu Score")).toBeVisible();
   });
 
-  test("deve gerar insight de peso em queda", async ({ page }) => {
+  test("deve gerar recomendacao de peso em queda", async ({ page }) => {
     await page.goto("/");
     await page.evaluate((testDates) => {
       localStorage.setItem(
@@ -271,6 +300,8 @@ test.describe("T007: Visualizar Insights", () => {
 
     await page.goto("/insights");
 
-    await expect(page.getByText("Peso em queda")).toBeVisible();
+    // Recomendacao de peso em queda: observation mostra diff + action mostra conselho
+    await expect(page.getByText(/kg no per/).first()).toBeVisible();
+    await expect(page.getByText(/Continue no ritmo/).first()).toBeVisible();
   });
 });
