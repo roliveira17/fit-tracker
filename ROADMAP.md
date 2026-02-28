@@ -1,7 +1,7 @@
 # Fit Track v3 — Roadmap e Progresso
 
 > Arquivo unico de acompanhamento do projeto.
-> Ultima atualizacao: 2026-02-22
+> Ultima atualizacao: 2026-02-28
 
 ---
 
@@ -13,8 +13,9 @@
 | Frontend v1 (core) | 100% | Onboarding, Chat, Home, Insights, Profile, Import |
 | Frontend v2 (extras) | 98% (61/62) | Audio, foto inteligente, Apple Health, auth, export, notificacoes, import calma |
 | Chat Cards Retrofit (Stitch) | 100% (8/8) | Todos cards retrofitados + 2 pipelines novos |
-| Food API | 76% (13/17) | Fases 1-2 completas, Fase 3 parcial (retry TBCA feito) |
+| Food API | 82% (14/17) | Fases 1-2 completas, Fase 3 parcial (retry TBCA + barcode perf) |
 | UX Fixes (2026-02-22) | 100% (5/5) | Timezone, Enter, chat efemero, auto-refresh, pull-to-refresh |
+| Barcode Scanner Fix (2026-02-28) | 100% | APIs paralelas, timeouts, cancel real |
 | QA / Testes E2E | 100% (15/15) | Todos implementados, 79 pass + 3 skip |
 | Design System | 100% | Retrofit Stitch (light) completo — todas telas + floating pill nav + auth pages |
 | Deploy | Ativo | https://fit-tracker-murex.vercel.app |
@@ -73,8 +74,8 @@ O formato FreeStyle Libre eh detectado em `lib/parsers/cgm.ts` mas usa o parser 
 
 ### 3. Food API — Fase 3 Otimizacoes (BAIXA)
 
-5 tasks, 1 concluida:
-- [ ] Loading states durante scan de barcode
+5 tasks, 2 concluidas:
+- [x] Loading states durante scan de barcode ✅ [2026-02-28]
 - [x] Retry com exponential backoff para TBCA lookup ✅ [2026-02-19]
 - [ ] Analytics de uso (cache hit rates, taxa de acerto)
 - [ ] Testes E2E para barcode scanner
@@ -105,14 +106,23 @@ Arquivo `components/ui/button.tsx` e compatibilidade com shadcn/ui antigo. Pode 
 
 ---
 
-## Sessao 2026-02-22 — Onde Paramos
+## Sessao 2026-02-28 — Onde Paramos
 
 ### Concluido nesta sessao:
-- ✅ **FIX: Timezone local** — Novo `lib/date-utils.ts` com `getLocalDateString()` e `getLocalTimeString()`. Substituido `toISOString().split("T")[0]` em 14 arquivos. Refeicao as 23h UTC-3 agora cai em "hoje"
-- ✅ **FIX: Enter = nova linha** — Removido `handleKeyDown` do ChatInput. Enter cria quebra de linha, enviar so pelo botao
-- ✅ **FIX: Chat efemero** — Removido load/save de localStorage. Mensagens limpam ao navegar entre paginas
-- ✅ **FIX: Home auto-refresh** — Listener de `focus` no window com debounce 10s recarrega dados ao voltar do Chat
-- ✅ **FEAT: Pull-to-refresh** — Novo componente `PullToRefresh` com touch events, resistance curve e spinner. Integrado em Home, Insights e Profile
+- ✅ **FIX: Barcode Scanner lento** — Pipeline de lookup caiu de ~33s (pior caso) para 12s hard cap. APIs BR e Global agora rodam em paralelo via `Promise.any()`. Cache Supabase com timeout de 3s. Cache save e hit_count viraram fire-and-forget
+- ✅ **FIX: Cancel real no scanner** — Botao Cancelar agora aborta fetch real via `AbortController` (antes so resetava state). Aparece apos 2s (antes era 3s)
+- ✅ **FIX: Erros diferenciados** — Timeout, rede e produto nao encontrado mostram mensagens distintas. `BarcodeLookupError` com code tipado
+- ✅ **FIX: Loading messages progressivos** — 0s cache → 0.8s buscando → 2s Open Food Facts + botao Cancelar → 5s conexao lenta
+- ✅ **FIX: Deploy Vercel** — Adicionado `.vercelignore` excluindo `.next/`, `node_modules/`, `docs/db/export/` (961MB de Apple Health export)
+
+### Arquivos modificados:
+- `lib/openfoodfacts.ts` — `fetchWithRetry` (2 retries, AbortSignal) + `fetchProductByBarcode` (Promise.any paralelo)
+- `lib/barcode-cache.ts` — `BarcodeLookupError`, `withTimeout`, cache 3s, pipeline 12s, fire-and-forget
+- `components/import/BarcodeScanner.tsx` — AbortController, handleCancel, showCancel, erros tipados
+- `.vercelignore` — novo arquivo
+
+### Sessao anterior (2026-02-22):
+- ✅ Timezone local, Enter = nova linha, chat efemero, auto-refresh, pull-to-refresh
 
 ### Testes: 79 pass, 3 skip (Notification API headless), 0 fail
 
@@ -215,7 +225,7 @@ Arquivo `components/ui/button.tsx` e compatibilidade com shadcn/ui antigo. Pode 
 |------|------|-----------|
 | Fase 1: TBCA no Supabase | 2026-01-27 | 6/6 |
 | Fase 2: Barcode Scanner | 2026-01-27 | 6/6 |
-| Fase 3: Otimizacoes | Pendente | 0/5 |
+| Fase 3: Otimizacoes | Em progresso | 2/5 |
 
 ---
 
