@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
-import { lookupBarcode } from "@/lib/barcode-cache";
+import { lookupBarcode, BarcodeLookupError } from "@/lib/barcode-cache";
 import { offProductToMealItem, isLiquidProduct, type NormalizedProduct } from "@/lib/openfoodfacts";
 
 interface BarcodeScannerProps {
@@ -23,20 +23,29 @@ export function BarcodeScanner({
   const [error, setError] = useState<string | null>(null);
   const [cameraPermission, setCameraPermission] = useState<"granted" | "denied" | "prompt">("prompt");
 
+  const [showCancel, setShowCancel] = useState(false);
+
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const loadingTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Loading states progressivos
   useEffect(() => {
     if (isLoading) {
       setLoadingMessage("Verificando cache...");
-      const t1 = setTimeout(() => setLoadingMessage("Buscando no Open Food Facts..."), 1000);
-      const t2 = setTimeout(() => setLoadingMessage("Conexao lenta... aguarde"), 3000);
-      loadingTimersRef.current = [t1, t2];
+      setShowCancel(false);
+      const t1 = setTimeout(() => setLoadingMessage("Buscando produto..."), 800);
+      const t2 = setTimeout(() => {
+        setLoadingMessage("Consultando Open Food Facts...");
+        setShowCancel(true);
+      }, 2000);
+      const t3 = setTimeout(() => setLoadingMessage("Conexão lenta... aguarde ou cancele"), 5000);
+      loadingTimersRef.current = [t1, t2, t3];
     } else {
       loadingTimersRef.current.forEach(clearTimeout);
       loadingTimersRef.current = [];
+      setShowCancel(false);
     }
     return () => {
       loadingTimersRef.current.forEach(clearTimeout);
@@ -59,42 +68,55 @@ export function BarcodeScanner({
 
   const handleScan = useCallback(
     async (decodedText: string) => {
-      // Evita processar o mesmo código múltiplas vezes
       if (decodedText === lastScannedCode || isLoading) {
         return;
       }
+
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
 
       setLastScannedCode(decodedText);
       setIsLoading(true);
       setError(null);
 
-      // Para o scanner enquanto busca
       await stopScanner();
 
       try {
         console.log("Barcode escaneado:", decodedText);
 
-        const { product, source } = await lookupBarcode(decodedText);
+        const { product, source } = await lookupBarcode(decodedText, controller.signal);
+
+        if (controller.signal.aborted) return;
 
         if (product) {
           console.log(`Produto encontrado (${source}):`, product.productName);
           onProductScanned(product);
         } else {
-          setError(`Produto não encontrado: ${decodedText}`);
-          onError?.(`Produto não encontrado: ${decodedText}`);
+          const msg = `Produto não encontrado para código ${decodedText}. Pode não estar no Open Food Facts.`;
+          setError(msg);
+          onError?.(msg);
 
-          // Permite escanear novamente após 2s
           setTimeout(() => {
             setLastScannedCode(null);
             setError(null);
-          }, 2000);
+          }, 3000);
         }
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Erro ao buscar produto";
+        if (controller.signal.aborted) return;
+
+        let message: string;
+        if (err instanceof BarcodeLookupError) {
+          message = err.message;
+        } else {
+          message = "Erro ao buscar produto. Tente novamente.";
+        }
         setError(message);
         onError?.(message);
       } finally {
-        setIsLoading(false);
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
+        abortControllerRef.current = null;
       }
     },
     [lastScannedCode, isLoading, stopScanner, onProductScanned, onError]
@@ -149,6 +171,15 @@ export function BarcodeScanner({
       }
     }
   }, [handleScan]);
+
+  const handleCancel = useCallback(() => {
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
+    setIsLoading(false);
+    setLastScannedCode(null);
+    setError(null);
+    startScanner();
+  }, [startScanner]);
 
   // Inicia scanner ao montar
   useEffect(() => {
@@ -205,14 +236,10 @@ export function BarcodeScanner({
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70">
             <div className="mb-4 size-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
             <p className="text-white">{loadingMessage}</p>
-            {loadingMessage.includes("lenta") && (
+            {showCancel && (
               <button
                 type="button"
-                onClick={() => {
-                  setIsLoading(false);
-                  setLastScannedCode(null);
-                  startScanner();
-                }}
+                onClick={handleCancel}
                 className="mt-4 rounded-lg bg-white/20 px-6 py-2 text-sm font-medium text-white hover:bg-white/30"
               >
                 Cancelar

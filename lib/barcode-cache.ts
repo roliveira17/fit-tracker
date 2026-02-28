@@ -11,6 +11,28 @@ import {
   type NormalizedProduct,
 } from "./openfoodfacts";
 
+export type BarcodeLookupErrorCode = "timeout" | "network" | "not_found";
+
+export class BarcodeLookupError extends Error {
+  code: BarcodeLookupErrorCode;
+  constructor(code: BarcodeLookupErrorCode, message: string) {
+    super(message);
+    this.name = "BarcodeLookupError";
+    this.code = code;
+  }
+}
+
+function withTimeout<T>(
+  promise: Promise<T>,
+  ms: number,
+  fallback: T
+): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms)),
+  ]);
+}
+
 export interface CachedBarcode {
   id: string;
   barcode: string;
@@ -40,43 +62,45 @@ export async function getFromBarcodeCache(
   barcode: string
 ): Promise<NormalizedProduct | null> {
   try {
-    const { data, error } = await supabase
-      .from("barcode_cache")
-      .select("*")
-      .eq("barcode", barcode)
-      .single();
+    const fetchCache = async (): Promise<NormalizedProduct | null> => {
+      const { data, error } = await supabase
+        .from("barcode_cache")
+        .select("*")
+        .eq("barcode", barcode)
+        .single();
 
-    if (error || !data) {
-      return null;
-    }
+      if (error || !data) return null;
 
-    // Incrementa hit count
-    await supabase
-      .from("barcode_cache")
-      .update({
-        hit_count: (data.hit_count || 0) + 1,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("barcode", barcode);
+      // Incrementa hit count — fire-and-forget
+      supabase
+        .from("barcode_cache")
+        .update({
+          hit_count: (data.hit_count || 0) + 1,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("barcode", barcode)
+        .then(() => {}, () => {});
 
-    // Converte para NormalizedProduct
-    return {
-      barcode: data.barcode,
-      productName: data.product_name || "Produto sem nome",
-      brand: data.brand,
-      quantity: data.quantity,
-      imageUrl: data.image_url,
-      energyKcal: data.energy_kcal,
-      proteinG: data.protein_g,
-      carbsG: data.carbs_g,
-      fatG: data.fat_g,
-      fiberG: data.fiber_g,
-      sodiumMg: data.sodium_mg,
-      sugarG: data.sugar_g,
-      nutriscore: data.nutriscore,
-      novaGroup: data.nova_group,
-      source: "openfoodfacts",
+      return {
+        barcode: data.barcode,
+        productName: data.product_name || "Produto sem nome",
+        brand: data.brand,
+        quantity: data.quantity,
+        imageUrl: data.image_url,
+        energyKcal: data.energy_kcal,
+        proteinG: data.protein_g,
+        carbsG: data.carbs_g,
+        fatG: data.fat_g,
+        fiberG: data.fiber_g,
+        sodiumMg: data.sodium_mg,
+        sugarG: data.sugar_g,
+        nutriscore: data.nutriscore,
+        novaGroup: data.nova_group,
+        source: "openfoodfacts",
+      };
     };
+
+    return await withTimeout(fetchCache(), 3000, null);
   } catch (error) {
     console.error("Erro ao buscar do cache de barcodes:", error);
     return null;
@@ -158,33 +182,56 @@ function logBarcodeAnalytics(barcode: string, source: "cache" | "api" | "not_fou
 }
 
 export async function lookupBarcode(
-  barcode: string
+  barcode: string,
+  externalSignal?: AbortSignal
 ): Promise<{ product: NormalizedProduct | null; source: "cache" | "api" | null }> {
   const start = Date.now();
+  const timeoutController = new AbortController();
+  const timeoutId = setTimeout(() => timeoutController.abort(), 12000);
 
-  // 1. Tenta cache primeiro
-  const cached = await getFromBarcodeCache(barcode);
-  if (cached) {
-    console.log(`[Barcode] Cache hit: ${barcode}`);
-    logBarcodeAnalytics(barcode, "cache", Date.now() - start);
-    return { product: cached, source: "cache" };
+  const signals: AbortSignal[] = [timeoutController.signal];
+  if (externalSignal) signals.push(externalSignal);
+  const combinedSignal = AbortSignal.any(signals);
+
+  try {
+    // 1. Tenta cache primeiro
+    const cached = await getFromBarcodeCache(barcode);
+    if (cached) {
+      console.log(`[Barcode] Cache hit: ${barcode}`);
+      logBarcodeAnalytics(barcode, "cache", Date.now() - start);
+      return { product: cached, source: "cache" };
+    }
+
+    if (combinedSignal.aborted) {
+      throw new DOMException("Aborted", "AbortError");
+    }
+
+    // 2. Busca na API do Open Food Facts
+    console.log(`[Barcode] Cache miss, buscando na API: ${barcode}`);
+    const product = await fetchProductByBarcode(barcode, combinedSignal);
+
+    if (!product) {
+      logBarcodeAnalytics(barcode, "not_found", Date.now() - start);
+      return { product: null, source: null };
+    }
+
+    // 3. Salva no cache — fire-and-forget
+    saveToBarcodeCache(product).then(
+      () => console.log(`[Barcode] Salvo no cache: ${barcode}`),
+      () => {}
+    );
+    logBarcodeAnalytics(barcode, "api", Date.now() - start);
+
+    return { product, source: "api" };
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "AbortError") {
+      if (externalSignal?.aborted) throw err;
+      throw new BarcodeLookupError("timeout", "A busca demorou demais. Verifique sua conexão.");
+    }
+    throw new BarcodeLookupError("network", "Erro de rede ao buscar produto.");
+  } finally {
+    clearTimeout(timeoutId);
   }
-
-  // 2. Busca na API do Open Food Facts
-  console.log(`[Barcode] Cache miss, buscando na API: ${barcode}`);
-  const product = await fetchProductByBarcode(barcode);
-
-  if (!product) {
-    logBarcodeAnalytics(barcode, "not_found", Date.now() - start);
-    return { product: null, source: null };
-  }
-
-  // 3. Salva no cache
-  await saveToBarcodeCache(product);
-  console.log(`[Barcode] Salvo no cache: ${barcode}`);
-  logBarcodeAnalytics(barcode, "api", Date.now() - start);
-
-  return { product, source: "api" };
 }
 
 /**

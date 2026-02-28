@@ -16,16 +16,27 @@ const OFF_API_BR = "https://br.openfoodfacts.org/api/v2";
 async function fetchWithRetry(
   url: string,
   options: RequestInit = {},
-  maxRetries = 3
+  maxRetries = 2,
+  externalSignal?: AbortSignal
 ): Promise<Response> {
   for (let attempt = 0; attempt < maxRetries; attempt++) {
+    if (externalSignal?.aborted) {
+      throw new DOMException("Aborted", "AbortError");
+    }
     try {
+      const signals: AbortSignal[] = [AbortSignal.timeout(5000)];
+      if (externalSignal) signals.push(externalSignal);
+      const combinedSignal = AbortSignal.any(signals);
+
       const res = await fetch(url, {
         ...options,
-        signal: AbortSignal.timeout(5000),
+        signal: combinedSignal,
       });
       return res;
     } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError" && externalSignal?.aborted) {
+        throw err;
+      }
       if (attempt === maxRetries - 1) throw err;
       const delay = 500 * Math.pow(2, attempt);
       console.log(`[OFF] Retry ${attempt + 1}/${maxRetries} apos ${delay}ms`);
@@ -117,9 +128,9 @@ export interface NormalizedProduct {
  * // { productName: "Nescau", brand: "Nestlé", energyKcal: 377, ... }
  */
 export async function fetchProductByBarcode(
-  barcode: string
+  barcode: string,
+  signal?: AbortSignal
 ): Promise<NormalizedProduct | null> {
-  // Limpa o barcode (remove espaços, traços)
   const cleanBarcode = barcode.replace(/[\s-]/g, "");
 
   if (!cleanBarcode || cleanBarcode.length < 8) {
@@ -127,40 +138,43 @@ export async function fetchProductByBarcode(
     return null;
   }
 
-  try {
-    // Tenta primeiro na API brasileira, depois na global
-    const urls = [
-      `${OFF_API_BR}/product/${cleanBarcode}.json`,
-      `${OFF_API_BASE}/product/${cleanBarcode}.json`,
-    ];
+  if (signal?.aborted) return null;
 
-    for (const url of urls) {
-      try {
-        const response = await fetchWithRetry(url, {
-          headers: {
-            "User-Agent": "FitTrack/1.0 (https://fittrack.app)",
-          },
-        });
+  const fetchFromUrl = async (url: string): Promise<NormalizedProduct> => {
+    const response = await fetchWithRetry(
+      url,
+      { headers: { "User-Agent": "FitTrack/1.0 (https://fittrack.app)" } },
+      2,
+      signal
+    );
 
-        if (!response.ok) {
-          continue;
-        }
-
-        const data: OFFResponse = await response.json();
-
-        if (data.status === 1 && data.product) {
-          return normalizeProduct(cleanBarcode, data.product);
-        }
-      } catch {
-        // Retry esgotado para esta URL, tenta a proxima
-        continue;
-      }
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
     }
 
+    const data: OFFResponse = await response.json();
+
+    if (data.status === 1 && data.product) {
+      return normalizeProduct(cleanBarcode, data.product);
+    }
+    throw new Error("Product not found");
+  };
+
+  try {
+    const result = await Promise.any([
+      fetchFromUrl(`${OFF_API_BR}/product/${cleanBarcode}.json`),
+      fetchFromUrl(`${OFF_API_BASE}/product/${cleanBarcode}.json`),
+    ]);
+    return result;
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "AbortError") throw err;
+    if (err instanceof AggregateError) {
+      const abortErr = err.errors.find(
+        (e) => e instanceof DOMException && e.name === "AbortError"
+      );
+      if (abortErr) throw abortErr;
+    }
     console.log("Produto não encontrado no Open Food Facts:", cleanBarcode);
-    return null;
-  } catch (error) {
-    console.error("Erro ao buscar produto no Open Food Facts:", error);
     return null;
   }
 }
