@@ -351,3 +351,34 @@ useEffect(() => {
 **Solucao:** Adicionar fallback: se `totalMinutes === 0` mas `inBedMinutes > 0`, usar IN_BED como sono leve (core).
 
 **Licao:** Apple Health exporta dados diferentes dependendo do hardware. iPhone sem Watch so gera `HKCategoryValueSleepAnalysisInBed`. Sempre testar com exports de diferentes configuracoes de hardware.
+
+---
+
+## 21. Barcode scanner lento — APIs sequenciais + sem timeout no cache
+
+**Sintoma:** Escanear Coca-Cola Zero trava por ~30s antes de mostrar erro. Botao "Cancelar" nao interrompe a busca.
+
+**Causa raiz (multipla):**
+1. APIs BR e Global do Open Food Facts rodavam em sequencia, com 3 retries x 5s cada = ~33s pior caso
+2. Cache Supabase nao tinha timeout — se projeto pausado, hang indefinido
+3. Botao Cancelar so resetava state React, fetch continuava rodando em background
+4. `saveToBarcodeCache` e `hit_count update` eram `await` — adicionavam latencia desnecessaria
+
+**Solucao:**
+1. `fetchProductByBarcode` usa `Promise.any()` — BR e Global em paralelo, primeiro sucesso vence
+2. `fetchWithRetry` reduzido de 3 para 2 tentativas, aceita `AbortSignal` externo
+3. `getFromBarcodeCache` envolvido em `withTimeout(query, 3000, null)` — 3s max
+4. `lookupBarcode` com hard cap de 12s via `AbortController` interno
+5. `saveToBarcodeCache` e `hit_count` viraram fire-and-forget (`.then(() => {}, () => {})`)
+6. `BarcodeScanner` passa `AbortController.signal` para `lookupBarcode` — Cancel aborta fetch real
+7. `BarcodeLookupError` com code tipado (`timeout | network | not_found`) para mensagens diferenciadas
+
+**Budget de timeout:**
+| Etapa | Antes | Depois |
+|-------|-------|--------|
+| Cache Supabase | Indefinido | 3s max |
+| APIs BR + Global | ~33s (sequencial) | ~10.5s (paralelo) |
+| Pipeline total | Indefinido | 12s hard cap |
+| Cache save | Blocking | Fire-and-forget |
+
+**Licao:** APIs externas devem sempre ter: (1) timeout total no pipeline, (2) chamadas paralelas quando possivel, (3) cancel real via AbortController, (4) operacoes nao-criticas como fire-and-forget. Nunca confiar que Supabase responde rapido — free tier pode estar pausado.

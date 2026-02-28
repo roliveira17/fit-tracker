@@ -163,3 +163,19 @@ Padroes que deram certo no desenvolvimento do Fit Track v3.
 - Adicionar `window.addEventListener("focus", handleFocus)` para recarregar dados ao voltar de outra aba/pagina
 - Debounce com `useRef` (10s) evita chamadas excessivas
 - Padrao aplicado em Home e Insights — garante que dados ficam frescos apos registrar no Chat
+
+### Promise.any() para APIs paralelas (2026-02-28)
+- Quando duas URLs podem retornar o mesmo dado (ex: API BR vs Global), usar `Promise.any()` — primeiro sucesso vence
+- Mais rapido que loop sequencial e tolerante a falha de uma das fontes
+- Propagar `AbortSignal` para permitir cancelamento externo
+
+### AbortController para cancel real em UIs de loading (2026-02-28)
+- Criar `AbortController` no inicio da operacao, guardar em `useRef`
+- Passar `signal` para toda a cadeia de fetch (lookupBarcode → fetchProductByBarcode → fetchWithRetry)
+- Botao Cancel chama `controller.abort()` — fetch para de verdade, nao so reseta state
+- Checar `signal.aborted` antes de atualizar state no callback para evitar updates em componente desmontado
+
+### Fire-and-forget para operacoes nao-criticas (2026-02-28)
+- Cache save e hit_count update nao precisam bloquear o retorno ao usuario
+- Padrao: `promise.then(() => {}, () => {})` — sem await, sem unhandled rejection
+- Reduz latencia percebida sem sacrificar funcionalidade
