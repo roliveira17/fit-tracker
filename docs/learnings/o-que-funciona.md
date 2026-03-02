@@ -179,3 +179,10 @@ Padroes que deram certo no desenvolvimento do Fit Track v3.
 - Cache save e hit_count update nao precisam bloquear o retorno ao usuario
 - Padrao: `promise.then(() => {}, () => {})` — sem await, sem unhandled rejection
 - Reduz latencia percebida sem sacrificar funcionalidade
+
+### Formatacao resiliente de contexto para IA (2026-03-02)
+- Sempre incluir `raw_text` no header da refeicao, independente de `meal_items` estar populado
+- Se meal_items existem: listar cada item com macros individuais (P/C/G)
+- Se meal_items vazio: raw_text como descricao + totais
+- Instrucoes da IA devem ser explicitas: "SEMPRE liste alimentos pelo nome, NUNCA apenas totais"
+- Contexto deve ser legivel mesmo com dados parciais — IA nao pode depender de um unico campo

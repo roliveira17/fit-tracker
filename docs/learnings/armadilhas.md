@@ -382,3 +382,23 @@ useEffect(() => {
 | Cache save | Blocking | Fire-and-forget |
 
 **Licao:** APIs externas devem sempre ter: (1) timeout total no pipeline, (2) chamadas paralelas quando possivel, (3) cancel real via AbortController, (4) operacoes nao-criticas como fire-and-forget. Nunca confiar que Supabase responde rapido — free tier pode estar pausado.
+
+---
+
+## 22. Contexto da IA perde nomes de alimentos e macros individuais
+
+**Sintoma:** Ao perguntar "o que eu comi hoje?", IA responde apenas com totais (ex: "Almoco 405 kcal P 59g C 0g G 0g") sem listar os alimentos.
+
+**Causa raiz (multipla):**
+1. `formatUserContextForPrompt()` nao incluia `raw_text` no header da refeicao — so mostrava tipo (Almoco/Jantar)
+2. Se `meal_items` vem vazio do PostgREST (relacao nao detectada ou RLS bloqueia), IA perde a descricao do que foi comido
+3. Instrucoes da IA para `question` nao enfatizavam listar alimentos pelo nome
+4. Carbs/fat = 0 pode indicar RPC `insert_meal` desatualizada (sem `p_total_carbs_g`/`p_total_fat_g`) — mesma armadilha #6
+
+**Solucao:**
+1. Sempre incluir `raw_text` no header: `### Almoco (almocei arroz e frango)`
+2. Se `meal_items` vazio, mostrar `raw_text` como descricao + totais (fallback)
+3. Instrucoes da IA: "SEMPRE liste alimentos pelo nome, NUNCA responda apenas com totais"
+4. Log de debug em `getUserContextForAI()` para verificar dados retornados
+
+**Licao:** O contexto da IA deve ser resiliente a dados incompletos. Se `meal_items` pode estar vazio, `raw_text` deve ser a ancora — e o raw_text deve estar sempre visivel no prompt, nao escondido atras de um `else`.

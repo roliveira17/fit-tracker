@@ -1,7 +1,7 @@
 # Fit Track v3 — Roadmap e Progresso
 
 > Arquivo unico de acompanhamento do projeto.
-> Ultima atualizacao: 2026-02-28
+> Ultima atualizacao: 2026-03-02
 
 ---
 
@@ -103,6 +103,25 @@ Todos 15 testes implementados. T001-T009 passam, T010-T015 passam (35/38, 3 skip
 ### 6. Button legado — migrar para design system (BAIXA)
 
 Arquivo `components/ui/button.tsx` e compatibilidade com shadcn/ui antigo. Pode ser removido quando todos os imports forem migrados.
+
+---
+
+## Sessao 2026-03-02 — Onde Paramos
+
+### Concluido nesta sessao:
+- ✅ **FIX: Contexto de refeicoes para IA** — IA agora lista alimentos pelo nome (raw_text no header + meal_items detalhados). Instrucoes reforçadas para nunca responder so com totais [PR #7]
+- 🔍 **PENDENTE VERIFICACAO**: Carbs=0 pode ser RPC `insert_meal` desatualizada no Supabase. Queries SQL de diagnostico fornecidas no PR #7
+
+### Arquivos modificados:
+- `lib/supabase.ts` — Formatacao resiliente de refeicoes + debug log em `getUserContextForAI()`
+- `lib/ai.ts` — Instrucoes da IA reforçadas para listar alimentos e usar raw_text/meal_items
+
+### Pendente para validar:
+1. **Rodar queries SQL no Supabase Dashboard** (PR #7 tem as queries) para confirmar:
+   - Se `meals.total_carbs_g` / `meals.total_fat_g` estao sendo salvos
+   - Se `meal_items` estao sendo inseridos
+   - Se RPCs `insert_meal` / `insert_meal_item` tem assinatura correta
+2. Se RPC desatualizada, aplicar migration com DROP + CREATE
 
 ---
 
