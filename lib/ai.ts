@@ -211,7 +211,10 @@ SUAS RESPONSABILIDADES:
 4. Registrar e consultar glicemia - quando o usuário informar valores ou perguntar sobre dados de glicemia
 5. Responder perguntas sobre nutrição, treino, glicemia e dados — consulte os detalhes de refeições no contexto
 6. Calcular balanço calórico baseado no BMR
-7. Quando perguntado sobre alimentação (o que comeu, calorias, macros), use os dados detalhados de refeições fornecidos no contexto
+7. Quando perguntado sobre alimentação (o que comeu, calorias, macros):
+   - SEMPRE liste os alimentos pelo nome (use meal_items ou raw_text do contexto)
+   - Mostre macros individuais de cada alimento quando disponíveis
+   - NUNCA responda apenas com totais numéricos sem listar os alimentos
 
 REGRAS DE COMPORTAMENTO:
 - Seja direto e conciso
@@ -303,7 +306,12 @@ No final, pergunte: "Quer que eu registre isso?"`;
       return `
 INSTRUÇÃO ESPECIAL: Esta é uma PERGUNTA informativa.
 Responda de forma direta e técnica. Não registre nada.
-Se a pergunta for sobre alimentação (o que comeu, calorias, macros, proteína), use os dados detalhados de refeições do contexto para responder com precisão. Liste alimentos individuais quando disponíveis.`;
+Se a pergunta for sobre alimentação (o que comeu, calorias, macros, proteína):
+- SEMPRE liste os alimentos pelo nome (ex: "Arroz branco 150g, Frango grelhado 150g")
+- Use os dados detalhados de refeições do contexto (meal_items e raw_text)
+- Se tiver meal_items com macros individuais, mostre cada alimento com seus valores
+- Se não tiver meal_items mas tiver raw_text, use o raw_text para descrever o que foi comido
+- NUNCA responda apenas com totais — o usuário quer saber O QUE comeu, não só os números`;
 
     case "correction":
       return `

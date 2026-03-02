@@ -847,9 +847,20 @@ export async function getUserContextForAI(): Promise<UserContext | null> {
     getGlucoseStats(7)
   ]);
 
+  const meals = mealsResult.data || [];
+
+  // Debug: verificar dados de refeições retornados do Supabase
+  if (meals.length > 0) {
+    console.log(`[AI Context] ${meals.length} refeições encontradas`);
+    for (const m of meals.slice(0, 3)) {
+      const items = (m as Record<string, unknown>).meal_items as unknown[] | undefined;
+      console.log(`[AI Context] ${m.date} ${m.meal_type}: cal=${m.total_calories} P=${m.total_protein_g} C=${m.total_carbs_g} G=${m.total_fat_g} items=${items?.length ?? 0} raw="${m.raw_text}"`);
+    }
+  }
+
   return {
     profile: profileResult.data,
-    recentMeals: mealsResult.data || [],
+    recentMeals: meals,
     recentWorkouts: workoutsResult.data || [],
     recentWeights: weightsResult.data || [],
     recentGlucose: glucoseResult.data || [],
@@ -911,13 +922,16 @@ export function formatUserContextForPrompt(context: UserContext): string {
     if (todayMeals.length > 0) {
       lines.push(`## Refeições de Hoje (${today})`);
       for (const meal of todayMeals) {
-        lines.push(`### ${formatMealType(meal.meal_type)}`);
+        const header = meal.raw_text
+          ? `### ${formatMealType(meal.meal_type)} (${meal.raw_text})`
+          : `### ${formatMealType(meal.meal_type)}`;
+        lines.push(header);
         if (meal.meal_items && meal.meal_items.length > 0) {
           for (const item of meal.meal_items) {
             lines.push(`- ${item.food_name} (${Math.round(item.quantity_g)}g): ${formatItemMacros(item)}`);
           }
         } else if (meal.raw_text) {
-          lines.push(`- ${meal.raw_text}`);
+          lines.push(`- Descrição: ${meal.raw_text}`);
         }
         lines.push(`Total: ${meal.total_calories || 0} kcal | P ${Math.round(meal.total_protein_g || 0)}g C ${Math.round(meal.total_carbs_g || 0)}g G ${Math.round(meal.total_fat_g || 0)}g`);
       }
