@@ -402,3 +402,18 @@ useEffect(() => {
 4. Log de debug em `getUserContextForAI()` para verificar dados retornados
 
 **Licao:** O contexto da IA deve ser resiliente a dados incompletos. Se `meal_items` pode estar vazio, `raw_text` deve ser a ancora — e o raw_text deve estar sempre visivel no prompt, nao escondido atras de um `else`.
+
+---
+
+## 23. RPC definida no repo mas nunca aplicada — meal_items vazio
+
+**Sintoma:** Tabela `meal_items` com 0 registros em toda a base. Refeicoes registradas pelo chat salvavam apenas totais na tabela `meals`, sem itens individuais.
+
+**Causa raiz:** A migration que criava `insert_meal_item` estava num arquivo `.bak` (ignorado pelo Supabase). O codigo em `logMeal()` chamava a RPC, recebia erro `PGRST202` (funcao nao existe), logava no console e continuava — salvando a meal sem items.
+
+**Solucao:**
+1. Criar migration `.sql` (nao `.bak`) com a RPC
+2. Aplicar via `supabase db push` (CLI logado)
+3. Validar com script que chama a RPC com UUID fake (espera erro FK, nao PGRST202)
+
+**Licao:** Arquivos `.bak` em `supabase/migrations/` sao silenciosamente ignorados. Sempre verificar que migrations estao com extensao `.sql` correta. Erros em RPCs chamadas dentro de loops (`for...of`) podem ser silenciosos se o `console.error` nao e visto — considerar `throw` ou retorno de erro explicito.

@@ -186,3 +186,10 @@ Padroes que deram certo no desenvolvimento do Fit Track v3.
 - Se meal_items vazio: raw_text como descricao + totais
 - Instrucoes da IA devem ser explicitas: "SEMPRE liste alimentos pelo nome, NUNCA apenas totais"
 - Contexto deve ser legivel mesmo com dados parciais — IA nao pode depender de um unico campo
+
+### Supabase CLI `db push` para aplicar migrations (2026-03-02)
+- `npx supabase db push` aplica todas migrations `.sql` pendentes no projeto linkado
+- Muito mais rapido que colar SQL manualmente no Dashboard
+- Requer `npx supabase login` + projeto linkado (`supabase link`)
+- Pula arquivos `.bak` automaticamente (so processa `*.sql`)
+- Pede confirmacao interativa — listar migrations que serao aplicadas antes de executar
