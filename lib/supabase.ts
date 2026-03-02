@@ -768,7 +768,23 @@ export async function getRecentGlucoseLogs(limit: number = 10): Promise<GlucoseL
 
 export interface UserContext {
   profile: Profile | null;
-  recentMeals: { date: string; meal_type: string; total_calories: number; total_protein_g: number }[];
+  recentMeals: {
+    date: string;
+    meal_type: string;
+    total_calories: number;
+    total_protein_g: number;
+    total_carbs_g: number;
+    total_fat_g: number;
+    raw_text: string | null;
+    meal_items: {
+      food_name: string;
+      quantity_g: number;
+      calories: number;
+      protein_g: number;
+      carbs_g: number;
+      fat_g: number;
+    }[];
+  }[];
   recentWorkouts: { date: string; workout_type: string; duration_min: number; calories_burned: number }[];
   recentWeights: { date: string; weight_kg: number }[];
   recentGlucose: { date: string; time: string; glucose_mg_dl: number; measurement_type: string }[];
@@ -799,7 +815,7 @@ export async function getUserContextForAI(): Promise<UserContext | null> {
     // Últimas 30 refeições (últimos 7 dias aproximadamente)
     supabase
       .from("meals")
-      .select("date, meal_type, total_calories, total_protein_g")
+      .select("date, meal_type, total_calories, total_protein_g, total_carbs_g, total_fat_g, raw_text, meal_items(food_name, quantity_g, calories, protein_g, carbs_g, fat_g)")
       .eq("user_id", user.id)
       .order("date", { ascending: false })
       .limit(30),
@@ -842,6 +858,20 @@ export async function getUserContextForAI(): Promise<UserContext | null> {
   };
 }
 
+function formatMealType(type: string): string {
+  const map: Record<string, string> = {
+    breakfast: "Café da Manhã",
+    lunch: "Almoço",
+    dinner: "Jantar",
+    snack: "Lanche",
+  };
+  return map[type] || type;
+}
+
+function formatItemMacros(item: { calories: number; protein_g: number; carbs_g: number; fat_g: number }): string {
+  return `${Math.round(item.calories)} kcal | P ${Math.round(item.protein_g)}g C ${Math.round(item.carbs_g)}g G ${Math.round(item.fat_g)}g`;
+}
+
 /**
  * Formata o contexto do usuário como texto para incluir no prompt da AI
  */
@@ -866,21 +896,47 @@ export function formatUserContextForPrompt(context: UserContext): string {
     lines.push(`- Calorias consumidas: ${context.todaySummary.calories_in} kcal`);
     lines.push(`- Calorias gastas: ${context.todaySummary.calories_out} kcal`);
     lines.push(`- Proteína: ${context.todaySummary.protein}g`);
+    lines.push(`- Carboidratos: ${context.todaySummary.carbs}g`);
+    lines.push(`- Gordura: ${context.todaySummary.fat}g`);
     lines.push(`- Treino: ${context.todaySummary.workout_minutes} min`);
     lines.push(``);
   }
 
-  // Refeições recentes (últimos 3 dias)
+  // Refeições recentes — hoje detalhado, dias anteriores resumidos
   if (context.recentMeals.length > 0) {
-    const last3Days = [...new Set(context.recentMeals.slice(0, 12).map(m => m.date))].slice(0, 3);
-    lines.push(`## Refeições Recentes`);
-    for (const date of last3Days) {
-      const dayMeals = context.recentMeals.filter(m => m.date === date);
-      const totalCal = dayMeals.reduce((sum, m) => sum + (m.total_calories || 0), 0);
-      const totalProt = dayMeals.reduce((sum, m) => sum + (m.total_protein_g || 0), 0);
-      lines.push(`- ${date}: ${totalCal} kcal, ${Math.round(totalProt)}g proteína (${dayMeals.length} refeições)`);
+    const today = getLocalDateString();
+    const todayMeals = context.recentMeals.filter(m => m.date === today);
+    const previousMeals = context.recentMeals.filter(m => m.date !== today);
+
+    if (todayMeals.length > 0) {
+      lines.push(`## Refeições de Hoje (${today})`);
+      for (const meal of todayMeals) {
+        lines.push(`### ${formatMealType(meal.meal_type)}`);
+        if (meal.meal_items && meal.meal_items.length > 0) {
+          for (const item of meal.meal_items) {
+            lines.push(`- ${item.food_name} (${Math.round(item.quantity_g)}g): ${formatItemMacros(item)}`);
+          }
+        } else if (meal.raw_text) {
+          lines.push(`- ${meal.raw_text}`);
+        }
+        lines.push(`Total: ${meal.total_calories || 0} kcal | P ${Math.round(meal.total_protein_g || 0)}g C ${Math.round(meal.total_carbs_g || 0)}g G ${Math.round(meal.total_fat_g || 0)}g`);
+      }
+      lines.push(``);
     }
-    lines.push(``);
+
+    if (previousMeals.length > 0) {
+      const prevDays = [...new Set(previousMeals.map(m => m.date))].slice(0, 5);
+      lines.push(`## Dias Anteriores`);
+      for (const date of prevDays) {
+        const dayMeals = previousMeals.filter(m => m.date === date);
+        const totalCal = dayMeals.reduce((sum, m) => sum + (m.total_calories || 0), 0);
+        const totalProt = dayMeals.reduce((sum, m) => sum + (m.total_protein_g || 0), 0);
+        const totalCarbs = dayMeals.reduce((sum, m) => sum + (m.total_carbs_g || 0), 0);
+        const totalFat = dayMeals.reduce((sum, m) => sum + (m.total_fat_g || 0), 0);
+        lines.push(`- ${date}: ${totalCal} kcal | P ${Math.round(totalProt)}g C ${Math.round(totalCarbs)}g G ${Math.round(totalFat)}g (${dayMeals.length} refeições)`);
+      }
+      lines.push(``);
+    }
   }
 
   // Treinos recentes
