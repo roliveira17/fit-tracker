@@ -49,6 +49,7 @@ export default function HomePage() {
   // Dados do Supabase
   const [supabaseSummary, setSupabaseSummary] = useState<HomeSummary | null>(null);
   const [supabaseTdee, setSupabaseTdee] = useState<number | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Dados do dia selecionado (localStorage fallback)
   const [meals, setMeals] = useState<Meal[]>([]);
@@ -131,6 +132,14 @@ export default function HomePage() {
     return () => window.removeEventListener("focus", handleFocus);
   }, [loadData]);
 
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    lastLoadRef.current = Date.now();
+    loadData();
+    await new Promise((r) => setTimeout(r, 600));
+    setIsRefreshing(false);
+  }, [loadData]);
+
   // Calcula totais do dia - prefere Supabase se disponível
   const totals = supabaseSummary
     ? {
@@ -180,12 +189,27 @@ export default function HomePage() {
   return (
     <ScreenContainer className="bg-[#F5F3EF] text-gray-800">
       <PullToRefresh onRefresh={loadData}>
-        {/* Navegação temporal */}
-        <DateNavigator
-          selectedDate={selectedDate}
-          onDateChange={setSelectedDate}
-          theme="light"
-        />
+        {/* Navegação temporal + refresh */}
+        <div className="flex items-center gap-2">
+          <div className="flex-1">
+            <DateNavigator
+              selectedDate={selectedDate}
+              onDateChange={setSelectedDate}
+              theme="light"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            aria-label="Atualizar dados"
+            className="w-8 h-8 rounded-full bg-white/80 text-gray-400 shadow-soft flex items-center justify-center hover:bg-white hover:text-gray-600 transition-all shrink-0"
+          >
+            <span className={`material-symbols-outlined text-[18px] ${isRefreshing ? "animate-spin" : ""}`}>
+              refresh
+            </span>
+          </button>
+        </div>
 
         {/* Conteúdo principal */}
         <div className="flex flex-1 flex-col gap-6 py-4">
