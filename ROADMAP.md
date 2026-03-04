@@ -1,7 +1,7 @@
 # Fit Track v3 — Roadmap e Progresso
 
 > Arquivo unico de acompanhamento do projeto.
-> Ultima atualizacao: 2026-03-02 (sessao 2)
+> Ultima atualizacao: 2026-03-04
 
 ---
 
@@ -106,22 +106,29 @@ Arquivo `components/ui/button.tsx` e compatibilidade com shadcn/ui antigo. Pode 
 
 ---
 
-## Sessao 2026-03-02 — Onde Paramos
+## Sessao 2026-03-04 — Onde Paramos
 
 ### Concluido nesta sessao:
-- ✅ **FIX: Contexto de refeicoes para IA** — IA agora lista alimentos pelo nome (raw_text no header + meal_items detalhados). Instrucoes reforçadas para nunca responder so com totais [PR #7]
-- ✅ **FIX: RPC insert_meal_item criada** — RPC nunca havia sido aplicada (migration em .bak). meal_items tinha 0 registros em toda a base. Migration aplicada via `supabase db push` [2026-03-02]
-- ✅ **Migrations pendentes aplicadas** — `20260207_001_fix_glucose_import.sql` e `20260208_001_fix_import_rpc.sql` tambem aplicadas via `supabase db push`
+- ✅ **FIX: Persistencia chat** — Substituido string check `data.response.includes("✓ Registrado")` por logica baseada em `parsedData` (`shouldPersist`). Mais robusto e desacoplado do texto da IA
+- ✅ **FIX: Botao refresh na Home** — Botao manual de refresh ao lado do DateNavigator, com animacao spin
+- ✅ **Review /simplify** — Codigo revisado: nenhuma mudanca adicional necessaria. Toast behavior equivalente ao original, short-circuit seguro
 
 ### Arquivos modificados:
-- `lib/supabase.ts` — Formatacao resiliente de refeicoes + debug log em `getUserContextForAI()`
-- `lib/ai.ts` — Instrucoes da IA reforçadas para listar alimentos e usar raw_text/meal_items
-- `supabase/migrations/20260302_001_create_insert_meal_item_rpc.sql` — Migration da RPC (aplicada)
-- `scripts/validate-insert-meal-item-rpc.ts` — Script de validacao da RPC
+- `app/chat/page.tsx` — `shouldPersist` substitui string check para persistencia e toast
+- `app/home/page.tsx` — Botao refresh manual + `handleRefresh` + `isRefreshing` state
 
 ### Pendente para validar:
 1. **Testar no app**: registrar refeicao pelo chat e verificar que `meal_items` tem registros
 2. **Perguntar "o que eu comi?"** — IA deve listar alimentos individuais com macros
+
+---
+
+## Sessao 2026-03-02 — Historico
+
+### Concluido:
+- ✅ **FIX: Contexto de refeicoes para IA** — IA agora lista alimentos pelo nome (raw_text no header + meal_items detalhados). Instrucoes reforçadas para nunca responder so com totais [PR #7]
+- ✅ **FIX: RPC insert_meal_item criada** — RPC nunca havia sido aplicada (migration em .bak). meal_items tinha 0 registros em toda a base. Migration aplicada via `supabase db push` [2026-03-02]
+- ✅ **Migrations pendentes aplicadas** — `20260207_001_fix_glucose_import.sql` e `20260208_001_fix_import_rpc.sql` tambem aplicadas via `supabase db push`
 
 ---
 

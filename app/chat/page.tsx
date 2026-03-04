@@ -557,7 +557,12 @@ export default function ChatPage() {
 
       setMessages((prev) => [...prev, aiMessage]);
 
-      if (parsedData && data.response.includes("✓ Registrado")) {
+      const shouldPersist = parsedData
+        && parsedData.type !== "weekly_analysis"
+        && parsedData.type !== "glucose_analysis"
+        && !(parsedData.type === "food" && parsedData.data.needsQuestion);
+
+      if (shouldPersist) {
         // Sempre salva no localStorage (funciona offline e sem login)
         switch (parsedData.type) {
           case "food":
@@ -664,7 +669,7 @@ export default function ChatPage() {
       }
 
       // Mostra toast baseado no tipo de mensagem classificada
-      if (classification?.type === "declaration" && data.response.includes("✓ Registrado")) {
+      if (classification?.type === "declaration" && shouldPersist) {
         const subtypeLabels: Record<string, string> = {
           food: "Refeição registrada!",
           exercise: "Treino registrado!",
