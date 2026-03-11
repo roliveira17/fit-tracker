@@ -27,6 +27,7 @@ import {
   saveWeightLog,
   saveWorkout,
   saveBodyFatLog,
+  removeMealByType,
   type UserProfile,
   type ChatMessage,
   type Meal,
@@ -38,11 +39,13 @@ import {
   logWorkout,
   logBodyFat,
   logGlucose,
+  deleteMeal,
   getUserContextForAI,
   type Meal as SupabaseMeal,
   type UserContext,
 } from "@/lib/supabase";
 import { generateMessageId } from "@/lib/ai";
+import { parseCorrection } from "@/lib/parsers";
 import { Toast } from "@/components/feedback/Toast";
 import { useToast } from "@/hooks/useToast";
 import { EditMealSheet, type EditableFoodItem } from "@/components/chat/EditMealSheet";
@@ -668,6 +671,65 @@ export default function ChatPage() {
         }
       }
 
+      // Persistência para CORREÇÕES de alimentação
+      if (classification?.type === "correction") {
+        const mealHistory = getMeals().slice(-30);
+        const correctionData = await parseCorrection(data.response, mealHistory);
+        if (correctionData) {
+          // 1. Remover do localStorage pelo tipo de refeição
+          removeMealByType(correctionData.mealType as Meal["type"]);
+
+          // 2. Re-inserir no localStorage com dados corrigidos
+          const correctedLocalItems = correctionData.items.map((item) => ({
+            name: item.name,
+            quantity: item.quantity || 100,
+            unit: item.unit || "g",
+            calories: item.calories,
+            protein: item.protein,
+            carbs: item.carbs,
+            fat: item.fat,
+          }));
+          saveMeal({
+            type: correctionData.mealType as Meal["type"],
+            items: correctedLocalItems,
+            totalCalories: correctionData.totalCalories,
+            totalProtein: correctionData.totalProtein,
+            totalCarbs: correctionData.totalCarbs,
+            totalFat: correctionData.totalFat,
+            rawText: correctionData.rawText,
+          });
+
+          // 3. Atualizar Supabase se logado
+          if (user && supabaseContext) {
+            const todayStr = new Date().toLocaleDateString("sv-SE");
+            const targetMeal = supabaseContext.recentMeals
+              .filter((m) => m.date === todayStr && m.meal_type === correctionData.mealType)
+              .slice(-1)[0];
+
+            if (targetMeal?.id) {
+              await deleteMeal(targetMeal.id);
+            }
+
+            const mealItems = correctionData.items.map((item) => ({
+              food_name: item.name,
+              quantity_g: item.quantity || 100,
+              calories: item.calories,
+              protein_g: item.protein,
+              carbs_g: item.carbs,
+              fat_g: item.fat,
+            }));
+            await logMeal(
+              correctionData.mealType as SupabaseMeal["meal_type"],
+              mealItems,
+              correctionData.rawText
+            );
+          }
+
+          showToast("Registro corrigido!", "success");
+          router.refresh();
+        }
+      }
+
       // Mostra toast baseado no tipo de mensagem classificada
       if (classification?.type === "declaration" && shouldPersist) {
         const subtypeLabels: Record<string, string> = {
@@ -678,8 +740,6 @@ export default function ChatPage() {
           glucose: "Glicemia registrada!",
         };
         showToast(subtypeLabels[classification.subtype] || "Registro salvo!", "success");
-      } else if (classification?.type === "correction" && data.response.includes("✓ Corrigido")) {
-        showToast("Registro corrigido!", "success");
       } else if (classification?.type === "subjective" && data.response.includes("✓ Registrado")) {
         showToast("Estado registrado!", "success");
       }

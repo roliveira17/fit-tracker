@@ -613,3 +613,45 @@ Mensagem: "${message}"`;
 
   return null;
 }
+
+/**
+ * Extrai dados estruturados de uma resposta de correção do AI.
+ * Espera um bloco <correction_data>{"meal_type":..., "items":[...]}</correction_data>.
+ * Resolve calorias/macros dos itens via food lookup pipeline.
+ */
+export async function parseCorrection(
+  aiResponse: string,
+  userHistory?: Meal[]
+): Promise<FoodParseResult | null> {
+  const match = aiResponse.match(/<correction_data>([\s\S]*?)<\/correction_data>/);
+  if (!match) return null;
+
+  let rawData: { meal_type?: string; items?: { name: string; quantity_g?: number }[] };
+  try {
+    rawData = JSON.parse(match[1].trim());
+  } catch {
+    console.error("parseCorrection: JSON inválido no bloco correction_data");
+    return null;
+  }
+
+  if (!rawData.items || rawData.items.length === 0) return null;
+
+  const mealType = (rawData.meal_type as FoodParseResult["mealType"]) || inferMealType();
+  const foodNames = rawData.items.map(
+    (item) => item.quantity_g ? `${item.quantity_g}g de ${item.name}` : item.name
+  );
+
+  const items = await parseUnknownFoodsWithAI(foodNames, foodNames.join(", "), userHistory);
+
+  if (items.length === 0) return null;
+
+  return {
+    mealType,
+    items,
+    totalCalories: items.reduce((sum, i) => sum + i.calories, 0),
+    totalProtein: items.reduce((sum, i) => sum + i.protein, 0),
+    totalCarbs: items.reduce((sum, i) => sum + i.carbs, 0),
+    totalFat: items.reduce((sum, i) => sum + i.fat, 0),
+    rawText: aiResponse,
+  };
+}
