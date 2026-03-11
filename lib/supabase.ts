@@ -769,6 +769,7 @@ export async function getRecentGlucoseLogs(limit: number = 10): Promise<GlucoseL
 export interface UserContext {
   profile: Profile | null;
   recentMeals: {
+    id: string;
     date: string;
     meal_type: string;
     total_calories: number;
@@ -815,7 +816,7 @@ export async function getUserContextForAI(): Promise<UserContext | null> {
     // Últimas 30 refeições (últimos 7 dias aproximadamente)
     supabase
       .from("meals")
-      .select("date, meal_type, total_calories, total_protein_g, total_carbs_g, total_fat_g, raw_text, meal_items(food_name, quantity_g, calories, protein_g, carbs_g, fat_g)")
+      .select("id, date, meal_type, total_calories, total_protein_g, total_carbs_g, total_fat_g, raw_text, meal_items(food_name, quantity_g, calories, protein_g, carbs_g, fat_g)")
       .eq("user_id", user.id)
       .order("date", { ascending: false })
       .limit(30),
@@ -847,6 +848,13 @@ export async function getUserContextForAI(): Promise<UserContext | null> {
     getGlucoseStats(7)
   ]);
 
+  if (mealsResult.error) {
+    console.error("getUserContextForAI: erro ao buscar refeições:", mealsResult.error.message);
+  }
+  if (profileResult.error) {
+    console.error("getUserContextForAI: erro ao buscar perfil:", profileResult.error.message);
+  }
+
   return {
     profile: profileResult.data,
     recentMeals: mealsResult.data || [],
@@ -856,6 +864,15 @@ export async function getUserContextForAI(): Promise<UserContext | null> {
     todaySummary: summaryResult,
     glucoseStats: glucoseStatsResult
   };
+}
+
+export async function deleteMeal(mealId: string): Promise<void> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  const { error } = await supabase.rpc("delete_meal", { p_meal_id: mealId });
+  if (error) {
+    console.error("deleteMeal: erro ao deletar refeição:", error.message);
+  }
 }
 
 function formatMealType(type: string): string {

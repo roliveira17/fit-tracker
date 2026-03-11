@@ -288,6 +288,23 @@ export function getTodayTotals(): {
   };
 }
 
+/**
+ * Remove a refeição mais recente do dia atual com o tipo informado.
+ * Usado para limpar o localStorage antes de persistir uma correção.
+ */
+export function removeMealByType(type: Meal["type"]): void {
+  if (!isBrowser()) return;
+  const meals = getMeals();
+  const today = getCurrentDate();
+  const todayByType = meals
+    .map((m, idx) => ({ m, idx }))
+    .filter(({ m }) => m.date === today && m.type === type);
+  if (todayByType.length === 0) return;
+  const lastIdx = todayByType[todayByType.length - 1].idx;
+  meals.splice(lastIdx, 1);
+  localStorage.setItem(STORAGE_KEYS.MEALS, JSON.stringify(meals));
+}
+
 // ============================================
 // FUNÇÕES DE REGISTRO - WORKOUTS
 // ============================================

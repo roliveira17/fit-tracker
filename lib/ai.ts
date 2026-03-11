@@ -308,7 +308,13 @@ Se a pergunta for sobre alimentação (o que comeu, calorias, macros, proteína)
     case "correction":
       return `
 INSTRUÇÃO ESPECIAL: Esta é uma CORREÇÃO de um registro anterior.
-Confirme a correção com "✓ Corrigido:" e mostre o valor atualizado.`;
+Confirme a correção com "✓ Corrigido:" e mostre o valor atualizado.
+OBRIGATÓRIO: No final da resposta, inclua um bloco com os dados corrigidos:
+<correction_data>
+{"meal_type": "lunch", "items": [{"name": "frango grelhado", "quantity_g": 200}]}
+</correction_data>
+Valores válidos para meal_type: breakfast, lunch, dinner, snack.
+Se a correção não for de alimentação, omita o bloco correction_data.`;
 
     case "subjective":
       return `
